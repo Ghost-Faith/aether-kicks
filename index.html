@@ -21,7 +21,7 @@
   <!-- Fixed Luxury Squircle Navigation -->
   <nav class="store-nav">
     <!-- Brand Logo -->
-    <a href="#section-chicago" class="nav-brand">
+    <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
       <div class="brand-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
@@ -42,10 +42,12 @@
       </div>
     </div>
 
-    <!-- Quick Navigation Links (hidden on compact screens) -->
+    <!-- Desktop Navigation Links (hidden on compact screens) -->
     <ul class="nav-links">
+      <li><a href="#section-chicago" class="nav-link" onclick="if(window.setCatalogLayout) setCatalogLayout('runway')">Vault</a></li>
+      <li><a href="#square-grid-vault" class="nav-link" onclick="if(window.setCatalogLayout) setCatalogLayout('grid')">Archive</a></li>
+      <li><a href="#customizer-lab" class="nav-link">Bespoke Lab</a></li>
       <li><a href="#hype-drops" class="nav-link">Drops</a></li>
-      <li><a href="#customizer-lab" class="nav-link">Bespoke</a></li>
       <li><a href="#market-analytics" class="nav-link">Analytics</a></li>
       <li><a href="about.html" class="nav-link">About Us</a></li>
     </ul>
@@ -70,7 +72,7 @@
       </a>
 
       <!-- Cart Button -->
-      <button class="btn-nav-cart" onclick="window.cartManager.openCart()" title="Ver Saco de Colecionador">
+      <button class="btn-nav-cart" onclick="window.cartManager ? window.cartManager.openCart() : null" title="Ver Saco de Colecionador">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span>BAG</span>
         <span class="cart-badge-count" style="display: none;">0</span>
@@ -80,7 +82,7 @@
       <div class="nav-auth-group">
         <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;" title="Painel do Colecionador">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Perfil</span>
+          <span id="nav-profile-name">Perfil</span>
         </a>
       </div>
 
@@ -97,24 +99,24 @@
   <div id="hamburger-backdrop" class="modal-backdrop"></div>
   <aside id="hamburger-drawer" class="hamburger-drawer">
     <div class="hamburger-drawer-header">
-      <div class="nav-brand">
+      <a href="index.html" class="nav-brand" style="text-decoration: none;" title="AETHER KICKS Archive">
         <div class="brand-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
         <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
-      </div>
-      <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer;" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+      </a>
+      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
     </div>
 
     <!-- Presentation Mode Toggle inside Drawer -->
-    <div style="padding: 16px 20px 8px 20px; border-bottom: 1px solid var(--border-glass);">
-      <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Presentation Mode</div>
-      <div class="nav-view-switcher" style="display: flex; width: 100%;">
-        <button id="drawer-btn-runway" class="btn-view-opt active" style="flex: 1;" onclick="setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click();">
+    <div class="drawer-presentation-box">
+      <div class="drawer-presentation-label">Presentation Mode</div>
+      <div class="nav-view-switcher">
+        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span>Runway</span>
         </button>
-        <button id="drawer-btn-grid" class="btn-view-opt" style="flex: 1;" onclick="setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click();">
+        <button id="drawer-btn-grid" class="btn-view-opt" onclick="setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span>Square Grid</span>
         </button>
@@ -122,15 +124,15 @@
     </div>
 
     <ul class="hamburger-menu-links">
-      <li><a href="#section-chicago" class="hamburger-menu-link" onclick="setCatalogLayout('runway')"><span class="menu-idx">01</span>Runway Archive</a></li>
-      <li><a href="javascript:void(0)" onclick="setCatalogLayout('grid')" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault (Grid)</a></li>
+      <li><a href="#section-chicago" class="hamburger-menu-link" onclick="if(window.setCatalogLayout) setCatalogLayout('runway')"><span class="menu-idx">01</span>Runway Archive</a></li>
+      <li><a href="#square-grid-vault" class="hamburger-menu-link" onclick="if(window.setCatalogLayout) setCatalogLayout('grid')"><span class="menu-idx">02</span>The Grail Vault</a></li>
       <li><a href="#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
       <li><a href="#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
       <li><a href="#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
       <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span>About Us / Sobre Nós</a></li>
-      <li><a href="wishlist.html" class="hamburger-menu-link"><span class="menu-idx">07</span>A Tua Wishlist ❤️</a></li>
+      <li><a href="wishlist.html" class="hamburger-menu-link"><span class="menu-idx">07</span>A Tua Wishlist</a></li>
       <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span>Perfil de Colecionador</a></li>
-      <li><a href="javascript:void(0)" onclick="openNFCScanner()" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
+      <li><a href="#nfc-modal" onclick="if(window.openNFCScanner) { openNFCScanner(); return false; }" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
     </ul>
 
     <div class="hamburger-drawer-footer">
@@ -1794,7 +1796,7 @@
 
       <div class="cart-summary-row cart-summary-total">
         <span>Estimated Total</span>
-        <span id="cart-total">$0.00</span>
+        <span id="cart-total" class="cart-total-value">$0.00</span>
       </div>
 
       <button class="btn-primary" style="width: 100%; padding: 16px;" onclick="window.cartManager.openCheckoutModal()">

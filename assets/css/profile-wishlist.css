@@ -783,3 +783,310 @@
   gap: 16px;
   margin-top: 12px;
 }
+
+/* ==========================================================================
+   WISHLIST STATS BADGES ROW
+   ========================================================================== */
+.wishlist-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.wishlist-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: normal;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.wishlist-stat-badge svg {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.profile-size-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS (Down to 320px)
+   ========================================================================== */
+@media (max-width: 680px) {
+  .page-container {
+    padding: 96px 14px 40px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden;
+  }
+
+  .wishlist-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .profile-layout {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .profile-panel {
+    padding: 20px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .profile-user-card {
+    padding: 24px 16px !important;
+  }
+
+  .profile-avatar-wrap {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 12px;
+  }
+
+  .profile-avatar-img {
+    font-size: 1.6rem !important;
+  }
+
+  .profile-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .order-history-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .order-history-card > div:last-child {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left !important;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-glass);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .profile-actions-bar {
+    flex-direction: column-reverse !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .profile-actions-bar button,
+  .profile-actions-bar a {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .cart-drawer {
+    padding: 0 !important;
+  }
+
+  .cart-drawer-header,
+  .cart-drawer-footer {
+    padding: 16px 14px !important;
+  }
+
+  .cart-items-list {
+    padding: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-hero-title {
+    font-size: 1.65rem !important;
+  }
+
+  .page-hero-subtitle {
+    font-size: 0.88rem !important;
+  }
+
+  .page-hero-badge {
+    font-size: 0.68rem !important;
+    padding: 5px 10px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    border-radius: 12px !important;
+  }
+
+  .wishlist-stats-row {
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .wishlist-stat-badge {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+
+  .wishlist-card-thumb {
+    height: 190px;
+    padding: 16px;
+  }
+
+  .wishlist-card-body {
+    padding: 16px 16px 12px;
+  }
+
+  .wishlist-card-name {
+    font-size: 1.12rem;
+  }
+
+  .wishlist-card-footer {
+    padding: 14px 16px 16px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .wishlist-card-actions {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .wishlist-card-actions button,
+  .wishlist-card-actions a {
+    flex: 1 !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .profile-panel-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+  }
+
+  .profile-panel-title {
+    font-size: 1.15rem;
+  }
+
+  .profile-size-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .size-unit-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .size-unit-toggle .btn-unit-opt {
+    flex: 1;
+    text-align: center;
+    padding: 5px 0;
+  }
+
+  .hamburger-menu-links {
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .hamburger-menu-link {
+    font-size: 1.12rem !important;
+    gap: 8px !important;
+  }
+
+  .hamburger-drawer {
+    padding: 24px 16px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .page-container {
+    padding: 86px 10px 32px !important;
+  }
+
+  .page-hero-title {
+    font-size: 1.45rem !important;
+  }
+
+  .page-hero-badge {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.02em !important;
+    padding: 4px 8px !important;
+  }
+
+  .wishlist-stats-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .wishlist-stat-badge {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.68rem;
+    padding: 4px 8px;
+  }
+
+  .profile-panel {
+    padding: 16px 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .profile-user-card {
+    padding: 20px 12px !important;
+  }
+
+  .profile-stat-box {
+    padding: 8px 4px;
+  }
+
+  .profile-stat-val {
+    font-size: 1.05rem;
+  }
+
+  .profile-stat-lbl {
+    font-size: 0.62rem;
+    letter-spacing: 0;
+  }
+
+  .profile-nav-tab {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+
+  .hamburger-menu-link {
+    font-size: 0.98rem !important;
+    gap: 6px !important;
+  }
+
+  .hamburger-drawer-footer div {
+    flex-direction: column;
+  }
+}

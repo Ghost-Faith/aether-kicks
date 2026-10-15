@@ -20,25 +20,27 @@
 
   <!-- Fixed Luxury Squircle Navigation -->
   <nav class="store-nav">
-    <a href="index.html" class="nav-brand">
+    <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
       <div class="brand-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       </div>
       <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
     </a>
 
-    <!-- Center Navigation Links -->
+    <!-- Desktop Navigation Links -->
     <ul class="nav-links">
       <li><a href="index.html#section-chicago" class="nav-link">Vault</a></li>
-      <li><a href="index.html#customizer-lab" class="nav-link">Bespoke Atelier</a></li>
       <li><a href="index.html#square-grid-vault" class="nav-link">Archive</a></li>
+      <li><a href="index.html#customizer-lab" class="nav-link">Bespoke Lab</a></li>
+      <li><a href="index.html#hype-drops" class="nav-link">Drops</a></li>
+      <li><a href="index.html#market-analytics" class="nav-link">Analytics</a></li>
       <li><a href="about.html" class="nav-link">About Us</a></li>
     </ul>
 
     <!-- Right Header Actions -->
     <div class="nav-actions">
       <!-- Sound Toggle -->
-      <button id="btn-sound-toggle" class="btn-sound-toggle" title="Alternar Som">
+      <button id="btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
         <div class="sound-bars">
           <span class="sound-bar"></span>
           <span class="sound-bar"></span>
@@ -48,24 +50,24 @@
       </button>
 
       <!-- Wishlist Button Active -->
-      <a href="wishlist.html" class="btn-nav-wishlist" style="border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.12);" title="A tua Wishlist">
+      <a href="wishlist.html" class="btn-nav-wishlist active" style="border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.12);" title="A tua Wishlist de Grails">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         <span>WISHLIST</span>
-        <span class="wishlist-badge-count">2</span>
+        <span class="wishlist-badge-count" style="display: none;">0</span>
       </a>
 
       <!-- Cart Button -->
-      <button class="btn-nav-cart" onclick="window.cartManager ? window.cartManager.openCart() : null">
+      <button class="btn-nav-cart" onclick="window.cartManager ? window.cartManager.openCart() : null" title="Ver Saco de Colecionador">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span>BAG</span>
         <span class="cart-badge-count" style="display: none;">0</span>
       </button>
 
-      <!-- Profile Link / Auth -->
+      <!-- Auth Action Links -->
       <div class="nav-auth-group">
-        <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;">
+        <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;" title="Painel do Colecionador">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Perfil</span>
+          <span id="nav-profile-name">Perfil</span>
         </a>
       </div>
 
@@ -82,24 +84,24 @@
   <div id="hamburger-backdrop" class="modal-backdrop"></div>
   <aside id="hamburger-drawer" class="hamburger-drawer">
     <div class="hamburger-drawer-header">
-      <div class="nav-brand">
+      <a href="index.html" class="nav-brand" style="text-decoration: none;" title="AETHER KICKS Archive">
         <div class="brand-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
         <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
-      </div>
-      <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer;" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+      </a>
+      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
     </div>
 
     <!-- Presentation Mode Toggle inside Drawer -->
-    <div style="padding: 16px 20px 8px 20px; border-bottom: 1px solid var(--border-glass);">
-      <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Presentation Mode</div>
-      <div class="nav-view-switcher" style="display: flex; width: 100%;">
-        <button id="drawer-btn-runway" class="btn-view-opt active" style="flex: 1;" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#section-chicago'; }">
+    <div class="drawer-presentation-box">
+      <div class="drawer-presentation-label">Presentation Mode</div>
+      <div class="nav-view-switcher">
+        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#section-chicago'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span>Runway</span>
         </button>
-        <button id="drawer-btn-grid" class="btn-view-opt" style="flex: 1;" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#square-grid-vault'; }">
+        <button id="drawer-btn-grid" class="btn-view-opt" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#square-grid-vault'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span>Square Grid</span>
         </button>
@@ -108,14 +110,14 @@
 
     <ul class="hamburger-menu-links">
       <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span>Runway Archive</a></li>
-      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault (Grid)</a></li>
+      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault</a></li>
       <li><a href="index.html#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
       <li><a href="index.html#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
       <li><a href="index.html#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
       <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span>About Us / Sobre Nós</a></li>
-      <li><a href="wishlist.html" class="hamburger-menu-link active" style="color: #ef4444;"><span class="menu-idx" style="color: #ef4444;">07</span>A Tua Wishlist ❤️</a></li>
+      <li><a href="wishlist.html" class="hamburger-menu-link active"><span class="menu-idx">07</span>A Tua Wishlist</a></li>
       <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span>Perfil de Colecionador</a></li>
-      <li><a href="javascript:void(0)" onclick="if(window.openNFCScanner) openNFCScanner(); else location.href='index.html#nfc';" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
+      <li><a href="index.html#nfc-modal" onclick="if(document.getElementById('nfc-modal')){ openNFCScanner(); return false; }" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
     </ul>
 
     <div class="hamburger-drawer-footer">
@@ -139,8 +141,19 @@
       <p class="page-hero-subtitle">
         Os pares mais cobiçados do mundo preservados no teu radar. Reserva, compra instantaneamente ou personaliza no nosso Atelier Bespoke.
       </p>
-      <div style="margin-top: 18px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted);" id="wishlist-total-count">
-        A carregar grails guardados...
+      <div class="wishlist-stats-row">
+        <div class="wishlist-stat-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="wishlist-total-count">A carregar grails guardados...</span>
+        </div>
+        <div class="wishlist-stat-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Lisbon Deadstock Vault</span>
+        </div>
+        <div class="wishlist-stat-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>NFC Verificado</span>
+        </div>
       </div>
     </header>
 
@@ -226,32 +239,54 @@
   </main>
 
   <!-- Slide-Out Shopping Bag Drawer -->
-  <div id="cart-backdrop" class="cart-backdrop" onclick="window.cartManager.closeCart()"></div>
+  <div id="cart-backdrop" class="cart-backdrop" onclick="window.cartManager ? window.cartManager.closeCart() : null"></div>
   <aside id="cart-drawer" class="cart-drawer">
-    <div class="cart-header">
-      <div class="cart-title-wrap">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        <h4>Collector Bag</h4>
-      </div>
-      <button class="cart-close-btn" onclick="window.cartManager.closeCart()">✕</button>
+    <div class="cart-drawer-header">
+      <h3 class="cart-drawer-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>Collector Bag</span>
+      </h3>
+      <button class="modal-close-btn" onclick="window.cartManager ? window.cartManager.closeCart() : null">✕</button>
     </div>
-    <div id="cart-items-list" class="cart-items-list"></div>
-    <div class="cart-footer">
-      <div class="cart-pricing-row">
+
+    <div id="cart-items-list" class="cart-items-list">
+      <!-- Populated via CartManager -->
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-promo-row">
+        <input type="text" id="promo-code-input" class="cart-promo-input" placeholder="Promo Code: GRAIL20" value="GRAIL20">
+        <button class="btn-secondary" style="padding: 10px 16px; font-size: 0.82rem;" onclick="window.cartManager ? window.cartManager.applyPromoCode(document.getElementById('promo-code-input').value) : null">
+          Apply
+        </button>
+      </div>
+
+      <div class="cart-summary-row">
         <span>Subtotal</span>
         <span id="cart-subtotal">$0.00</span>
       </div>
-      <div id="cart-discount-row" class="cart-pricing-row" style="display: none; color: #22c55e;">
-        <span>Grail Collector VIP</span>
+
+      <div id="cart-discount-row" class="cart-summary-row" style="display: none; color: #22c55e;">
+        <span>Promo Discount</span>
         <span id="cart-discount-val">-$0.00</span>
       </div>
-      <div class="cart-pricing-row total-row">
-        <span>Total Vault</span>
-        <span id="cart-total">$0.00</span>
+
+      <div class="cart-summary-row">
+        <span>Verified Express Shipping</span>
+        <span style="color: #22c55e;">FREE ($0.00)</span>
       </div>
-      <button class="btn-primary" style="width: 100%; padding: 14px; margin-top: 14px;" onclick="window.cartManager.openCheckoutModal()">
-        Cryptographic Checkout →
-      </button>
+
+      <div class="cart-summary-row cart-summary-total">
+        <span>Estimated Total</span>
+        <span id="cart-total" class="cart-total-value">$0.00</span>
+      </div>
+
+      <div class="cart-actions-row">
+        <button class="btn-primary" style="width: 100%; padding: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="window.cartManager ? window.cartManager.openCheckoutModal() : null">
+          <span>Proceed to Secure Checkout</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -290,24 +325,29 @@
   </div>
 
   <!-- Express Checkout Modal -->
-  <div id="checkout-backdrop" class="modal-backdrop" onclick="window.cartManager.closeCheckoutModal()"></div>
+  <div id="checkout-backdrop" class="modal-backdrop" onclick="window.cartManager ? window.cartManager.closeCheckoutModal() : null"></div>
   <div id="checkout-modal" class="custom-modal">
-    <button class="modal-close-btn" onclick="window.cartManager.closeCheckoutModal()">✕</button>
+    <button class="modal-close-btn" onclick="window.cartManager ? window.cartManager.closeCheckoutModal() : null">✕</button>
+
     <div style="margin-bottom: 24px;">
       <span class="badge-pill active">CRYPTOGRAPHIC ENCRYPTED CHECKOUT</span>
       <h2 style="font-size: 1.8rem; margin: 6px 0;">Finalizar Reserva de Grail</h2>
       <p style="color: var(--text-secondary); font-size: 0.9rem;">Par deadstock 100% autêntico reservado no cofre por 10 minutos.</p>
     </div>
-    <form onsubmit="event.preventDefault(); window.cartManager.processOrder();">
+
+    <form onsubmit="event.preventDefault(); window.cartManager ? window.cartManager.processOrder() : null;">
+      <!-- Shipping Address -->
       <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
         <div class="input-group">
           <label class="input-label">Nome Completo</label>
           <input type="text" class="form-input" style="padding-left: 16px;" value="Gonçalo Silva" required>
         </div>
+
         <div class="input-group">
           <label class="input-label">Morada de Envio (Portugal)</label>
           <input type="text" class="form-input" style="padding-left: 16px;" value="Avenida da Liberdade 120, 3º Dto" required>
         </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="input-group">
             <label class="input-label">Código Postal</label>
@@ -319,7 +359,38 @@
           </div>
         </div>
       </div>
-      <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 1rem;">
+
+      <!-- Payment Method -->
+      <div class="input-group" style="margin-bottom: 20px;">
+        <label class="input-label">Método de Pagamento</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <button type="button" class="btn-stage-size selected" style="padding: 12px 6px;" onclick="this.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); if(window.soundEngine) window.soundEngine.playClick();">Apple Pay</button>
+          <button type="button" class="btn-stage-size" style="padding: 12px 6px;" onclick="this.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); if(window.soundEngine) window.soundEngine.playClick();">Cartão Crédito</button>
+          <button type="button" class="btn-stage-size" style="padding: 12px 6px;" onclick="this.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('selected')); this.classList.add('selected'); if(window.soundEngine) window.soundEngine.playClick();">MB WAY</button>
+        </div>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 14px; padding: 16px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 6px;">
+          <span style="color: var(--text-secondary);">Subtotal:</span>
+          <span id="chk-subtotal">$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 6px; color: #22c55e;">
+          <span>Grail Discount (20% OFF):</span>
+          <span id="chk-discount">-$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 10px; color: #22c55e;">
+          <span>Envio Expresso Prioritário:</span>
+          <span>GRÁTIS</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px dashed var(--border-glass); padding-top: 10px;">
+          <span>Total a Pagar:</span>
+          <span id="chk-total" style="color: var(--theme-primary);">$0.00</span>
+        </div>
+      </div>
+
+      <button id="btn-confirm-order" type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 1rem;">
         Confirmar Compra Segura
       </button>
     </form>

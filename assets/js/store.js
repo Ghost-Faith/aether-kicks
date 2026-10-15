@@ -90,6 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initAuthUI();
   initSoundButton();
   initHamburgerMenu();
+
+  // Handle URL hash direct linking for square grid view or NFC modal
+  if (window.location.hash === '#square-grid-vault' || window.location.hash === '#grid') {
+    if (typeof setCatalogLayout === 'function') setCatalogLayout('grid');
+  } else if (window.location.hash === '#nfc-modal' || window.location.hash === '#nfc') {
+    setTimeout(() => {
+      if (typeof openNFCScanner === 'function') openNFCScanner();
+    }, 250);
+  }
 });
 
 /**
@@ -743,6 +752,14 @@ function initHamburgerMenu() {
 
   btn.addEventListener('click', toggleMenu);
   if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+  const closeBtns = drawer.querySelectorAll('.btn-close-modal, .btn-close-drawer, #btn-close-hamburger, .btn-close-hamburger');
+  closeBtns.forEach(closeBtn => {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeMenu();
+    });
+  });
 
   drawer.querySelectorAll('.hamburger-menu-link, a').forEach(link => {
     link.addEventListener('click', closeMenu);
