@@ -20,32 +20,33 @@
 
   <!-- Fixed Luxury Squircle Navigation -->
   <nav class="store-nav">
-    <!-- Brand Logo -->
-    <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
-      <div class="brand-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
-    </a>
+    <!-- Left Navigation Group (Brand Logo + View Switcher) -->
+    <div class="nav-left">
+      <!-- Brand Logo -->
+      <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+      </a>
 
-    <!-- Center Presentation Mode Switcher (Runway vs Square Grid) -->
-    <div class="nav-center-switcher">
-      <div class="nav-view-switcher" title="Modo de Visualização">
-        <button id="btn-toggle-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway')" title="Modo Passarela Imersiva">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          <span>Runway</span>
-        </button>
-        <button id="btn-toggle-grid" class="btn-view-opt" onclick="setCatalogLayout('grid')" title="Modo Grade de Quadrados">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          <span>Square Grid</span>
-        </button>
+      <!-- Center Presentation Mode Switcher (Runway vs Square Grid) -->
+      <div class="nav-center-switcher">
+        <div class="nav-view-switcher" title="Modo de Visualização">
+          <button id="btn-toggle-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway')" title="Modo Passarela Imersiva">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span>Runway</span>
+          </button>
+          <button id="btn-toggle-grid" class="btn-view-opt" onclick="setCatalogLayout('grid')" title="Modo Grade de Quadrados">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Square Grid</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Desktop Navigation Links (hidden on compact screens) -->
     <ul class="nav-links">
-      <li><a href="#section-chicago" class="nav-link" onclick="if(window.setCatalogLayout) setCatalogLayout('runway')">Vault</a></li>
-      <li><a href="#square-grid-vault" class="nav-link" onclick="if(window.setCatalogLayout) setCatalogLayout('grid')">Archive</a></li>
       <li><a href="#customizer-lab" class="nav-link">Bespoke Lab</a></li>
       <li><a href="#hype-drops" class="nav-link">Drops</a></li>
       <li><a href="#market-analytics" class="nav-link">Analytics</a></li>

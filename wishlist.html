@@ -20,12 +20,15 @@
 
   <!-- Fixed Luxury Squircle Navigation -->
   <nav class="store-nav">
-    <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
-      <div class="brand-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
-    </a>
+    <!-- Left Navigation Group (Brand Logo) -->
+    <div class="nav-left">
+      <a href="index.html" class="nav-brand" title="AETHER KICKS Archive">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+      </a>
+    </div>
 
     <!-- Desktop Navigation Links -->
     <ul class="nav-links">
@@ -398,52 +401,55 @@
 
   <!-- Footer -->
   <footer class="store-footer">
-    <div class="footer-grid">
-      <div class="footer-brand-col">
-        <div class="footer-brand">
-          <div class="footer-brand-icon">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand" style="text-decoration: none;">
+          <div class="brand-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
-          <span>AETHER ARCHIVE</span>
-        </div>
-        <p class="footer-desc">
-          O primeiro arquivo digital forense dedicado à preservação, verificação física e criação bespoke de sneakers Air Jordan 1 de 1985.
-        </p>
+          <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+        </a>
+        <p>A plataforma definitiva de custódia e criação para colecionadores de ténis raros. Experiência de visualização imersiva, autenticação forense em 14 pontos físicos e preservação deadstock com chip NFC criptográfico.</p>
       </div>
 
       <div class="footer-col">
-        <h5>Arquivo & Atelier</h5>
+        <h5>Runway & Coleção</h5>
         <ul>
-          <li><a href="index.html#section-chicago">Passarela 1985</a></li>
-          <li><a href="index.html#square-grid-vault">Coleção Grade</a></li>
-          <li><a href="index.html#customizer-lab">Atelier Bespoke 1-of-1</a></li>
-          <li><a href="wishlist.html">Cofre Wishlist</a></li>
+          <li><a href="index.html#section-chicago">Chicago 1985 (Varsity Red)</a></li>
+          <li><a href="index.html#section-purple">Court Purple 2.0 (Violet)</a></li>
+          <li><a href="index.html#section-blue">University Blue (Sky)</a></li>
+          <li><a href="index.html#section-green">Pine Green 2.0 (Emerald)</a></li>
+          <li><a href="index.html#square-grid-vault">Catálogo The Vault (Grid)</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h5>Sobre Nós</h5>
+        <h5>Atelier & Autenticação</h5>
         <ul>
-          <li><a href="about.html">O Manifesto do Atelier</a></li>
-          <li><a href="about.html#origens">De Onde Viemos</a></li>
+          <li><a href="about.html" style="color: var(--theme-primary); font-weight: 700;">Sobre Nós / O Manifesto</a></li>
+          <li><a href="about.html#origens">De Onde Viemos (Timeline)</a></li>
           <li><a href="about.html#missao">A Nossa Missão</a></li>
-          <li><a href="profile.html">Configurar Perfil</a></li>
+          <li><a href="about.html#pilares">Os 4 Pilares Forenses</a></li>
+          <li><a href="javascript:void(0)" onclick="openNFCScanner()">Verificador NFC</a></li>
+          <li><a href="about.html#contacto-atelier">Collector Concierge</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h5>Membros VIP</h5>
+        <h5>Área do Colecionador</h5>
         <ul>
-          <li><a href="profile.html">Painel de Membro</a></li>
+          <li><a href="profile.html" style="color: var(--theme-primary); font-weight: 700;">Painel de Colecionador / Perfil</a></li>
+          <li><a href="wishlist.html" style="color: var(--theme-primary); font-weight: 700;">A Minha Wishlist ❤️</a></li>
           <li><a href="login.html">Sign In (Chicago)</a></li>
           <li><a href="register.html">Registar Conta (Court Purple)</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('Use o código GRAIL20 no carrinho para 20% de desconto.')">Código Ativo: GRAIL20</a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
       <span>© 2026 AETHER KICKS ARCHIVE. Lisboa, Portugal. Todos os direitos reservados.</span>
-      <span>Preservação de Silhuetas OG com Engenharia Web Moderna.</span>
+      <span>Artesanato Bespoke, Proteção Criptográfica & Custódia Deadstock.</span>
     </div>
   </footer>
 
