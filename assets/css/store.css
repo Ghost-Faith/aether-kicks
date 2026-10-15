@@ -8,7 +8,10 @@
   position: fixed;
   top: 16px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
+  -webkit-transform: translateX(-50%) translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   width: calc(100% - 32px);
   max-width: 1400px;
   height: 64px;
@@ -734,6 +737,10 @@
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Giant Watermark Typography in Background of Each Section */
@@ -3460,6 +3467,10 @@
 }
 
 @media (max-width: 768px) {
+  .noise-overlay {
+    display: none !important;
+  }
+
   .runway-sidebar-dots {
     display: none;
   }
@@ -3827,13 +3838,51 @@
 /* ==========================================================================
    STRICT MOBILE RESPONSIVENESS DOWN TO 320PX (ZERO OVERFLOW / ZERO RIGHT BAR)
    ========================================================================== */
-@media (max-width: 640px) {
+/* Global zero-overflow guards for key sections */
+#market-analytics,
+#square-grid-vault,
+#about-atelier,
+#about-us,
+#hype-drops,
+.square-grid-container,
+.square-cards-grid,
+.square-sneaker-card,
+.analytics-card,
+.drop-hud-card,
+.about-stats-panel {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#market-analytics,
+#hype-drops,
+#about-us,
+#about-atelier,
+#square-grid-vault {
+  scroll-margin-top: 90px;
+}
+
+@media (max-width: 680px) {
   .customizer-section,
-  .drop-hud-section,
   .analytics-section,
   .about-archive-section,
+  .about-section,
   .market-analytics-section {
     padding: 60px 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .drop-hud-section {
+    padding-top: 100px !important;
+    padding-bottom: 60px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    scroll-margin-top: 90px;
   }
 
   .customizer-preview-box {
@@ -3849,6 +3898,274 @@
   .drop-hud-card {
     padding: 24px 16px !important;
     border-radius: 20px !important;
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .drop-hud-title,
+  .drop-hud-card h2 {
+    font-size: clamp(1.5rem, 6vw, 2.5rem) !important;
+    line-height: 1.18 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .drop-timer-display {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    margin: 20px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .drop-timer-display .timer-slot {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding: 12px 8px !important;
+    box-sizing: border-box !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+  }
+
+  .drop-timer-display .timer-slot:nth-child(4),
+  .drop-timer-display .timer-slot.timer-slot-ms {
+    display: none !important;
+  }
+
+  .drop-timer-display .timer-num {
+    font-size: clamp(1.2rem, 5vw, 1.6rem) !important;
+    line-height: 1 !important;
+  }
+
+  .drop-timer-display .timer-label {
+    font-size: 0.68rem !important;
+    margin-top: 4px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  /* Market Analytics Section Mobile */
+  .analytics-card {
+    padding: 24px 16px !important;
+    border-radius: 20px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .analytics-card h2 {
+    font-size: clamp(1.4rem, 5.5vw, 2rem) !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .analytics-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin: 20px 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .stat-box {
+    padding: 14px 12px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
+  }
+
+  .stat-label {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.02em !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.3 !important;
+  }
+
+  .stat-val {
+    font-size: clamp(1.15rem, 4.5vw, 1.55rem) !important;
+    margin-top: 4px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.1 !important;
+  }
+
+  .chart-svg-container {
+    height: 190px !important;
+    margin-top: 16px !important;
+    max-width: 100% !important;
+  }
+
+  /* About Atelier & Manifesto Section Mobile */
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+
+  .about-title {
+    font-size: clamp(1.6rem, 6.5vw, 2.8rem) !important;
+    line-height: 1.15 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    margin-bottom: 16px !important;
+  }
+
+  .about-lead {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 24px !important;
+  }
+
+  .about-pillars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pillar-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 18px 16px !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    border-radius: 14px !important;
+  }
+
+  .about-stats-panel {
+    padding: 24px 16px !important;
+    border-radius: 20px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .stats-grid-about {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .stat-about-box {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 12px !important;
+  }
+
+  .stat-about-num {
+    font-size: clamp(1.5rem, 5.5vw, 2.2rem) !important;
+    word-break: break-word !important;
+    line-height: 1.1 !important;
+  }
+
+  .stat-about-label {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+    margin-top: 4px !important;
+  }
+
+  .vault-metrics-banner {
+    padding: 24px 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .metrics-strip-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .metric-strip-item {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 12px !important;
+  }
+
+  .metric-strip-num {
+    font-size: clamp(1.5rem, 5.5vw, 2.2rem) !important;
+    word-break: break-word !important;
+    line-height: 1.1 !important;
+  }
+
+  .metric-strip-label {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+  }
+
+  /* Square Grid Vault Mobile */
+  .square-grid-section {
+    padding: 0 16px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .square-grid-header h2 {
+    font-size: clamp(1.8rem, 7vw, 2.8rem) !important;
+    line-height: 1.15 !important;
+    word-break: break-word !important;
+  }
+
+  .square-cards-grid,
+  .square-grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .square-sneaker-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 20px 16px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .square-card-image-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 1.3 / 1 !important;
+    overflow: hidden !important;
+  }
+
+  .square-card-img {
+    max-width: 240px !important;
+    width: 85% !important;
+    height: auto !important;
+  }
+
+  .square-card-actions {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .btn-card-buy,
+  .btn-card-inspect {
+    min-width: 0 !important;
+    padding: 10px 8px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box !important;
   }
 
   /* Bespoke Customizer Stage & Canvas Mobile Scaling */
@@ -3987,6 +4304,100 @@
   }
 }
 
+@media (max-width: 480px) {
+  .customizer-section,
+  .analytics-section,
+  .about-archive-section,
+  .about-section,
+  .market-analytics-section {
+    padding: 50px 12px !important;
+  }
+
+  .drop-hud-section {
+    padding-top: 100px !important;
+    padding-bottom: 40px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .analytics-card,
+  .drop-hud-card,
+  .about-stats-panel {
+    padding: 18px 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .analytics-stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin: 16px 0 !important;
+  }
+
+  .stat-box {
+    padding: 11px 9px !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-label {
+    font-size: 0.6rem !important;
+  }
+
+  .stat-val {
+    font-size: clamp(1.0rem, 4.2vw, 1.35rem) !important;
+  }
+
+  .stats-grid-about,
+  .metrics-strip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .stat-about-box,
+  .metric-strip-item {
+    padding-left: 10px !important;
+  }
+
+  .stat-about-num,
+  .metric-strip-num {
+    font-size: clamp(1.25rem, 5.2vw, 1.7rem) !important;
+  }
+
+  .stat-about-label,
+  .metric-strip-label {
+    font-size: 0.65rem !important;
+  }
+
+  .drop-timer-display {
+    gap: 6px !important;
+    margin: 16px 0 !important;
+  }
+
+  .drop-timer-display .timer-slot {
+    padding: 10px 8px !important;
+    font-size: 1.3rem !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+    border-radius: 10px !important;
+  }
+
+  .drop-timer-display .timer-num {
+    font-size: 1.3rem !important;
+  }
+
+  .drop-timer-display .timer-label {
+    font-size: 0.62rem !important;
+  }
+
+  .square-grid-section {
+    padding: 0 12px !important;
+  }
+
+  .square-sneaker-card {
+    padding: 18px 12px !important;
+    border-radius: 16px !important;
+  }
+}
+
 @media (max-width: 380px) {
   /* Prevent any element from exceeding 320px viewport */
   html, body {
@@ -4098,8 +4509,14 @@
   }
 
   .customizer-section,
-  .drop-hud-section,
   .square-grid-section {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .drop-hud-section {
+    padding-top: 100px !important;
+    padding-bottom: 30px !important;
     padding-left: 10px !important;
     padding-right: 10px !important;
   }
@@ -4108,6 +4525,39 @@
   .square-sneaker-card,
   .drop-hud-card {
     padding: 18px 12px !important;
+  }
+
+  .drop-timer-display {
+    gap: 5px !important;
+    margin: 14px 0 !important;
+  }
+
+  .drop-timer-display .timer-slot {
+    padding: 8px 6px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+    border-radius: 8px !important;
+  }
+
+  .drop-timer-display .timer-num {
+    font-size: 1.15rem !important;
+  }
+
+  .drop-timer-display .timer-label {
+    font-size: 0.58rem !important;
+  }
+
+  .stat-box {
+    padding: 9px 7px !important;
+  }
+
+  .stat-val {
+    font-size: 1.05rem !important;
+  }
+
+  .stat-about-num,
+  .metric-strip-num {
+    font-size: 1.25rem !important;
   }
 
   .customizer-controls-box {

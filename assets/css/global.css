@@ -125,7 +125,7 @@ button {
   outline: none;
 }
 
-/* Ambient Backdrop Glow Orbs */
+/* Ambient Backdrop Glow Orbs - GPU Accelerated */
 .ambient-glow-layer {
   position: fixed;
   inset: 0;
@@ -134,6 +134,11 @@ button {
   overflow: hidden;
   opacity: 0.75;
   transition: opacity 0.8s ease;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
 }
 
 .glow-orb-primary {
@@ -145,7 +150,11 @@ button {
   border-radius: 50%;
   background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%);
   filter: blur(80px);
-  transition: background 1s ease, transform 1s ease;
+  -webkit-filter: blur(80px);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   will-change: transform;
   animation: orbDrift 14s ease-in-out infinite alternate;
 }
@@ -159,17 +168,22 @@ button {
   border-radius: 50%;
   background: radial-gradient(circle, var(--theme-glow-soft) 0%, transparent 70%);
   filter: blur(90px);
-  transition: background 1s ease;
+  -webkit-filter: blur(90px);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
   animation: orbDrift 18s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes orbDrift {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, -50px) scale(1.1); }
-  100% { transform: translate(-30px, 30px) scale(0.95); }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(40px, -50px, 0) scale(1.1); }
+  100% { transform: translate3d(-30px, 30px, 0) scale(0.95); }
 }
 
-/* Noise Texture Overlay for Gritty Luxury Touch */
+/* Noise Texture Overlay for Gritty Luxury Touch - Desktop GPU Composited */
 .noise-overlay {
   position: fixed;
   inset: 0;
@@ -177,6 +191,17 @@ button {
   z-index: 1;
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Disable expensive SVG feTurbulence filter on mobile / touch devices to prevent scroll flickering & layout repaints */
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
+  .noise-overlay {
+    display: none !important;
+  }
 }
 
 /* Glassmorphism Containers */

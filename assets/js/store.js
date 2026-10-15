@@ -49,7 +49,36 @@ const COLOR_STOPS = [
   }
 ];
 
+// State & Layout Cache for Zero-Thrashing Continuous Color Transitions
 let ticking = false;
+let cachedSectionCenters = [];
+let cachedRootEl = null;
+let cachedOrb1El = null;
+let cachedOrb2El = null;
+let lastAppliedTheme = {
+  r: -999,
+  g: -999,
+  b: -999,
+  sr: -999,
+  sg: -999,
+  sb: -999,
+  bgr: -999,
+  bgg: -999,
+  bgb: -999
+};
+
+/**
+ * Cache section centers once to eliminate forced synchronous reflow (getBoundingClientRect)
+ * during high-frequency mobile and desktop touch/wheel scroll events.
+ */
+function cacheSectionPositions(sections) {
+  if (!sections || sections.length === 0) return;
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  cachedSectionCenters = sections.map(sec => {
+    const rect = sec.getBoundingClientRect();
+    return scrollY + rect.top + rect.height / 2;
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   initGradualColorScroll();
@@ -68,6 +97,15 @@ document.addEventListener('DOMContentLoaded', () => {
 function initGradualColorScroll() {
   const sections = Array.from(document.querySelectorAll('.runway-section'));
   const dots = Array.from(document.querySelectorAll('.runway-dot'));
+  if (sections.length < 2) return;
+
+  // Cache static elements
+  cachedRootEl = document.documentElement;
+  cachedOrb1El = document.querySelector('.glow-orb-primary');
+  cachedOrb2El = document.querySelector('.glow-orb-secondary');
+
+  // Pre-calculate positions once
+  cacheSectionPositions(sections);
 
   function onScroll() {
     if (!ticking) {
@@ -79,8 +117,34 @@ function initGradualColorScroll() {
     }
   }
 
+  // Bind passive listeners
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll, { passive: true });
+
+  // Recalculate cached offsets only when viewport geometry changes
+  window.addEventListener('resize', () => {
+    cacheSectionPositions(sections);
+    onScroll();
+  }, { passive: true });
+
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      cacheSectionPositions(sections);
+      onScroll();
+    }, 150);
+  }, { passive: true });
+
+  window.addEventListener('load', () => {
+    cacheSectionPositions(sections);
+    onScroll();
+  });
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      cacheSectionPositions(sections);
+      onScroll();
+    });
+  }
+
   // Initial run
   updateColorsContinuous(sections, dots);
 
@@ -100,15 +164,17 @@ function initGradualColorScroll() {
 function updateColorsContinuous(sections, dots) {
   if (sections.length < 2) return;
 
-  const scrollY = window.scrollY;
-  const vh = window.innerHeight;
+  // Fallback if cache not initialized
+  if (!cachedSectionCenters || cachedSectionCenters.length !== sections.length) {
+    cacheSectionPositions(sections);
+  }
+
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const vh = window.innerHeight || 800;
   const currentCenter = scrollY + vh / 2;
 
-  // Calculate the vertical center of each runway section
-  const sectionCenters = sections.map(sec => {
-    const rect = sec.getBoundingClientRect();
-    return scrollY + rect.top + rect.height / 2;
-  });
+  // Use pre-computed static document center offsets without calling getBoundingClientRect()
+  const sectionCenters = cachedSectionCenters;
 
   let indexA = 0;
   let t = 0;
@@ -151,28 +217,57 @@ function updateColorsContinuous(sections, dots) {
   const bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
   const bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
 
-  const root = document.documentElement;
-  root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
-  root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
-  root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
-  root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
-  root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-  root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
-  document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+  // Throttle updates: only mutate CSS custom properties if RGB values shifted by at least 2 units or hit edge boundary
+  const dr = Math.abs(r - lastAppliedTheme.r);
+  const dg = Math.abs(g - lastAppliedTheme.g);
+  const db = Math.abs(b - lastAppliedTheme.b);
+  const dsr = Math.abs(sr - lastAppliedTheme.sr);
+  const dsg = Math.abs(sg - lastAppliedTheme.sg);
+  const dsb = Math.abs(sb - lastAppliedTheme.sb);
+  const dbgr = Math.abs(bgr - lastAppliedTheme.bgr);
+  const dbgg = Math.abs(bgg - lastAppliedTheme.bgg);
+  const dbgb = Math.abs(bgb - lastAppliedTheme.bgb);
 
-  // Update Ambient Atmospheric Orbs
-  const orb1 = document.querySelector('.glow-orb-primary');
-  const orb2 = document.querySelector('.glow-orb-secondary');
-  if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
-  if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
+  const hasAnyDiff = (dr > 0 || dg > 0 || db > 0 || dsr > 0 || dsg > 0 || dsb > 0 || dbgr > 0 || dbgg > 0 || dbgb > 0);
+  const hasThresholdDiff = (dr >= 2 || dg >= 2 || db >= 2 || dsr >= 2 || dsg >= 2 || dsb >= 2 || dbgr >= 2 || dbgg >= 2 || dbgb >= 2);
+  const isEdge = (t === 0 || t === 1);
 
-  // Highlight active dot
+  // Only update if colors actually changed AND (it crossed the 2-unit threshold OR snapped precisely at an edge)
+  const shouldUpdateTheme = hasAnyDiff && (hasThresholdDiff || isEdge);
+
+  if (shouldUpdateTheme) {
+    lastAppliedTheme.r = r;
+    lastAppliedTheme.g = g;
+    lastAppliedTheme.b = b;
+    lastAppliedTheme.sr = sr;
+    lastAppliedTheme.sg = sg;
+    lastAppliedTheme.sb = sb;
+    lastAppliedTheme.bgr = bgr;
+    lastAppliedTheme.bgg = bgg;
+    lastAppliedTheme.bgb = bgb;
+
+    const root = cachedRootEl || (cachedRootEl = document.documentElement);
+    root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+    root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+    root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+    document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+
+    // Update Ambient Atmospheric Orbs
+    if (!cachedOrb1El) cachedOrb1El = document.querySelector('.glow-orb-primary');
+    if (!cachedOrb2El) cachedOrb2El = document.querySelector('.glow-orb-secondary');
+    if (cachedOrb1El) cachedOrb1El.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
+    if (cachedOrb2El) cachedOrb2El.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
+  }
+
+  // Highlight active dot without redundant DOM mutations
   const closestIndex = t < 0.5 ? indexA : indexA + 1;
   dots.forEach((dot, idx) => {
-    if (idx === closestIndex) {
-      dot.classList.add('active');
-    } else {
-      dot.classList.remove('active');
+    const shouldBeActive = (idx === closestIndex);
+    if (dot.classList.contains('active') !== shouldBeActive) {
+      dot.classList.toggle('active', shouldBeActive);
     }
   });
 }

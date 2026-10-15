@@ -1,0 +1,6 @@
+scratch/
+*.log
+*.ps1
+.vscode/
+.DS_Store
+Thumbs.db

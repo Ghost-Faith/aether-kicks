@@ -1,0 +1,5 @@
+scratch/
+.git/
+.vscode/
+*.ps1
+*.log

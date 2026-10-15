@@ -69,8 +69,8 @@
         </a>
       </div>
 
-      <!-- Hamburger Menu Toggle -->
-      <button id="btn-hamburger-toggle" class="btn-hamburger" title="Menu do Arquivo" aria-label="Toggle Menu">
+      <!-- Luxury Animated Hamburger Menu Toggle -->
+      <button id="btn-hamburger-toggle" class="btn-hamburger" title="Archive Menu" aria-label="Toggle Navigation Menu">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -78,27 +78,54 @@
     </div>
   </nav>
 
-  <!-- Mobile Drawer -->
-  <div id="hamburger-backdrop" class="hamburger-backdrop"></div>
+  <!-- Luxury Slide-Out Hamburger Drawer & Backdrop -->
+  <div id="hamburger-backdrop" class="modal-backdrop"></div>
   <aside id="hamburger-drawer" class="hamburger-drawer">
-    <div class="drawer-header">
-      <div class="drawer-brand">
-        <div class="drawer-brand-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <div class="hamburger-drawer-header">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
-        <span>AETHER ARCHIVE</span>
+        <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
       </div>
-      <button class="drawer-close-btn" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+      <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer;" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
     </div>
 
-    <ul class="hamburger-nav-links">
-      <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span>Runway Vault</a></li>
-      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>Square Grid</a></li>
+    <!-- Presentation Mode Toggle inside Drawer -->
+    <div style="padding: 16px 20px 8px 20px; border-bottom: 1px solid var(--border-glass);">
+      <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Presentation Mode</div>
+      <div class="nav-view-switcher" style="display: flex; width: 100%;">
+        <button id="drawer-btn-runway" class="btn-view-opt active" style="flex: 1;" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#section-chicago'; }">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Runway</span>
+        </button>
+        <button id="drawer-btn-grid" class="btn-view-opt" style="flex: 1;" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#square-grid-vault'; }">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Square Grid</span>
+        </button>
+      </div>
+    </div>
+
+    <ul class="hamburger-menu-links">
+      <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span>Runway Archive</a></li>
+      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault (Grid)</a></li>
       <li><a href="index.html#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
-      <li><a href="wishlist.html" class="hamburger-menu-link active" style="color: #ef4444;"><span class="menu-idx">04</span>❤️ Wishlist (<span class="wishlist-badge-count">2</span>)</a></li>
-      <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">05</span>Sobre Nós / About</a></li>
-      <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">06</span>Configurar Perfil</a></li>
+      <li><a href="index.html#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
+      <li><a href="index.html#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
+      <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span>About Us / Sobre Nós</a></li>
+      <li><a href="wishlist.html" class="hamburger-menu-link active" style="color: #ef4444;"><span class="menu-idx" style="color: #ef4444;">07</span>A Tua Wishlist ❤️</a></li>
+      <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span>Perfil de Colecionador</a></li>
+      <li><a href="javascript:void(0)" onclick="if(window.openNFCScanner) openNFCScanner(); else location.href='index.html#nfc';" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
     </ul>
+
+    <div class="hamburger-drawer-footer">
+      <div style="display: flex; gap: 8px;">
+        <a href="login.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Sign In</a>
+        <a href="register.html" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Join Vault</a>
+        <a href="profile.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Perfil</a>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 10px;">AUTHENTICATED SNEAKERHEAD ARCHIVE © 2026</p>
+    </div>
   </aside>
 
   <!-- Main Content -->
