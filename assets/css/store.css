@@ -358,6 +358,8 @@
     gap: 8px;
     height: 56px;
     top: 10px;
+    transition: none !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
   }
 
   /* Presentation Mode is available in the luxury slide-out drawer */
@@ -3014,6 +3016,13 @@
   box-shadow: 0 0 20px var(--theme-glow);
 }
 
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
+  .custom-cursor-dot,
+  .custom-cursor-ring {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
    ANIMATED HAMBURGER MENU & DRAWER
    ========================================================================== */
@@ -3489,6 +3498,24 @@
 
   .footer-inner {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Eliminate heavy dynamic transitions on fixed/backdrop-filter elements on mobile to prevent scroll flicker */
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
+  .store-nav {
+    transition: none !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .buy-card {
+    transition: none !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .buy-card::before,
+  .brand-icon {
+    transition: none !important;
   }
 }
 

@@ -55,17 +55,19 @@ let cachedSectionCenters = [];
 let cachedRootEl = null;
 let cachedOrb1El = null;
 let cachedOrb2El = null;
+let activeSectionIndex = -1;
 let lastAppliedTheme = {
   r: -999,
   g: -999,
   b: -999,
   sr: -999,
   sg: -999,
-  sb: -999,
-  bgr: -999,
-  bgg: -999,
-  bgb: -999
+  sb: -999
 };
+
+function isMobileDevice() {
+  return window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+}
 
 /**
  * Cache section centers once to eliminate forced synchronous reflow (getBoundingClientRect)
@@ -122,12 +124,16 @@ function initGradualColorScroll() {
 
   // Recalculate cached offsets only when viewport geometry changes
   window.addEventListener('resize', () => {
+    activeSectionIndex = -1;
+    lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
     cacheSectionPositions(sections);
     onScroll();
   }, { passive: true });
 
   window.addEventListener('orientationchange', () => {
     setTimeout(() => {
+      activeSectionIndex = -1;
+      lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
       cacheSectionPositions(sections);
       onScroll();
     }, 150);
@@ -196,6 +202,51 @@ function updateColorsContinuous(sections, dots) {
     }
   }
 
+  const closestIndex = t < 0.5 ? indexA : Math.min(indexA + 1, COLOR_STOPS.length - 1);
+  const isMobile = isMobileDevice();
+
+  if (isMobile) {
+    // -------------------------------------------------------------------------
+    // MOBILE / TOUCH OPTIMIZATION: Adaptive Section-Snapped Theme Transitioning
+    // Updates theme CSS variables ONLY when crossing into a new section boundary.
+    // Zero style recalculations during scrolling inside sections.
+    // Eliminates all smartphone scroll stutter, tile drops, and GPU compositor flicker!
+    // -------------------------------------------------------------------------
+    if (closestIndex !== activeSectionIndex) {
+      activeSectionIndex = closestIndex;
+      const stop = COLOR_STOPS[closestIndex] || COLOR_STOPS[0];
+      const [r, g, b] = stop.primary;
+      const [sr, sg, sb] = stop.secondary;
+
+      const root = cachedRootEl || (cachedRootEl = document.documentElement);
+      root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+      root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+      root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+      root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+      root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+
+      // Update ambient atmospheric orbs ONLY on section change (eliminates per-frame Gaussian blur re-rasterization)
+      if (!cachedOrb1El) cachedOrb1El = document.querySelector('.glow-orb-primary');
+      if (!cachedOrb2El) cachedOrb2El = document.querySelector('.glow-orb-secondary');
+      if (cachedOrb1El) cachedOrb1El.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
+      if (cachedOrb2El) cachedOrb2El.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
+
+      // Update active dot without redundant DOM mutations
+      dots.forEach((dot, idx) => {
+        const shouldBeActive = (idx === closestIndex);
+        if (dot.classList.contains('active') !== shouldBeActive) {
+          dot.classList.toggle('active', shouldBeActive);
+        }
+      });
+    }
+    return;
+  }
+
+  // ---------------------------------------------------------------------------
+  // DESKTOP: Smooth Gradual Lerping with Optimized Thresholds (>= 6)
+  // Completely avoids setting document.body.style.backgroundColor on scroll to prevent full-page repaint strobe!
+  // ---------------------------------------------------------------------------
   // Smoothstep easing for silky-smooth transition curve
   const easeT = t * t * (3 - 2 * t);
 
@@ -213,26 +264,19 @@ function updateColorsContinuous(sections, dots) {
   const sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
   const sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
 
-  const bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
-  const bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
-  const bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
-
-  // Throttle updates: only mutate CSS custom properties if RGB values shifted by at least 2 units or hit edge boundary
+  // Throttle updates: only mutate CSS custom properties if RGB values shifted by at least 6 units or hit edge boundary
   const dr = Math.abs(r - lastAppliedTheme.r);
   const dg = Math.abs(g - lastAppliedTheme.g);
   const db = Math.abs(b - lastAppliedTheme.b);
   const dsr = Math.abs(sr - lastAppliedTheme.sr);
   const dsg = Math.abs(sg - lastAppliedTheme.sg);
   const dsb = Math.abs(sb - lastAppliedTheme.sb);
-  const dbgr = Math.abs(bgr - lastAppliedTheme.bgr);
-  const dbgg = Math.abs(bgg - lastAppliedTheme.bgg);
-  const dbgb = Math.abs(bgb - lastAppliedTheme.bgb);
 
-  const hasAnyDiff = (dr > 0 || dg > 0 || db > 0 || dsr > 0 || dsg > 0 || dsb > 0 || dbgr > 0 || dbgg > 0 || dbgb > 0);
-  const hasThresholdDiff = (dr >= 2 || dg >= 2 || db >= 2 || dsr >= 2 || dsg >= 2 || dsb >= 2 || dbgr >= 2 || dbgg >= 2 || dbgb >= 2);
+  const hasAnyDiff = (dr > 0 || dg > 0 || db > 0 || dsr > 0 || dsg > 0 || dsb > 0);
+  const hasThresholdDiff = (dr >= 6 || dg >= 6 || db >= 6 || dsr >= 6 || dsg >= 6 || dsb >= 6);
   const isEdge = (t === 0 || t === 1);
 
-  // Only update if colors actually changed AND (it crossed the 2-unit threshold OR snapped precisely at an edge)
+  // Only update if colors actually changed AND (it crossed the 6-unit threshold OR snapped precisely at an edge)
   const shouldUpdateTheme = hasAnyDiff && (hasThresholdDiff || isEdge);
 
   if (shouldUpdateTheme) {
@@ -242,9 +286,6 @@ function updateColorsContinuous(sections, dots) {
     lastAppliedTheme.sr = sr;
     lastAppliedTheme.sg = sg;
     lastAppliedTheme.sb = sb;
-    lastAppliedTheme.bgr = bgr;
-    lastAppliedTheme.bgg = bgg;
-    lastAppliedTheme.bgb = bgb;
 
     const root = cachedRootEl || (cachedRootEl = document.documentElement);
     root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
@@ -253,7 +294,9 @@ function updateColorsContinuous(sections, dots) {
     root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
     root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
     root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
-    document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+
+    // Note: document.body.style.backgroundColor is NEVER mutated on scroll!
+    // Body maintains its steady dark luxury background (var(--bg-dark)), while atmospheric orbs provide ambient color.
 
     // Update Ambient Atmospheric Orbs
     if (!cachedOrb1El) cachedOrb1El = document.querySelector('.glow-orb-primary');
@@ -263,7 +306,6 @@ function updateColorsContinuous(sections, dots) {
   }
 
   // Highlight active dot without redundant DOM mutations
-  const closestIndex = t < 0.5 ? indexA : indexA + 1;
   dots.forEach((dot, idx) => {
     const shouldBeActive = (idx === closestIndex);
     if (dot.classList.contains('active') !== shouldBeActive) {

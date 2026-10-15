@@ -197,9 +197,40 @@ button {
   -webkit-backface-visibility: hidden;
 }
 
-/* Disable expensive SVG feTurbulence filter on mobile / touch devices to prevent scroll flickering & layout repaints */
+/* Mobile & Touch Performance: Eliminate scroll flickering, GPU compositing lag & full-page repaints */
 @media (max-width: 768px), (hover: none) and (pointer: coarse) {
+  body {
+    background-attachment: scroll !important;
+    transition: none !important;
+    background-color: var(--bg-dark) !important;
+  }
+
   .noise-overlay {
+    display: none !important;
+  }
+
+  /* Scale down ambient glow orbs & reduce heavy Gaussian blur convolutions */
+  .glow-orb-primary,
+  .glow-orb-secondary {
+    width: 320px !important;
+    height: 320px !important;
+    filter: blur(40px) !important;
+    -webkit-filter: blur(40px) !important;
+    opacity: 0.55 !important;
+  }
+
+  /* Remove slow, conflicting transitions on elements using dynamic theme variables */
+  .glass-panel,
+  .btn-primary,
+  .btn-secondary,
+  .btn-icon,
+  .badge-pill,
+  .form-input {
+    transition: none !important;
+  }
+
+  .custom-cursor-dot,
+  .custom-cursor-ring {
     display: none !important;
   }
 }
@@ -448,7 +479,7 @@ button {
 }
 
 /* Hide desktop custom cursor on mobile / touch devices to avoid phantom width & artifacts */
-@media (max-width: 768px), (hover: none) {
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
   .custom-cursor-dot,
   .custom-cursor-ring {
     display: none !important;
