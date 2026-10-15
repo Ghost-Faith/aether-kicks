@@ -1017,16 +1017,19 @@
 
   .hamburger-menu-link {
     font-family: var(--font-display) !important;
-    font-size: clamp(0.90rem, 3.2vw, 1.0rem) !important;
+    font-size: clamp(0.85rem, 2.9vw, 0.95rem) !important;
     font-weight: 800 !important;
-    letter-spacing: -0.01em !important;
+    letter-spacing: -0.02em !important;
     padding: 7px 10px !important;
     gap: 8px !important;
     white-space: nowrap !important;
   }
 
   .hamburger-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
     padding: 24px 16px !important;
+    overflow-x: hidden !important;
   }
 }
 
