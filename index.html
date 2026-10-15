@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHER KICKS | Premium Sneakerhead Archive & Dynamic Runway</title>
+  <link rel="stylesheet" href="assets/css/global.css">
+  <link rel="stylesheet" href="assets/css/store.css">
+  <link rel="stylesheet" href="assets/css/profile-wishlist.css">
+  <link rel="icon" href="assets/images/jordan-chicago.png" type="image/png">
+</head>
+<body>
+
+  <!-- Ambient Dynamic Lighting Layer -->
+  <div class="ambient-glow-layer">
+    <div class="glow-orb-primary"></div>
+    <div class="glow-orb-secondary"></div>
+  </div>
+  <div class="noise-overlay"></div>
+
+  <!-- Fixed Luxury Squircle Navigation -->
+  <nav class="store-nav">
+    <!-- Brand Logo -->
+    <a href="#section-chicago" class="nav-brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+    </a>
+
+    <!-- Center Presentation Mode Switcher (Runway vs Square Grid) -->
+    <div class="nav-center-switcher">
+      <div class="nav-view-switcher" title="Modo de Visualização">
+        <button id="btn-toggle-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway')" title="Modo Passarela Imersiva">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Runway</span>
+        </button>
+        <button id="btn-toggle-grid" class="btn-view-opt" onclick="setCatalogLayout('grid')" title="Modo Grade de Quadrados">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Square Grid</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Links (hidden on compact screens) -->
+    <ul class="nav-links">
+      <li><a href="#hype-drops" class="nav-link">Drops</a></li>
+      <li><a href="#customizer-lab" class="nav-link">Bespoke</a></li>
+      <li><a href="#market-analytics" class="nav-link">Analytics</a></li>
+      <li><a href="about.html" class="nav-link">About Us</a></li>
+    </ul>
+
+    <!-- Right Header Actions -->
+    <div class="nav-actions">
+      <!-- Sound Toggle -->
+      <button id="btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
+        <div class="sound-bars">
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+        </div>
+        <span>AUDIO</span>
+      </button>
+
+      <!-- Wishlist Button -->
+      <a href="wishlist.html" class="btn-nav-wishlist" title="A tua Wishlist de Grails">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>WISHLIST</span>
+        <span class="wishlist-badge-count" style="display: none;">0</span>
+      </a>
+
+      <!-- Cart Button -->
+      <button class="btn-nav-cart" onclick="window.cartManager.openCart()" title="Ver Saco de Colecionador">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>BAG</span>
+        <span class="cart-badge-count" style="display: none;">0</span>
+      </button>
+
+      <!-- Auth Action Links -->
+      <div class="nav-auth-group">
+        <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;" title="Painel do Colecionador">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Perfil</span>
+        </a>
+      </div>
+
+      <!-- Luxury Animated Hamburger Menu Toggle -->
+      <button id="btn-hamburger-toggle" class="btn-hamburger" title="Archive Menu" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Luxury Slide-Out Hamburger Drawer & Backdrop -->
+  <div id="hamburger-backdrop" class="modal-backdrop"></div>
+  <aside id="hamburger-drawer" class="hamburger-drawer">
+    <div class="hamburger-drawer-header">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+      </div>
+      <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer;" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+    </div>
+
+    <!-- Presentation Mode Toggle inside Drawer -->
+    <div style="padding: 16px 20px 8px 20px; border-bottom: 1px solid var(--border-glass);">
+      <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Presentation Mode</div>
+      <div class="nav-view-switcher" style="display: flex; width: 100%;">
+        <button id="drawer-btn-runway" class="btn-view-opt active" style="flex: 1;" onclick="setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          <span>Runway</span>
+        </button>
+        <button id="drawer-btn-grid" class="btn-view-opt" style="flex: 1;" onclick="setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Square Grid</span>
+        </button>
+      </div>
+    </div>
+
+    <ul class="hamburger-menu-links">
+      <li><a href="#section-chicago" class="hamburger-menu-link" onclick="setCatalogLayout('runway')"><span class="menu-idx">01</span>Runway Archive</a></li>
+      <li><a href="javascript:void(0)" onclick="setCatalogLayout('grid')" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault (Grid)</a></li>
+      <li><a href="#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
+      <li><a href="#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
+      <li><a href="#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
+      <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span>About Us / Sobre Nós</a></li>
+      <li><a href="wishlist.html" class="hamburger-menu-link"><span class="menu-idx">07</span>A Tua Wishlist ❤️</a></li>
+      <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span>Perfil de Colecionador</a></li>
+      <li><a href="javascript:void(0)" onclick="openNFCScanner()" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
+    </ul>
+
+    <div class="hamburger-drawer-footer">
+      <div style="display: flex; gap: 8px;">
+        <a href="login.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Sign In</a>
+        <a href="register.html" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Join Vault</a>
+        <a href="profile.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Perfil</a>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 10px;">AUTHENTICATED SNEAKERHEAD ARCHIVE © 2026</p>
+    </div>
+  </aside>
+
+  <!-- Side Runway Dots (Quick Colorway Jump) -->
+  <div class="runway-sidebar-dots">
+    <div class="runway-dot active" data-target="section-chicago" data-tooltip="Chicago (Varsity Red)" style="--dot-color: #dc2626;"></div>
+    <div class="runway-dot" data-target="section-purple" data-tooltip="Court Purple 2.0" style="--dot-color: #9333ea;"></div>
+    <div class="runway-dot" data-target="section-blue" data-tooltip="University Blue" style="--dot-color: #0284c7;"></div>
+    <div class="runway-dot" data-target="section-green" data-tooltip="Pine Green 2.0" style="--dot-color: #16a34a;"></div>
+    <div class="runway-dot" data-target="section-orange" data-tooltip="Shattered Backboard" style="--dot-color: #ea580c;"></div>
+    <div class="runway-dot" data-target="section-shadow" data-tooltip="Shadow 2.0 Stealth" style="--dot-color: #64748b;"></div>
+  </div>
+
+  <!-- ==========================================================================
+       SQUARE GRID VAULT ARCHIVE (ALTERNATIVE PRESENTATION VIEW)
+       ========================================================================== -->
+  <section id="square-grid-vault" class="square-grid-section">
+    <div class="square-grid-header">
+      <span class="badge-pill active" style="margin-bottom: 12px; display: inline-flex;">CATALOG ARCHIVE</span>
+      <h2>THE GRAIL VAULT</h2>
+      <p>Explore our authenticated high-top lineage in a clean square grid format or switch back to the immersive colorway runway anytime.</p>
+    </div>
+
+    <div class="square-cards-grid">
+      <!-- Card 1: Chicago -->
+      <article class="square-sneaker-card" style="--card-color: #dc2626; --card-glow: rgba(220, 38, 38, 0.4);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 01 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">1985 / 2026</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="chicago" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-chicago')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-chicago.png" alt="Air Jordan 1 High Chicago" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 1 Retro High OG</h3>
+          <div class="square-card-colorway">CHICAGO (VARSITY RED)</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$480</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('chicago')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-chicago')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: Court Purple -->
+      <article class="square-sneaker-card" style="--card-color: #9333ea; --card-glow: rgba(147, 51, 234, 0.4);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 02 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">2020 / 2026</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="purple" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-purple')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-purple.png" alt="Air Jordan 1 High Court Purple" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 1 Retro High OG</h3>
+          <div class="square-card-colorway">COURT PURPLE 2.0</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$365</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('purple')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-purple')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: University Blue -->
+      <article class="square-sneaker-card" style="--card-color: #0284c7; --card-glow: rgba(2, 132, 199, 0.4);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 03 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">2021 / 2026</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="blue" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-blue')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-blue.png" alt="Air Jordan 1 High University Blue" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 1 Retro High OG</h3>
+          <div class="square-card-colorway">UNIVERSITY BLUE</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$395</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('blue')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-blue')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4: Pine Green -->
+      <article class="square-sneaker-card" style="--card-color: #16a34a; --card-glow: rgba(22, 163, 74, 0.4);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 04 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">2020 / 2026</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="green" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-green')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-green.png" alt="Air Jordan 1 High Pine Green" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 1 Retro High OG</h3>
+          <div class="square-card-colorway">PINE GREEN 2.0</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$340</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('green')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-green')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 5: Shattered Backboard -->
+      <article class="square-sneaker-card" style="--card-color: #ea580c; --card-glow: rgba(234, 88, 12, 0.4);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 05 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">2016 / 2026</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="orange" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-orange')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-orange.png" alt="Air Jordan 1 High Shattered Backboard" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 1 Retro High OG</h3>
+          <div class="square-card-colorway">REVERSE SHATTERED BACKBOARD</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$620</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('orange')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-orange')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 6: Black Cat -->
+      <article class="square-sneaker-card" style="--card-color: #a1a1aa; --card-glow: rgba(161, 161, 170, 0.35);">
+        <div class="square-card-top">
+          <span class="square-card-badge">DROP 06 • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">2006 / 2020</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="shadow" title="Guardar na Wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="jumpToRunwayShoe('section-shadow')" style="cursor: pointer;" title="Ver na Passarela Imersiva">
+          <img src="assets/images/jordan-shadow.png" alt="Air Jordan 4 Black Cat" class="square-card-img" loading="lazy">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">Air Jordan 4 Retro</h3>
+          <div class="square-card-colorway">BLACK CAT (TRIPLE BLACK)</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;">ASK PRICE</span>
+              <span class="square-card-price">$740</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('shadow')">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="jumpToRunwayShoe('section-shadow')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>View Runway</span>
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       SCROLLABLE COLOR-SHIFTING RUNWAY
+       ========================================================================== -->
+  <main class="runway-container">
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 1: AIR JORDAN 1 "CHICAGO" (RED THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-chicago" class="runway-section" data-theme="chicago" data-shoe-id="chicago">
+      <div class="runway-watermark">CHICAGO<br>1985</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 01</span>
+            <span class="badge-pill">DEADSTOCK 100%</span>
+          </div>
+
+          <div class="stage-colorway-label">VARSITY RED / WHITE / BLACK</div>
+          <h1 class="stage-title">AIR JORDAN 1 RETRO HIGH OG</h1>
+          <p class="stage-description">
+            The sneaker that sparked a global revolution. Fined $5,000 per game by David Stern, Michael Jordan wore them anyway. The defining grail of footwear culture.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">555088-101</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">ORIGINAL YEAR</span>
+              <span class="spec-item-val">1985 / 2026</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">UPPER LEATHER</span>
+              <span class="spec-item-val">Full-Grain Vachetta</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">CUSHIONING</span>
+              <span class="spec-item-val">Encapsulated Air</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>OG 1985 HIGH CUT</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>VARSITY RED LEATHER</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>ENCAPSULATED AIR</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-chicago.png" alt="Air Jordan 1 High Chicago" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$480</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+14.8% Market Trend</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="chicago" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-chicago">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Physical Authentication
+              </span>
+              <span>Express 2-Day Air</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 2: AIR JORDAN 1 "COURT PURPLE 2.0" (PURPLE THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-purple" class="runway-section" data-theme="purple" data-shoe-id="purple">
+      <div class="runway-watermark">COURT<br>PURPLE</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 02</span>
+            <span class="badge-pill">ROYAL AMETHYST</span>
+          </div>
+
+          <div class="stage-colorway-label">COURT PURPLE / WHITE / BLACK</div>
+          <h2 class="stage-title">AIR JORDAN 1 RETRO HIGH OG</h2>
+          <p class="stage-description">
+            Regal sophistication blended with asphalt street credibility. Crisp white leather base complemented by rich amethyst purple panels and bold black swoosh geometry.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">555088-500</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">RELEASE ERA</span>
+              <span class="spec-item-val">2020 / 2026</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">LEATHER GRADE</span>
+              <span class="spec-item-val">Tumbled Amethyst</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">OUTSOLE</span>
+              <span class="spec-item-val">Solid Court Violet</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>ROYAL AMETHYST FINISH</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>TUMBLED LEATHER QUARTERS</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>RETRO HIGH SILHOUETTE</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-purple.png" alt="Air Jordan 1 Court Purple" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$365</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+9.4% Market Trend</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="purple" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-purple">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                100% Verified Deadstock
+              </span>
+              <span>Double-Boxed Delivery</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 3: AIR JORDAN 1 "UNIVERSITY BLUE" (BLUE THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-blue" class="runway-section" data-theme="blue" data-shoe-id="blue">
+      <div class="runway-watermark">UNIVERSITY<br>BLUE</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 03</span>
+            <span class="badge-pill">TAR HEEL HERITAGE</span>
+          </div>
+
+          <div class="stage-colorway-label">UNIVERSITY BLUE / OBSIDIAN / WHITE</div>
+          <h2 class="stage-title">AIR JORDAN 1 RETRO HIGH OG</h2>
+          <p class="stage-description">
+            A heartfelt tribute to the basketball cradle of Chapel Hill. Features buttery soft University Blue suede overlays contrasting with clean white leather underlays and obsidian highlights.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">555088-134</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">COLLABORATION</span>
+              <span class="spec-item-val">UNC Tribute</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">MATERIAL</span>
+              <span class="spec-item-val">Premium Soft Nubuck</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">INNER LINING</span>
+              <span class="spec-item-val">Black Satin Padded</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>SOFT BLUE NUBUCK</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>OBSIDIAN CONTRAST</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>TAR HEEL HERITAGE</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-blue.png" alt="Air Jordan 1 University Blue" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$395</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+18.1% Market Trend</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="blue" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-blue">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                UNC Verified Deadstock
+              </span>
+              <span>Express 2-Day Air</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 4: AIR JORDAN 1 "PINE GREEN 2.0" (GREEN THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-green" class="runway-section" data-theme="green" data-shoe-id="green">
+      <div class="runway-watermark">PINE<br>GREEN</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 04</span>
+            <span class="badge-pill">STEALTH EMERALD</span>
+          </div>
+
+          <div class="stage-colorway-label">PINE GREEN / BLACK / GYM RED</div>
+          <h2 class="stage-title">AIR JORDAN 1 RETRO HIGH OG</h2>
+          <p class="stage-description">
+            Subversive street grit meets basketball classicism. Deep forest pine green tumbled leather contrasts against pitch black overlays with signature Gym Red embroidered Nike Air tongue branding.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">555088-030</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">RELEASE ERA</span>
+              <span class="spec-item-val">2020 / 2026</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">TEXTURE</span>
+              <span class="spec-item-val">Heavy Tumbled Hide</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">TONGUE TAG</span>
+              <span class="spec-item-val">Crimson Gym Red</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>TUMBLED PINE GRAIN</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>GYM RED ACCENT</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>SOLID RUBBER TRACTION</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-green.png" alt="Air Jordan 1 Pine Green" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$340</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+7.2% Market Trend</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="green" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-green">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Pine Green Authenticated
+              </span>
+              <span>Express 2-Day Air</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 5: AIR JORDAN 1 "REVERSE SHATTERED BACKBOARD" (ORANGE THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-orange" class="runway-section" data-theme="orange" data-shoe-id="orange">
+      <div class="runway-watermark">SHATTERED<br>1985</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 05</span>
+            <span class="badge-pill">ITALY EXHIBITION</span>
+          </div>
+
+          <div class="stage-colorway-label">STARFISH ORANGE / SAIL / BLACK</div>
+          <h2 class="stage-title">AIR JORDAN 1 RETRO HIGH OG</h2>
+          <p class="stage-description">
+            Commemorating Michael Jordan legendary dunk in Trieste, Italy in 1985 where he smashed the backboard glass into hundreds of crystalline shards. Crafted with iconic buttery sail leather.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">555088-113</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">NICKNAME</span>
+              <span class="spec-item-val">Shattered 2.0 (Away)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">SAIL MIDSOLE</span>
+              <span class="spec-item-val">Vintage Aged Patina</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">INSOLVE GRAPHIC</span>
+              <span class="spec-item-val">Broken Glass Print</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>STARFISH ORANGE LEATHER</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>TRIESTE 1985 DUNK</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>SAIL AGED MIDSOLE</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-orange.png" alt="Air Jordan 1 Reverse Shattered Backboard" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$620</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+24.6% Holy Grail</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="orange" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-orange">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Shattered Glass Seal
+              </span>
+              <span>Express 2-Day Air</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------------------
+         SLIDE 6: AIR JORDAN 4 RETRO "BLACK CAT" (STEALTH ONYX THEME)
+         ---------------------------------------------------------------------- -->
+    <section id="section-shadow" class="runway-section" data-theme="shadow" data-shoe-id="shadow">
+      <div class="runway-watermark">BLACK<br>CAT</div>
+
+      <div class="runway-stage-grid">
+        <!-- Info Column -->
+        <div class="stage-col-info">
+          <div class="stage-badge-group">
+            <span class="badge-pill active">LIMITED DROP 06</span>
+            <span class="badge-pill">STEALTH GRAIL</span>
+          </div>
+
+          <div class="stage-colorway-label">TRIPLE BLACK / NOIR / STEALTH</div>
+          <h2 class="stage-title">AIR JORDAN 4 RETRO 'BLACK CAT'</h2>
+          <p class="stage-description">
+            Inspired by Michael Jordan legendary predatory on-court nickname. Cloaked in sumptuous velvety black nubuck with matte mesh netting, graphite Jumpman emblems, and murdered-out hardware.
+          </p>
+
+          <div class="stage-specs-table">
+            <div class="spec-item">
+              <span class="spec-item-label">STYLE CODE</span>
+              <span class="spec-item-val">CU1110-010</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">SILHOUETTE</span>
+              <span class="spec-item-val">Retro Mid Cut</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">UPPER MATERIAL</span>
+              <span class="spec-item-val">Velvety Black Nubuck</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-item-label">CUSHIONING</span>
+              <span class="spec-item-val">Visible Heel Air-Sole</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Floating Sneaker Column -->
+        <div class="stage-col-shoe">
+          <div class="shoe-runway-halo"></div>
+          
+          <!-- Tech spec hotspots -->
+          <div class="stage-spec-tag tag-top-left">
+            <span class="spec-dot"></span>
+            <span>ALL-BLACK SUEDE</span>
+          </div>
+          <div class="stage-spec-tag tag-mid-right">
+            <span class="spec-dot"></span>
+            <span>FLIGHT TONGUE PATCH</span>
+          </div>
+          <div class="stage-spec-tag tag-bottom-right">
+            <span class="spec-dot"></span>
+            <span>VISIBLE AIR-SOLE</span>
+          </div>
+
+          <div class="stage-shoe-interactive-wrap">
+            <img src="assets/images/jordan-shadow.png" alt="Air Jordan 4 Retro Black Cat" class="stage-shoe-img">
+          </div>
+          <div class="stage-shoe-shadow"></div>
+        </div>
+
+        <!-- Right Buy Column -->
+        <div class="stage-col-buy">
+          <div class="buy-card">
+            <div class="buy-price-row">
+              <div style="display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;">
+                <div class="buy-price-val">$740</div>
+                <div class="buy-price-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span>+32.4% Holy Grail</span>
+                </div>
+              </div>
+              <button type="button" class="btn-card-wishlist btn-runway-wishlist" data-wishlist-id="shadow" title="Guardar na Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+
+            <div class="buy-section-title">
+              <div class="buy-size-title-wrap">
+                <span class="buy-size-title-text">Select Size</span>
+                <span class="buy-size-selected-badge" id="stage-selected-badge-shadow">Selected: EU 42 (US 8.5)</span>
+              </div>
+              <div class="stage-unit-switcher luxury-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+
+            <div class="buy-sizes-scroll">
+              <button type="button" class="btn-stage-size" data-eu="40" data-us="7" data-uk="6" data-cm="25.0"><span class="size-main">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="btn-stage-size" data-eu="40.5" data-us="7.5" data-uk="6.5" data-cm="25.5"><span class="size-main">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="41" data-us="8" data-uk="7" data-cm="26.0"><span class="size-main">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="btn-stage-size selected" data-eu="42" data-us="8.5" data-uk="7.5" data-cm="26.5"><span class="size-main">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="42.5" data-us="9" data-uk="8" data-cm="27.0"><span class="size-main">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="btn-stage-size" data-eu="43" data-us="9.5" data-uk="8.5" data-cm="27.5"><span class="size-main">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="btn-stage-size" data-eu="44" data-us="10" data-uk="9" data-cm="28.0"><span class="size-main">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="btn-stage-size" data-eu="45" data-us="11" data-uk="10" data-cm="29.0"><span class="size-main">45</span><small class="size-sub">US 11</small></button>
+            </div>
+
+            <div class="buy-card-actions">
+              <button class="btn-stage-instant-buy">
+                <span>Instant Buy Now</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
+              <button class="btn-stage-add-bag">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Add to Bag</span>
+              </button>
+              <button class="btn-secondary btn-stage-inspect" style="width: 100%; padding: 12px; font-size: 0.84rem; margin-top: 4px;">
+                Inspect Specifications & Story
+              </button>
+            </div>
+
+            <div class="buy-guarantee-row">
+              <span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Black Cat Authenticated
+              </span>
+              <span>Express 2-Day Air</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Marquee Ticker -->
+  <section class="marquee-tape">
+    <div class="marquee-content">
+      <span>100% VERIFIED DEADSTOCK</span>
+      <span>•</span>
+      <span class="highlight">PHYSICAL & DIGITAL NFC AUTHENTICATION</span>
+      <span>•</span>
+      <span>EXPRESS 2-DAY PRIORITY DELIVERY</span>
+      <span>•</span>
+      <span class="highlight">CHICAGO • COURT PURPLE • UNIVERSITY BLUE • PINE GREEN</span>
+      <span>•</span>
+      <span>THE SNEAKERHEAD ARCHIVE VAULT</span>
+      <span>•</span>
+      <span class="highlight">NO REPLICAS EVER PERMITTED</span>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       THE ARCHIVE VAULT (CATALOG SECTION)
+       ========================================================================== -->
+  <section id="catalog-vault" class="catalog-section">
+    <div class="catalog-header">
+      <div class="catalog-title-group">
+        <span class="badge-pill active">THE FULL DROP ARCHIVE</span>
+        <h2>Vault Catalog</h2>
+        <p>Explore authenticated iconic colorways, compare current market valuations, and lock down your grail.</p>
+      </div>
+
+      <div class="catalog-filters">
+        <button class="btn-filter-pill active" data-filter="all">All Grails (6)</button>
+        <button class="btn-filter-pill" data-filter="red">Chicago Red</button>
+        <button class="btn-filter-pill" data-filter="purple">Court Purple</button>
+        <button class="btn-filter-pill" data-filter="blue">University Blue</button>
+        <button class="btn-filter-pill" data-filter="green">Pine Green</button>
+        <button class="btn-filter-pill" data-filter="orange">Shattered</button>
+      </div>
+    </div>
+
+    <div class="catalog-grid">
+      <!-- Card 1 -->
+      <div class="sneaker-card" data-category="red" style="--card-theme: #dc2626; --card-glow: rgba(220, 38, 38, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-chicago.png" alt="Chicago">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(220, 38, 38, 0.2); border-color: #dc2626; color: #dc2626;">FLAGSHIP</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 1 High OG</h3>
+          <p class="sneaker-card-colorway" style="color: #dc2626;">Chicago (Varsity Red)</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">The untouchable Holy Grail that established modern streetwear culture.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$480</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #dc2626, #b91c1c); box-shadow: 0 4px 18px rgba(220, 38, 38, 0.45); border: 1px solid rgba(255, 255, 255, 0.2);" onclick="window.cartManager.openBuyModal('chicago')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="sneaker-card" data-category="purple" style="--card-theme: #9333ea; --card-glow: rgba(147, 51, 234, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-purple.png" alt="Court Purple">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(147, 51, 234, 0.2); border-color: #9333ea; color: #c084fc;">ROYAL</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 1 High OG</h3>
+          <p class="sneaker-card-colorway" style="color: #c084fc;">Court Purple 2.0</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Regal amethyst paneling with stark white and pitch-black balance.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$365</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #9333ea, #6b21a8);" onclick="window.cartManager.openBuyModal('purple')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="sneaker-card" data-category="blue" style="--card-theme: #0284c7; --card-glow: rgba(2, 132, 199, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-blue.png" alt="University Blue">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(2, 132, 199, 0.2); border-color: #0284c7; color: #38bdf8;">HERITAGE</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 1 High OG</h3>
+          <p class="sneaker-card-colorway" style="color: #38bdf8;">University Blue / Obsidian</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Powder sky blue nubuck honoring Michael Jordan university alma mater.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$395</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #0284c7, #0369a1);" onclick="window.cartManager.openBuyModal('blue')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="sneaker-card" data-category="green" style="--card-theme: #16a34a; --card-glow: rgba(22, 163, 74, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-green.png" alt="Pine Green">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(22, 163, 74, 0.2); border-color: #16a34a; color: #4ade80;">EMERALD</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 1 High OG</h3>
+          <p class="sneaker-card-colorway" style="color: #4ade80;">Pine Green 2.0</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Lush tumbled emerald leather with red tongue tag accents.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$340</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #16a34a, #15803d);" onclick="window.cartManager.openBuyModal('green')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="sneaker-card" data-category="orange" style="--card-theme: #ea580c; --card-glow: rgba(234, 88, 12, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-orange.png" alt="Shattered Backboard">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(234, 88, 12, 0.2); border-color: #ea580c; color: #fb923c;">GRAIL</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 1 High OG</h3>
+          <p class="sneaker-card-colorway" style="color: #fb923c;">Reverse Shattered Backboard</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Rich starfish orange and creamy sail commemorating the broken glass dunk.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$620</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #ea580c, #c2410c);" onclick="window.cartManager.openBuyModal('orange')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="sneaker-card" data-category="grey" style="--card-theme: #71717a; --card-glow: rgba(113, 113, 122, 0.4);">
+        <div class="sneaker-card-thumb">
+          <img src="assets/images/jordan-shadow.png" alt="Air Jordan 4 Black Cat">
+          <span class="badge-pill sneaker-card-badge" style="background: rgba(113, 113, 122, 0.2); border-color: #a1a1aa; color: #e4e4e7;">STEALTH GRAIL</span>
+        </div>
+        <div class="sneaker-card-body">
+          <h3 class="sneaker-card-name">Air Jordan 4 Retro</h3>
+          <p class="sneaker-card-colorway" style="color: #d4d4d8;">Black Cat (Triple Black)</p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Triple black velvety nubuck with matte mesh panels and visible Air cushioning.</p>
+        </div>
+        <div class="sneaker-card-footer">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">STARTING AT</div>
+            <div class="sneaker-card-price">$740</div>
+          </div>
+          <button class="btn-primary" style="padding: 10px 18px; font-size: 0.82rem; background: linear-gradient(135deg, #52525b, #27272a);" onclick="window.cartManager.openBuyModal('shadow')">
+            Buy Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       AETHER BESPOKE CUSTOMIZER LAB (1-OF-1 CREATOR)
+       ========================================================================== -->
+  <section id="customizer-lab" class="customizer-section">
+    <div style="text-align: center; max-width: 680px; margin: 0 auto 50px;">
+      <span class="badge-pill active">AETHER BESPOKE LAB</span>
+      <h2 style="font-size: 2.8rem; margin: 12px 0;">Design Your 1-of-1 Grail</h2>
+      <p style="color: var(--text-secondary); font-size: 1.05rem;">
+        Take full artistic direction over authentic Jordan silhouettes. Select panels, craft signature colorways, and mint custom physical-digital pairs directly to your bag.
+      </p>
+    </div>
+
+    <div class="customizer-grid">
+      <!-- Luxury Sneaker Atelier Studio Stage Box -->
+      <div class="customizer-preview-box">
+        <!-- Stage Mode & HUD Toolbar -->
+        <div class="stage-toolbar">
+          <div class="stage-mode-switch" role="group" aria-label="Studio Display Mode">
+            <button type="button" id="btn-mode-studio" class="stage-mode-btn active" data-mode="studio" onclick="window.sneakerCustomizer.setStudioMode('studio')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <span>Photorealistic Studio</span>
+            </button>
+            <button type="button" id="btn-mode-blueprint" class="stage-mode-btn" data-mode="blueprint" onclick="window.sneakerCustomizer.setStudioMode('blueprint')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              <span>Design Blueprint</span>
+            </button>
+          </div>
+          <div class="stage-badge-hud">
+            <span class="stage-live-pulse"></span>
+            <span class="stage-hud-text">1985 RETRO HIGH OG SPEC</span>
+          </div>
+        </div>
+
+        <!-- Luxury Stage Wrap -->
+        <div id="customizer-stage-wrap" class="customizer-stage-wrap">
+          <!-- Dynamic ambient lighting glow backdrop -->
+          <div id="custom-preview-glow" class="customizer-glow-bg"></div>
+
+          <!-- Authentic Air Jordan 1 Multi-Layer Bespoke Stage -->
+          <div id="bespoke-shoe-stage" class="bespoke-shoe-stage">
+            <div id="layer-sole" class="custom-shoe-layer layer-sole" style="background-color: #ffffff;"></div>
+            <div id="layer-base" class="custom-shoe-layer layer-base" style="background-color: #ffffff;"></div>
+            <div id="layer-collar" class="custom-shoe-layer layer-collar" style="background-color: #09090b;"></div>
+            <div id="layer-overlay" class="custom-shoe-layer layer-overlay" style="background-color: #dc2626;"></div>
+            <div id="layer-swoosh" class="custom-shoe-layer layer-swoosh" style="background-color: #09090b;"></div>
+            <div id="layer-laces" class="custom-shoe-layer layer-laces" style="background-color: #09090b;"></div>
+            <img src="assets/images/jordan-texture.png" class="shoe-texture-overlay" alt="Air Jordan 1 Shading" draggable="false">
+
+            <!-- Interactive Clickable Component Hotspots -->
+            <svg id="customizer-hotspot-svg" class="customizer-hotspot-svg" viewBox="0 0 860 560" preserveAspectRatio="xMidYMid meet" aria-label="Interactive Sneaker Component Selection">
+              <!-- Midsole & Sole Hotspot -->
+              <g class="shoe-hotspot" data-part="sole" data-label="Midsole / Sole" title="Midsole / Sole">
+                <polygon class="hotspot-shape" points="48,415 120,410 240,415 360,425 480,435 600,435 720,425 805,420 816,445 805,475 730,495 500,500 280,498 120,495 50,475 46,435" />
+              </g>
+              <!-- Base Leather: Midfoot Quarter & Toe Vamp -->
+              <g class="shoe-hotspot" data-part="base" data-label="Base Leather (Toe Vamp & Midfoot)" title="Base Leather">
+                <polygon class="hotspot-shape" points="565,320 660,312 745,335 750,375 670,375 580,365 565,330" />
+                <polygon class="hotspot-shape" points="220,250 310,240 420,235 480,265 470,350 400,380 270,365 220,310" />
+              </g>
+              <!-- Overlays / Mudguard: Toe Mudguard & Heel Counter -->
+              <g class="shoe-hotspot" data-part="overlay" data-label="Overlays (Mudguard & Heel Counter)" title="Overlays / Mudguard">
+                <polygon class="hotspot-shape" points="560,335 630,325 720,335 780,355 805,385 795,420 740,425 670,425 590,425 560,400 560,345" />
+                <polygon class="hotspot-shape" points="52,200 95,150 150,240 170,320 160,415 50,420 50,260" />
+                <polygon class="hotspot-shape" points="230,135 340,65 380,120 360,220 300,240 230,170" />
+              </g>
+              <!-- Collar & Tongue -->
+              <g class="shoe-hotspot" data-part="collar" data-label="Collar & Tongue" title="Collar & Tongue">
+                <polygon class="hotspot-shape" points="92,105 130,85 190,75 255,65 345,65 380,120 375,180 340,180 310,225 240,250 160,240 100,150 92,115" />
+              </g>
+              <!-- Swoosh -->
+              <g class="shoe-hotspot" data-part="swoosh" data-label="Swoosh" title="Swoosh">
+                <path class="hotspot-shape" d="M 80,265 C 130,285 190,320 250,345 C 310,365 370,360 412,275 C 375,325 315,340 260,325 C 200,305 140,280 80,265 Z" />
+              </g>
+              <!-- Laces & Eyestay -->
+              <g class="shoe-hotspot" data-part="laces" data-label="Laces & Eyestay" title="Laces">
+                <polygon class="hotspot-shape" points="335,140 405,135 465,225 540,290 585,310 585,375 530,375 440,300 370,225 335,160" />
+              </g>
+            </svg>
+            <div id="hotspot-indicator-pill" class="hotspot-indicator-pill">
+              <span class="indicator-dot"></span>
+              <span class="indicator-text">Interactive Hotspots</span>
+            </div>
+          </div>
+
+          <!-- Luxury Runway Floating Ambient Shadow -->
+          <div class="stage-ambient-shadow"></div>
+
+          <!-- Technical Blueprint Overlay (Factory Engineering Callout Matrix) -->
+          <div id="blueprint-overlay" class="blueprint-overlay" aria-hidden="true">
+            <div class="blueprint-grid-mesh"></div>
+            
+            <!-- SPEC 01: 1985 HIGH CUT SILHOUETTE -->
+            <div class="spec-callout-pill spec-collar" style="top: 14%; left: 14%;">
+              <span class="spec-pill-tag">SPEC 01</span>
+              <span class="spec-pill-label">1985 High Cut Silhouette</span>
+              <div class="spec-lead-line line-collar"></div>
+            </div>
+
+            <!-- SPEC 02: ICONIC WINGS DEBOSSING -->
+            <div class="spec-callout-pill spec-wings" style="top: 27%; left: 28%;">
+              <span class="spec-pill-tag">SPEC 02</span>
+              <span class="spec-pill-label">Iconic Wings Debossing</span>
+              <div class="spec-lead-line line-wings"></div>
+            </div>
+
+            <!-- SPEC 03: FULL-GRAIN LEATHER VAMP -->
+            <div class="spec-callout-pill spec-toe" style="top: 50%; right: 8%;">
+              <span class="spec-pill-tag">SPEC 03</span>
+              <span class="spec-pill-label">Full-Grain Leather Vamp</span>
+              <div class="spec-lead-line line-toe"></div>
+            </div>
+
+            <!-- SPEC 04: ENCAPSULATED AIR UNIT -->
+            <div class="spec-callout-pill spec-air" style="bottom: 11%; left: 16%;">
+              <span class="spec-pill-tag">SPEC 04</span>
+              <span class="spec-pill-label">Encapsulated Air Unit</span>
+              <div class="spec-lead-line line-cupsole"></div>
+            </div>
+
+            <!-- SPEC 05: PERIMETER SIDEWALL STITCH -->
+            <div class="spec-callout-pill spec-stitch" style="bottom: 13%; left: 45%;">
+              <span class="spec-pill-tag">SPEC 05</span>
+              <span class="spec-pill-label">Perimeter Sidewall Stitch</span>
+              <div class="spec-lead-line line-stitch"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Grail Presets Bar & Baseline Reset -->
+        <div class="stage-presets-bar">
+          <div class="presets-header-row">
+            <span class="presets-label">QUICK GRAIL PRESETS</span>
+            <button type="button" id="btn-reset-custom" class="btn-secondary btn-reset-custom">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+              <span>Reset Baseline</span>
+            </button>
+          </div>
+          <div class="custom-presets-grid">
+            <button type="button" class="btn-preset-pill active" data-preset="chicago" onclick="window.sneakerCustomizer.applyPreset('chicago')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #dc2626;"></span>
+                <span class="preset-dot" style="background-color: #ffffff;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Chicago '85</span>
+            </button>
+            <button type="button" class="btn-preset-pill" data-preset="purple" onclick="window.sneakerCustomizer.applyPreset('purple')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #9333ea;"></span>
+                <span class="preset-dot" style="background-color: #ffffff;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Court Purple</span>
+            </button>
+            <button type="button" class="btn-preset-pill" data-preset="blue" onclick="window.sneakerCustomizer.applyPreset('blue')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #0284c7;"></span>
+                <span class="preset-dot" style="background-color: #ffffff;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Univ. Blue</span>
+            </button>
+            <button type="button" class="btn-preset-pill" data-preset="green" onclick="window.sneakerCustomizer.applyPreset('green')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #16a34a;"></span>
+                <span class="preset-dot" style="background-color: #ffffff;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Pine Green</span>
+            </button>
+            <button type="button" class="btn-preset-pill" data-preset="shattered" onclick="window.sneakerCustomizer.applyPreset('shattered')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #ea580c;"></span>
+                <span class="preset-dot" style="background-color: #fef3c7;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Shattered</span>
+            </button>
+            <button type="button" class="btn-preset-pill" data-preset="blackcat" onclick="window.sneakerCustomizer.applyPreset('blackcat')">
+              <span class="preset-chip-dots">
+                <span class="preset-dot" style="background-color: #18181b;"></span>
+                <span class="preset-dot" style="background-color: #27272a;"></span>
+                <span class="preset-dot" style="background-color: #09090b;"></span>
+              </span>
+              <span>Black Cat</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Color Swatches Box -->
+      <div class="customizer-controls-box">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="badge-pill active">STUDIO ATELIER</span>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: #22c55e;">● SYSTEM LIVE</span>
+        </div>
+
+        <div style="margin: 18px 0;">
+          <label for="custom-shoe-name" style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">1-of-1 Silhouette Label</label>
+          <input type="text" id="custom-shoe-name" class="form-input" value="AIR JORDAN 1 HIGH 'AETHER BESPOKE'" style="margin-top: 6px; padding: 12px 16px; font-weight: 700; font-family: var(--font-display);">
+        </div>
+
+        <div>
+          <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Select Component to Color</label>
+          <div class="custom-part-tabs">
+            <button type="button" class="custom-part-tab active" data-part="overlay">
+              <span class="part-color-dot" data-part-dot="overlay" style="background-color: #dc2626;"></span>
+              <span>Overlays / Mudguard</span>
+            </button>
+            <button type="button" class="custom-part-tab" data-part="base">
+              <span class="part-color-dot" data-part-dot="base" style="background-color: #ffffff;"></span>
+              <span>Base Leather</span>
+            </button>
+            <button type="button" class="custom-part-tab" data-part="swoosh">
+              <span class="part-color-dot" data-part-dot="swoosh" style="background-color: #09090b;"></span>
+              <span>Swoosh</span>
+            </button>
+            <button type="button" class="custom-part-tab" data-part="collar">
+              <span class="part-color-dot" data-part-dot="collar" style="background-color: #09090b;"></span>
+              <span>Collar &amp; Tongue</span>
+            </button>
+            <button type="button" class="custom-part-tab" data-part="sole">
+              <span class="part-color-dot" data-part-dot="sole" style="background-color: #ffffff;"></span>
+              <span>Midsole / Sole</span>
+            </button>
+            <button type="button" class="custom-part-tab" data-part="laces">
+              <span class="part-color-dot" data-part-dot="laces" style="background-color: #09090b;"></span>
+              <span>Laces</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Curated Heritage Color Swatches</label>
+          <div id="customizer-swatches" class="swatches-grid" style="margin-top: 8px;">
+            <!-- Rendered by SneakerCustomizer JS -->
+          </div>
+        </div>
+
+        <!-- Bespoke Customizer Size Selection with Luxury Unit Switcher -->
+        <div class="customizer-size-container" style="margin-top: 14px; padding: 12px 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-glass); border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Bespoke Size / Tamanho</label>
+              <span id="customizer-size-display" style="font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--theme-primary, #dc2626);">Selected: EU 42 (US 8.5)</span>
+            </div>
+            <div class="customizer-unit-switcher luxury-unit-switcher" id="customizer-unit-switcher" role="group" aria-label="Customizer Unit">
+              <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+              <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+              <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+            </div>
+          </div>
+          <div id="customizer-sizes-grid" class="customizer-sizes-grid">
+            <!-- Rendered dynamically by customizer.js -->
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border-glass); gap: 12px; flex-wrap: wrap;">
+          <div>
+            <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 0.05em;">BESPOKE COMMISSION</div>
+            <div style="font-size: 1.8rem; font-weight: 900; font-family: var(--font-display); color: #fff;">$520 USD</div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="button" class="btn-secondary modal-btn-wishlist" id="customizer-wishlist-btn" data-wishlist-id="chicago" title="Guardar na Wishlist">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span>Wishlist</span>
+            </button>
+            <button type="button" id="btn-add-custom-bag" class="btn-primary" style="padding: 14px 28px;">
+              <span>Add 1-of-1 to Bag</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       HYPE DROP COUNTDOWN & CRYPTOGRAPHIC RAFFLE
+       ========================================================================== -->
+  <section id="hype-drops" class="drop-hud-section">
+    <div class="drop-hud-card">
+      <div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 14px;">
+          <span class="badge-pill active" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171;">NEXT GLOBAL DROP</span>
+          <span class="badge-pill">TIER 0 ALLOCATION</span>
+        </div>
+
+        <h2 style="font-size: 2.4rem; margin-bottom: 10px;">Travis Scott x Fragment Retro Low</h2>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 520px;">
+          Limited to 350 pairs globally. Featuring reverse sail swoosh, military blue heel embroidery, and dual Hiroshi Fujiwara / Cactus Jack emblems. Registered members receive guaranteed raffle balloting.
+        </p>
+
+        <div class="drop-timer-display">
+          <div class="timer-slot">
+            <span id="drop-hours" class="timer-num">14</span>
+            <span class="timer-label">Hours</span>
+          </div>
+          <div class="timer-slot">
+            <span id="drop-mins" class="timer-num">32</span>
+            <span class="timer-label">Minutes</span>
+          </div>
+          <div class="timer-slot">
+            <span id="drop-secs" class="timer-num">15</span>
+            <span class="timer-label">Seconds</span>
+          </div>
+          <div class="timer-slot" style="border-color: var(--theme-primary);">
+            <span id="drop-ms" class="timer-num" style="color: var(--theme-primary);">88</span>
+            <span class="timer-label">Millisec</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+          <button id="btn-enter-raffle" class="btn-primary" style="padding: 14px 28px;">
+            <span>Enter Cryptographic Raffle</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+            🔒 Verified via SHA-256 Entropy Ledger
+          </span>
+        </div>
+      </div>
+
+      <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, var(--theme-glow-soft) 0%, transparent 70%);"></div>
+        <img src="assets/images/jordan-blue.png" alt="Upcoming Drop Preview" style="max-width: 90%; transform: rotate(-14deg) scale(1.05); filter: drop-shadow(0 25px 40px rgba(0,0,0,0.8)); position: relative; z-index: 5;">
+        <span class="badge-pill active" style="position: absolute; bottom: 10px; right: 20px; z-index: 10;">MSRP $190 (Est. Resale $1,450)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       GRAIL MARKET VALUATION & LIQUIDITY ANALYTICS
+       ========================================================================== -->
+  <section id="market-analytics" class="analytics-section">
+    <div class="analytics-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+        <div>
+          <span class="badge-pill active">LIVE SECONDARY MARKET</span>
+          <h2 style="font-size: 2.2rem; margin: 8px 0;">Air Jordan 1 Chicago Valuation Index</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Historical 12-month transaction tracking verified across global sneaker exchanges.</p>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-hud-pill active">1 Year</button>
+          <button class="btn-hud-pill">6 Months</button>
+          <button class="btn-hud-pill">All Time</button>
+        </div>
+      </div>
+
+      <div class="analytics-stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Current Median Value</div>
+          <div class="stat-val">$540 USD</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">12-Month Appreciation</div>
+          <div class="stat-val" style="color: #22c55e;">+28.5% ↗</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">30-Day Liquidity Vol.</div>
+          <div class="stat-val">1,420 Pairs</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Vault Volatility Index</div>
+          <div class="stat-val">LOW (Grade A)</div>
+        </div>
+      </div>
+
+      <!-- Interactive SVG Chart -->
+      <div class="chart-svg-container">
+        <div id="chart-tooltip" class="chart-tooltip"></div>
+        <svg viewBox="0 0 800 220" width="100%" height="100%" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--theme-primary)" stop-opacity="0.45"/>
+              <stop offset="100%" stop-color="var(--theme-primary)" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Horizontal Grid Lines -->
+          <line x1="0" y1="40" x2="800" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+          <line x1="0" y1="100" x2="800" y2="100" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+          <line x1="0" y1="160" x2="800" y2="160" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+
+          <!-- Area fill -->
+          <path d="M 40 180 L 160 150 L 280 165 L 400 120 L 520 135 L 640 85 L 760 30 L 760 220 L 40 220 Z" fill="url(#chartGradient)"/>
+
+          <!-- Line path -->
+          <path d="M 40 180 L 160 150 L 280 165 L 400 120 L 520 135 L 640 85 L 760 30" fill="none" stroke="var(--theme-primary)" stroke-width="3.5" stroke-linecap="round"/>
+
+          <!-- Interactive Data Points (Oct 25 to Oct 26) -->
+          <circle class="chart-dot" data-index="0" cx="40" cy="180" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="1" cx="160" cy="150" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="2" cx="280" cy="165" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="3" cx="400" cy="120" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="4" cx="520" cy="135" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="5" cx="640" cy="85" r="5.5" fill="#fff" stroke="var(--theme-primary)" stroke-width="2.5"/>
+          <circle class="chart-dot" data-index="6" cx="760" cy="30" r="6" fill="#fff" stroke="var(--theme-primary)" stroke-width="3"/>
+        </svg>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-top: 10px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
+        <span>OCT 2025 ($420)</span>
+        <span>DEC 2025</span>
+        <span>FEB 2026</span>
+        <span>APR 2026</span>
+        <span>JUN 2026</span>
+        <span>AUG 2026</span>
+        <span style="color: var(--theme-primary); font-weight: 700;">OCT 2026 ($540 ATH)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       MODALS & SLIDE-OVER DRAWER
+       ========================================================================== -->
+
+  <!-- Slide-Over Shopping Cart Drawer -->
+  <div id="cart-backdrop" class="cart-backdrop" onclick="window.cartManager.closeCart()"></div>
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3 class="cart-drawer-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>Collector Bag</span>
+      </h3>
+      <button class="modal-close-btn" onclick="window.cartManager.closeCart()">✕</button>
+    </div>
+
+    <div id="cart-items-list" class="cart-items-list">
+      <!-- Populated via CartManager -->
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-promo-row">
+        <input type="text" id="promo-code-input" class="cart-promo-input" placeholder="Promo Code: GRAIL20" value="GRAIL20">
+        <button class="btn-secondary" style="padding: 10px 16px; font-size: 0.82rem;" onclick="window.cartManager.applyPromoCode(document.getElementById('promo-code-input').value)">
+          Apply
+        </button>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">$0.00</span>
+      </div>
+
+      <div id="cart-discount-row" class="cart-summary-row" style="display: none; color: #22c55e;">
+        <span>Promo Discount</span>
+        <span id="cart-discount-val">-$0.00</span>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Verified Express Shipping</span>
+        <span style="color: #22c55e;">FREE ($0.00)</span>
+      </div>
+
+      <div class="cart-summary-row cart-summary-total">
+        <span>Estimated Total</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+
+      <button class="btn-primary" style="width: 100%; padding: 16px;" onclick="window.cartManager.openCheckoutModal()">
+        <span>Proceed to Secure Checkout</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Quick Buy / Product Inspector Modal -->
+  <div id="modal-backdrop" class="modal-backdrop" onclick="window.cartManager.closeBuyModal(); closeNFCModal();"></div>
+  <div id="buy-modal" class="custom-modal">
+    <button class="modal-close-btn" onclick="window.cartManager.closeBuyModal()">✕</button>
+    
+    <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 20px;">
+      <div style="width: 120px; height: 90px; background: rgba(0,0,0,0.3); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+        <img id="modal-shoe-img" src="assets/images/jordan-chicago.png" alt="Sneaker" style="max-width: 90%; max-height: 80px; object-fit: contain;">
+      </div>
+      <div>
+        <span id="modal-shoe-style" class="badge-pill active">Style: 555088-101</span>
+        <h3 id="modal-shoe-title" style="font-size: 1.5rem; margin: 4px 0;">Air Jordan 1 Retro High OG</h3>
+        <p id="modal-shoe-colorway" style="color: var(--theme-primary); font-family: var(--font-mono); font-weight: 700; font-size: 0.95rem;">Chicago</p>
+      </div>
+    </div>
+
+    <p id="modal-shoe-story" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+      Sneaker heritage details...
+    </p>
+
+    <div class="modal-size-header-row">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Select Size</span>
+        <span id="modal-selected-size-callout" style="font-size: 0.8rem; color: var(--theme-primary, #dc2626); font-family: var(--font-mono); font-weight: 700;">Selected: EU 42 (US 8.5)</span>
+      </div>
+      <div class="modal-unit-switcher luxury-unit-switcher" id="modal-unit-switcher" role="group" aria-label="Modal Size Unit">
+        <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+        <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+        <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+      </div>
+    </div>
+
+    <div id="modal-sizes-grid" class="modal-sizes-grid">
+      <!-- Generated via CartManager -->
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 16px; padding: 14px 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 12px; gap: 12px; flex-wrap: wrap;">
+      <div>
+        <div id="modal-shoe-retail" style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">Est. Retail $180</div>
+        <div id="modal-shoe-price" style="font-size: 1.8rem; font-weight: 900; font-family: var(--font-display); color: #fff;">$480</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button type="button" class="btn-secondary modal-btn-wishlist" id="modal-wishlist-btn" title="Guardar na Wishlist">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Wishlist</span>
+        </button>
+        <button class="btn-primary" onclick="window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize, 'deadstock'); window.cartManager.closeBuyModal();">
+          Add Pair to Bag
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Express Checkout Modal -->
+  <div id="checkout-backdrop" class="modal-backdrop" onclick="window.cartManager.closeCheckoutModal()"></div>
+  <div id="checkout-modal" class="custom-modal">
+    <button class="modal-close-btn" onclick="window.cartManager.closeCheckoutModal()">✕</button>
+
+    <div style="margin-bottom: 24px;">
+      <span class="badge-pill active">CRYPTOGRAPHIC ENCRYPTED CHECKOUT</span>
+      <h2 style="font-size: 1.8rem; margin: 6px 0;">Complete Your Order</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Guaranteed deadstock pair reserved in vault for 10 minutes.</p>
+    </div>
+
+    <form onsubmit="event.preventDefault(); window.cartManager.processOrder();">
+      <!-- Shipping Address -->
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+        <div class="input-group">
+          <label class="input-label">Full Shipping Name</label>
+          <input type="text" class="form-input" style="padding-left: 16px;" value="Marcus Collector" required>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">Street Address</label>
+          <input type="text" class="form-input" style="padding-left: 16px;" value="23 Championship Blvd, Suite 1985" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="input-group">
+            <label class="input-label">City, State</label>
+            <input type="text" class="form-input" style="padding-left: 16px;" value="Chicago, IL" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Postal Code</label>
+            <input type="text" class="form-input" style="padding-left: 16px;" value="60601" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="input-group" style="margin-bottom: 20px;">
+        <label class="input-label">Select Payment Method</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <button type="button" class="btn-stage-size selected" style="padding: 12px 6px;">Apple Pay</button>
+          <button type="button" class="btn-stage-size" style="padding: 12px 6px;">Credit Card</button>
+          <button type="button" class="btn-stage-size" style="padding: 12px 6px;">SneakerPay</button>
+        </div>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass); border-radius: 14px; padding: 16px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 6px;">
+          <span style="color: var(--text-secondary);">Subtotal:</span>
+          <span id="chk-subtotal">$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 6px; color: #22c55e;">
+          <span>Grail Discount (20% OFF):</span>
+          <span id="chk-discount">-$0.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 10px; color: #22c55e;">
+          <span>2-Day Priority Courier:</span>
+          <span>FREE</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; border-top: 1px dashed var(--border-glass); padding-top: 10px;">
+          <span>Total to Pay:</span>
+          <span id="chk-total" style="color: var(--theme-primary);">$0.00</span>
+        </div>
+      </div>
+
+      <button id="btn-confirm-order" type="submit" class="btn-primary" style="width: 100%; padding: 16px;">
+        Lock Down Grail & Pay
+      </button>
+    </form>
+  </div>
+
+  <!-- NFC Authenticity Scanner Simulator Modal -->
+  <div id="nfc-modal" class="custom-modal" style="text-align: center;">
+    <button class="modal-close-btn" onclick="closeNFCModal()">✕</button>
+
+    <div id="nfc-scanning-box">
+      <span class="badge-pill active">CRYPTOGRAPHIC SENSOR ACTIVE</span>
+      <h3 style="font-size: 1.8rem; margin: 12px 0 6px;">Hold Device Near Sneaker Tongue</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Interrogating micro-antenna RFID/NFC cryptographic security chip...</p>
+
+      <div class="nfc-radar-circle">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--theme-primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+
+      <p style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+        STATUS: QUERYING DECENTRALIZED PROOF OF AUTHENTICITY...
+      </p>
+    </div>
+
+    <div id="nfc-result-box" style="display: none;">
+      <div class="success-icon-wrap" style="margin: 0 auto 16px;">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span class="badge-pill active" style="background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #4ade80;">VERIFIED ORIGINAL GRAIL</span>
+      <h3 style="font-size: 1.8rem; margin: 8px 0;">100% Guaranteed Authentic</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+        NFC Tag UID: <strong>04:B2:7F:A1:99:38:80</strong><br>
+        Digital Certificate hash matches Nike Air Jordan production registry.
+      </p>
+
+      <button class="btn-primary" onclick="closeNFCModal()">
+        Verification Complete
+      </button>
+    </div>
+  </div>
+
+  <!-- Raffle Registration Modal -->
+  <div id="raffle-modal" class="custom-modal">
+    <button class="modal-close-btn" onclick="closeRaffleModal()">✕</button>
+    <div id="raffle-modal-body">
+      <div style="margin-bottom: 20px;">
+        <span class="badge-pill active" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171;">LIMITED BALLOT</span>
+        <h3 style="font-size: 1.8rem; margin: 8px 0;">Travis Scott x Fragment Retro Low</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Sign the cryptographic raffle ticket. Winners will be notified with instant checkout rights.</p>
+      </div>
+
+      <form id="raffle-entry-form">
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+          <div class="input-group">
+            <label class="input-label">Collector Name</label>
+            <input type="text" class="form-input" style="padding-left: 16px;" value="Marcus Collector" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Email Address</label>
+            <input type="email" class="form-input" style="padding-left: 16px;" value="collector@aetherkicks.io" required>
+          </div>
+          <div class="input-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+              <label class="input-label" style="margin: 0;">Select Preferred Size / Tamanho</label>
+              <div class="raffle-unit-switcher luxury-unit-switcher" id="raffle-unit-switcher" role="group" aria-label="Raffle Unit">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+              </div>
+            </div>
+            <select id="raffle-size-select" class="form-input" style="padding: 12px 16px; background: rgba(20,20,28,0.9); color: #fff;">
+              <option value="EU 40" data-eu="40" data-us="7" data-uk="6">EU 40 (US 7 • UK 6)</option>
+              <option value="EU 40.5" data-eu="40.5" data-us="7.5" data-uk="6.5">EU 40.5 (US 7.5 • UK 6.5)</option>
+              <option value="EU 41" data-eu="41" data-us="8" data-uk="7">EU 41 (US 8 • UK 7)</option>
+              <option value="EU 42" data-eu="42" data-us="8.5" data-uk="7.5" selected>EU 42 (US 8.5 • UK 7.5) - Grail PT</option>
+              <option value="EU 42.5" data-eu="42.5" data-us="9" data-uk="8">EU 42.5 (US 9 • UK 8)</option>
+              <option value="EU 43" data-eu="43" data-us="9.5" data-uk="8.5">EU 43 (US 9.5 • UK 8.5)</option>
+              <option value="EU 44" data-eu="44" data-us="10" data-uk="9">EU 44 (US 10 • UK 9)</option>
+              <option value="EU 45" data-eu="45" data-us="11" data-uk="10">EU 45 (US 11 • UK 10)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 15px;">
+          Lock In Balloting Entry
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       ABOUT US / THE AETHER ARCHIVE MANIFESTO
+       ========================================================================== -->
+  <section id="about-us" class="about-section">
+    <div class="about-grid">
+      <div class="about-text-col">
+        <span class="about-manifesto-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          THE MANIFESTO & ARCHIVE HERITAGE
+        </span>
+        <h2 class="about-title">Where Street Culture Meets Forensic Precision.</h2>
+        <p class="about-lead">
+          Founded by obsessive collectors and digital craftspeople, AETHER KICKS bridges the raw nostalgia of 1985 hardwood grails with hyper-modern interactive digital archiving. We believe every pair tells a cultural milestone that deserves forensic verification, flawless climate preservation, and frictionless collector custody.
+        </p>
+
+        <div class="about-pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h4 class="pillar-title">12-Point Forensic Check</h4>
+            <p class="pillar-desc">Spectroscopy, UV luminescence, stitch density audits, and micro-text verification conducted by veteran footwear curators.</p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </div>
+            <h4 class="pillar-title">Cryptographic NFC Chips</h4>
+            <p class="pillar-desc">Every physical silhouette is tagged with an encrypted NFC chip linking directly to decentralized immutable provenance ledgers.</p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </div>
+            <h4 class="pillar-title">Sub-Zero Vault Custody</h4>
+            <p class="pillar-desc">Archived deadstock grails rest in climate, UV, and humidity-stabilized vaults at 52°F to prevent polyurethane oxidation.</p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <h4 class="pillar-title">Secondary Liquidity</h4>
+            <p class="pillar-desc">Real-time marketplace price indices, historical trend analysis, and instant guaranteed buyback for authenticated pairs.</p>
+          </div>
+        </div>
+
+        <!-- Call to Action Buttons for Complete Manifesto -->
+        <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap;">
+          <a href="about.html" class="btn-primary" style="text-decoration: none;">
+            <span>Conhecer o Manifesto & História Completa</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="about.html#contacto-atelier" class="btn-secondary" style="text-decoration: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Visitar O Atelier</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="about-stats-panel">
+        <div class="stats-grid-about">
+          <div class="stat-about-box">
+            <div class="stat-about-num">100%</div>
+            <div class="stat-about-label">Authenticity Guarantee</div>
+          </div>
+          <div class="stat-about-box">
+            <div class="stat-about-num">48,200+</div>
+            <div class="stat-about-label">Grails Verified & Shipped</div>
+          </div>
+          <div class="stat-about-box">
+            <div class="stat-about-num">12-Point</div>
+            <div class="stat-about-label">Forensic Physical Audit</div>
+          </div>
+          <div class="stat-about-box">
+            <div class="stat-about-num">0.00%</div>
+            <div class="stat-about-label">Counterfeit Tolerance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+        </div>
+        <p>The definitive luxury platform for verified grails. Experience high-resolution drops, real-time authenticated custody, and dynamic chromatic colorways.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Runway Colorways</h5>
+        <ul>
+          <li><a href="#section-chicago">Chicago 1985 (Red)</a></li>
+          <li><a href="#section-purple">Court Purple 2.0 (Violet)</a></li>
+          <li><a href="#section-blue">University Blue (Sky)</a></li>
+          <li><a href="#section-green">Pine Green (Emerald)</a></li>
+          <li><a href="#section-orange">Shattered Backboard</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Atelier & Authentication</h5>
+        <ul>
+          <li><a href="about.html" style="color: var(--theme-primary); font-weight: 700;">About Us / O Atelier</a></li>
+          <li><a href="javascript:void(0)" onclick="openNFCScanner()">NFC Chip Scanner</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('Authenticity inspection verified across 14 physical points.')">Inspection Checklist</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('Every pair comes with cryptographic tamper-evident seal.')">Tamper-Proof Guarantee</a></li>
+          <li><a href="about.html#contacto-atelier">Collector Concierge</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Collector Membership</h5>
+        <ul>
+          <li><a href="profile.html" style="color: var(--theme-primary); font-weight: 700;">Painel de Colecionador / Perfil</a></li>
+          <li><a href="wishlist.html" style="color: var(--theme-primary); font-weight: 700;">A Minha Wishlist ❤️</a></li>
+          <li><a href="login.html">Sign In (Chicago)</a></li>
+          <li><a href="register.html">Join Vault (Court Purple)</a></li>
+          <li><a href="javascript:void(0)" onclick="showToast('Use promo code GRAIL20 in your bag for 20% off.')">Active Promo: GRAIL20</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 AETHER KICKS ARCHIVE. All rights reserved.</span>
+      <span>Designed with HTML5, CSS3, & Modern Vanilla JavaScript.</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/db.js"></script>
+  <script src="assets/js/logo-particles.js"></script>
+  <script src="assets/js/customizer.js"></script>
+  <script src="assets/js/analytics.js"></script>
+  <script src="assets/js/cursor.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/wishlist.js"></script>
+  <script src="assets/js/store.js"></script>
+</body>
+</html>

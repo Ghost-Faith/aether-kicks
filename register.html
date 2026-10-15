@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | AETHER KICKS - Air Jordan 1 Court Purple Edition</title>
+  <link rel="stylesheet" href="assets/css/global.css">
+  <link rel="stylesheet" href="assets/css/auth.css">
+  <link rel="icon" href="assets/images/jordan-purple.png" type="image/png">
+</head>
+<body class="auth-page theme-purple">
+
+  <!-- Ambient Purple Glow Backdrop -->
+  <div class="ambient-glow-layer">
+    <div class="glow-orb-primary" style="background: radial-gradient(circle, rgba(168, 85, 247, 0.5) 0%, transparent 70%);"></div>
+    <div class="glow-orb-secondary" style="background: radial-gradient(circle, rgba(126, 34, 206, 0.3) 0%, transparent 70%);"></div>
+  </div>
+  <div class="noise-overlay"></div>
+
+  <!-- Header Bar -->
+  <header class="auth-header">
+    <a href="index.html" class="auth-brand">
+      <div class="brand-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span>AETHER<span style="color: var(--auth-accent)">KICKS</span></span>
+    </a>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="about.html" class="auth-back-link">
+        <span>About Us</span>
+      </a>
+      <a href="wishlist.html" class="auth-back-link">
+        <span>Wishlist</span>
+      </a>
+      <a href="index.html" class="auth-back-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Back to Storefront</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Split Screen Layout: SIDES INVERTED (Left Floating Purple Shoe, Right Form) -->
+  <main class="auth-split-layout inverted">
+    
+    <!-- LEFT SIDE: Shoe Image ONLY - Floating Air Jordan 1 Court Purple -->
+    <section class="auth-shoe-pane">
+      <!-- Watermark typography in background -->
+      <div class="shoe-watermark">
+        COURT<br>PURPLE
+      </div>
+
+      <!-- Glowing Purple Halo -->
+      <div class="shoe-halo-glow"></div>
+
+      <!-- Interactive Floating Stage -->
+      <div class="floating-sneaker-stage">
+        
+        <!-- Tech spec hotspots -->
+        <div class="shoe-spec-tag tag-top-left">
+          <span class="spec-dot"></span>
+          <span>ROYAL AMETHYST FINISH</span>
+        </div>
+
+        <div class="shoe-spec-tag tag-mid-right">
+          <span class="spec-dot"></span>
+          <span>TUMBLED LEATHER QUARTERS</span>
+        </div>
+
+        <div class="shoe-spec-tag tag-bottom-right">
+          <span class="spec-dot"></span>
+          <span>RETRO HIGH OG SILHOUETTE</span>
+        </div>
+
+        <!-- The Floating Sneaker -->
+        <div class="floating-shoe-wrap">
+          <img src="assets/images/jordan-purple.png" alt="Air Jordan 1 Retro High Court Purple" class="floating-shoe-img">
+        </div>
+
+        <!-- Dynamic ground shadow -->
+        <div class="floating-shoe-shadow"></div>
+      </div>
+
+      <!-- Sneaker Identity Callout -->
+      <div class="shoe-footer-specs">
+        <h2 class="shoe-footer-name">AIR JORDAN 1 RETRO HIGH OG</h2>
+        <div class="shoe-footer-details">
+          <span><strong style="color: var(--auth-accent)">COLORWAY:</strong> COURT PURPLE / WHITE / BLACK</span>
+          <span>•</span>
+          <span>STYLE: 555088-500</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDE: Register Options Form -->
+    <section class="auth-form-pane">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-badge-tag">
+            <span class="badge-dot" style="width: 6px; height: 6px; border-radius: 50%; background: var(--auth-accent); display: inline-block;"></span>
+            <span>COURT PURPLE EXCLUSIVE ENROLLMENT</span>
+          </div>
+          <h1 class="auth-card-title">Join The Vault</h1>
+          <p class="auth-card-subtitle">Create your collector profile to enter raffle drops, track portfolio value, and purchase authenticated pairs.</p>
+        </div>
+
+        <form id="register-form" class="auth-form">
+          
+          <!-- Full Name & Handle in row -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="input-group">
+              <label class="input-label" for="reg-name">Full Name</label>
+              <div class="input-wrapper">
+                <input type="text" id="reg-name" class="form-input" style="padding-left: 16px;" placeholder="Marcus Jordan" value="Marcus Jordan" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="reg-tag">Sneaker Tag</label>
+              <div class="input-wrapper">
+                <input type="text" id="reg-tag" class="form-input" style="padding-left: 16px;" placeholder="@air_collector" value="@court_king" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="input-group">
+            <label class="input-label" for="reg-email">Email Address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <input type="email" id="reg-email" class="form-input" placeholder="marcus@kicksarchive.com" value="marcus@vault.io" required autocomplete="email">
+            </div>
+          </div>
+
+          <!-- Password & Confirm Password -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="input-group">
+              <label class="input-label" for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <input type="password" id="reg-password" class="form-input" style="padding-left: 16px;" placeholder="••••••••" value="courtpurple2026" required autocomplete="new-password">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="reg-confirm-password">Confirm</label>
+              <div class="input-wrapper">
+                <input type="password" id="reg-confirm-password" class="form-input" style="padding-left: 16px;" placeholder="••••••••" value="courtpurple2026" required autocomplete="new-password">
+              </div>
+            </div>
+          </div>
+
+          <!-- Preferred Sneaker Size with Luxury Unit Switcher -->
+          <div class="input-group">
+            <div class="reg-size-header-bar">
+              <label class="input-label" style="margin-bottom: 0;">Preferred Sneaker Size / Tamanho PT</label>
+              <!-- Luxury Unit Switcher Toggle Pill -->
+              <div class="luxury-unit-switcher" id="reg-unit-switcher" role="group" aria-label="Size Unit Switcher">
+                <button type="button" class="unit-toggle-pill active" data-unit="EU">EU / PT</button>
+                <button type="button" class="unit-toggle-pill" data-unit="US">US</button>
+                <button type="button" class="unit-toggle-pill" data-unit="UK">UK</button>
+                <button type="button" class="unit-toggle-pill" data-unit="CM">CM</button>
+              </div>
+            </div>
+
+            <div class="reg-size-grid" id="reg-size-grid">
+              <button type="button" class="reg-size-pill" data-eu="38"><span class="size-val">38</span><small class="size-sub">US 5.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="38.5"><span class="size-val">38.5</span><small class="size-sub">US 6</small></button>
+              <button type="button" class="reg-size-pill" data-eu="39"><span class="size-val">39</span><small class="size-sub">US 6.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="40"><span class="size-val">40</span><small class="size-sub">US 7</small></button>
+              <button type="button" class="reg-size-pill" data-eu="40.5"><span class="size-val">40.5</span><small class="size-sub">US 7.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="41"><span class="size-val">41</span><small class="size-sub">US 8</small></button>
+              <button type="button" class="reg-size-pill active" data-eu="42"><span class="size-val">42</span><small class="size-sub">US 8.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="42.5"><span class="size-val">42.5</span><small class="size-sub">US 9</small></button>
+              <button type="button" class="reg-size-pill" data-eu="43"><span class="size-val">43</span><small class="size-sub">US 9.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="44"><span class="size-val">44</span><small class="size-sub">US 10</small></button>
+              <button type="button" class="reg-size-pill" data-eu="44.5"><span class="size-val">44.5</span><small class="size-sub">US 10.5</small></button>
+              <button type="button" class="reg-size-pill" data-eu="45"><span class="size-val">45</span><small class="size-sub">US 11</small></button>
+              <button type="button" class="reg-size-pill" data-eu="46"><span class="size-val">46</span><small class="size-sub">US 12</small></button>
+            </div>
+
+            <!-- Portuguese Grail Indicator -->
+            <div class="reg-size-badge" id="reg-size-badge">
+              <span>🇵🇹 Tamanho Portugal / EU:</span>
+              <strong id="reg-size-badge-text">EU 42 (US 8.5 • UK 7.5 • 26.5 cm)</strong>
+            </div>
+
+            <input type="hidden" id="selected-size-pref" value="EU 42 / US 8.5">
+            <input type="hidden" id="selected-size-unit" value="EU">
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="auth-options-row">
+            <label class="checkbox-label">
+              <input type="checkbox" checked required>
+              <span>I agree to Aether Terms, Deadstock Guarantee & Drop Rules</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-auth-submit">
+            <span>Create Collector Vault</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 8px; vertical-align: middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <span>OR REGISTER WITH</span>
+          </div>
+
+          <!-- Social Login -->
+          <div class="auth-social-grid">
+            <button type="button" class="btn-social" onclick="showToast('Signing up via Google Authenticator...'); setTimeout(() => window.location.href='index.html', 800);">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.6 3.6 1.7 7.4l3.7 2.9C6.3 7.3 8.9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.4 14.7c-.2-.7-.4-1.5-.4-2.7 0-1.1.2-2 .4-2.7L1.7 6.4C.6 8.6 0 10.2 0 12c0 1.8.6 3.4 1.7 5.6l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.7-2.3-6.6-5.3L1.7 15.9C3.6 19.7 7.4 23 12 23z"/></svg>
+              <span>Google</span>
+            </button>
+            <button type="button" class="btn-social" onclick="showToast('Signing up via Apple ID...'); setTimeout(() => window.location.href='index.html', 800);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.96.04-2.12.64-2.8 1.44-.59.69-1.11 1.76-1 2.82 1.07.08 2.17-.57 2.79-1.39z"/></svg>
+              <span>Apple Pay</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="auth-footer-switch">
+          <span>Already registered in the vault?</span>
+          <a href="login.html">Sign In Here →</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="assets/js/db.js"></script>
+  <script src="assets/js/logo-particles.js"></script>
+  <script src="assets/js/cursor.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/auth.js"></script>
+</body>
+</html>

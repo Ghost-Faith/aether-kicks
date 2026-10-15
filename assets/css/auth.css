@@ -1,0 +1,1062 @@
+/* ==========================================================================
+   AETHER KICKS - AUTHENTICATION STYLES (LOGIN & REGISTER)
+   Jordan Chicago (Red/Black/White) & Court Purple (Purple/Black/White) Themes
+   ========================================================================== */
+
+/* Page Wrapper */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  background-color: var(--auth-bg, #070709);
+  transition: background-color 0.8s ease;
+}
+
+/* Auth Top Navigation */
+.auth-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 50;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  color: var(--text-white);
+}
+
+.auth-brand .brand-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--auth-accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 16px var(--auth-glow);
+}
+
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-fast);
+}
+
+.auth-back-link:hover {
+  color: var(--text-white);
+  border-color: var(--auth-accent);
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateX(-3px);
+}
+
+/* Split Screen Container */
+.auth-split-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  position: relative;
+  z-index: 10;
+}
+
+/* Inverted Layout (Register page has shoe on Left, form on Right) */
+.auth-split-layout.inverted {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Left Form Pane (Default Login) */
+.auth-form-pane {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 100px 60px 60px;
+  position: relative;
+  z-index: 20;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(14, 14, 18, 0.75);
+  border: 1px solid var(--border-glass-light);
+  border-radius: 24px;
+  padding: 40px;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px var(--auth-glow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--auth-accent), transparent);
+}
+
+.auth-card-header {
+  margin-bottom: 30px;
+}
+
+.auth-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--auth-accent);
+  background: var(--auth-glow-soft);
+  border: 1px solid var(--auth-accent-border);
+  margin-bottom: 14px;
+}
+
+.auth-card-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  color: var(--text-white);
+}
+
+.auth-card-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Form Elements */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--border-glass-light);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: all var(--transition-fast);
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  background: var(--auth-accent);
+  border-color: var(--auth-accent);
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+  content: '✓';
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.auth-forgot-link {
+  color: var(--auth-accent);
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+}
+
+.btn-auth-submit {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--auth-accent) 0%, var(--auth-accent-dark) 100%);
+  box-shadow: 0 10px 28px var(--auth-glow);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  margin-top: 6px;
+}
+
+.btn-auth-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px var(--auth-glow);
+  filter: brightness(1.1);
+}
+
+.btn-auth-submit:active {
+  transform: translateY(0);
+}
+
+/* Social Login Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 10px 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-glass);
+}
+
+.auth-social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-social:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--auth-accent-border);
+  color: var(--text-white);
+  transform: translateY(-2px);
+}
+
+.auth-footer-switch {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.auth-footer-switch a {
+  color: var(--auth-accent);
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.auth-footer-switch a:hover {
+  text-decoration: underline;
+}
+
+/* Right Shoe Showcase Pane (or Left when inverted) */
+.auth-shoe-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 80px 40px;
+}
+
+/* Watermark Background Typography */
+.shoe-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(6rem, 15vw, 15rem);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.025);
+  letter-spacing: -0.05em;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 0.85;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Floating Radial Glow */
+.shoe-halo-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--auth-glow) 0%, transparent 70%);
+  filter: blur(70px);
+  z-index: 2;
+  pointer-events: none;
+  animation: haloPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes haloPulse {
+  0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+}
+
+/* Floating Sneaker Stage */
+.floating-sneaker-stage {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  perspective: 1200px;
+}
+
+/* The Shoe Itself (Floating Animation + Tilt) */
+.floating-shoe-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  animation: sneakerFloat 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.floating-shoe-img {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.65));
+  transition: transform 0.15s ease-out;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Dynamic Breathing Ground Shadow */
+.floating-shoe-shadow {
+  position: absolute;
+  bottom: 30px;
+  width: 380px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 75%);
+  filter: blur(12px);
+  animation: shadowBreath 5s ease-in-out infinite;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Sneaker Keyframe Animations */
+@keyframes sneakerFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(-12deg);
+  }
+  50% {
+    transform: translateY(-24px) rotate(-9deg);
+  }
+}
+
+@keyframes shadowBreath {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.75;
+    filter: blur(12px);
+  }
+  50% {
+    transform: scale(0.68) translateY(12px);
+    opacity: 0.35;
+    filter: blur(20px);
+  }
+}
+
+/* Floating Interactive Tech Hotspot Badges */
+.shoe-spec-tag {
+  position: absolute;
+  padding: 8px 16px;
+  background: rgba(14, 14, 18, 0.85);
+  border: 1px solid var(--border-glass-light);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  transition: all var(--transition-fast);
+}
+
+.shoe-spec-tag .spec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--auth-accent);
+  box-shadow: 0 0 10px var(--auth-accent);
+  animation: dotPulse 2s infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.shoe-spec-tag.tag-top-left {
+  top: 14%;
+  left: 6%;
+}
+
+.shoe-spec-tag.tag-bottom-right {
+  bottom: 12%;
+  right: 6%;
+}
+
+.shoe-spec-tag.tag-mid-right {
+  top: 42%;
+  right: 4%;
+}
+
+.shoe-spec-tag:hover {
+  transform: scale(1.05);
+  border-color: var(--auth-accent);
+  color: var(--text-white);
+}
+
+/* Shoe Info Bar Below Floating Sneaker */
+.shoe-footer-specs {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  text-align: center;
+}
+
+.shoe-footer-name {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-white);
+}
+
+.shoe-footer-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.shoe-footer-details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   JORDAN CHICAGO COLOR THEME (LOGIN PAGE)
+   ========================================================================== */
+.theme-chicago {
+  --auth-bg: #090506;
+  --auth-accent: #ef4444;
+  --auth-accent-dark: #dc2626;
+  --auth-accent-border: rgba(239, 68, 68, 0.4);
+  --auth-glow: rgba(239, 68, 68, 0.5);
+  --auth-glow-soft: rgba(239, 68, 68, 0.12);
+}
+
+/* ==========================================================================
+   COURT PURPLE COLOR THEME (REGISTER PAGE)
+   ========================================================================== */
+.theme-purple {
+  --auth-bg: #07030e;
+  --auth-accent: #a855f7;
+  --auth-accent-dark: #7e22ce;
+  --auth-accent-border: rgba(168, 85, 247, 0.4);
+  --auth-glow: rgba(168, 85, 247, 0.5);
+  --auth-glow-soft: rgba(168, 85, 247, 0.12);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .auth-split-layout,
+  .auth-split-layout.inverted {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  /* When on mobile, put shoe above form for both */
+  .auth-split-layout {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .auth-split-layout.inverted {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .auth-shoe-pane {
+    padding: 100px 20px 40px;
+    min-height: 400px;
+  }
+
+  .auth-form-pane {
+    padding: 20px 20px 60px;
+  }
+
+  .floating-sneaker-stage {
+    height: 320px;
+  }
+
+  .floating-shoe-img {
+    max-width: 360px;
+  }
+
+  .floating-shoe-shadow {
+    width: 260px;
+  }
+
+  .shoe-watermark {
+    font-size: 5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-header {
+    padding: 16px 20px;
+  }
+
+  .auth-card {
+    padding: 28px 20px;
+    border-radius: 20px;
+  }
+
+  .auth-card-title {
+    font-size: 1.6rem;
+  }
+
+  .auth-shoe-pane {
+    padding: 80px 16px 30px;
+    min-height: 320px;
+  }
+
+  .floating-sneaker-stage {
+    height: 260px;
+  }
+
+  .floating-shoe-img {
+    max-width: 290px;
+  }
+
+  .floating-shoe-shadow {
+    width: 210px;
+  }
+
+  .shoe-spec-tag {
+    padding: 5px 10px;
+    font-size: 0.65rem;
+  }
+
+  .shoe-watermark {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 380px) {
+  html, body {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .auth-header {
+    padding: 12px 14px;
+  }
+
+  .auth-brand {
+    font-size: 1rem;
+  }
+
+  .auth-back-link span {
+    display: none;
+  }
+
+  .auth-card {
+    padding: 20px 14px;
+    margin: 0 8px;
+    width: calc(100% - 16px);
+  }
+
+  .auth-shoe-pane {
+    padding: 60px 12px 24px;
+    min-height: 260px;
+  }
+
+  .floating-sneaker-stage {
+    height: 200px;
+  }
+
+  .floating-shoe-img {
+    max-width: 230px;
+  }
+
+  .floating-shoe-shadow {
+    width: 180px;
+  }
+
+  .shoe-spec-tag {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   3D WEBGL STUDIO MODAL & LUXURY CURSOR FOR AUTH PAGES
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.custom-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: rgba(16, 16, 22, 0.96);
+  backdrop-filter: blur(36px);
+  border: 1px solid var(--border-glass-light);
+  border-radius: 28px;
+  z-index: 2200;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+}
+
+.custom-modal.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.modal-3d-studio {
+  max-width: 1080px;
+  width: 95%;
+  height: 88vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(10, 10, 14, 0.98);
+}
+
+.studio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.studio-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.studio-title-wrap h3 {
+  font-size: 1.4rem;
+}
+
+.studio-stage-wrap {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 75%);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.studio-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+
+.studio-canvas-container:active {
+  cursor: grabbing;
+}
+
+.studio-hud-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+}
+
+.studio-hud-bottom {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(14, 14, 20, 0.85);
+  border: 1px solid var(--border-glass-light);
+  padding: 8px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(20px);
+  z-index: 20;
+}
+
+.studio-hud-right {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 20;
+}
+
+.btn-hud-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-hud-pill:hover,
+.btn-hud-pill.active {
+  background: var(--auth-accent, #dc2626);
+  border-color: var(--auth-accent, #dc2626);
+  color: #fff;
+  box-shadow: 0 0 14px var(--auth-glow, rgba(220, 38, 38, 0.4));
+}
+
+.hud-shoe-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(18, 18, 24, 0.8);
+  border: 1px solid var(--border-glass);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.hud-shoe-btn img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.hud-shoe-btn:hover,
+.hud-shoe-btn.active {
+  border-color: var(--auth-accent, #dc2626);
+  transform: scale(1.12);
+  box-shadow: 0 0 14px var(--auth-glow, rgba(220, 38, 38, 0.4));
+}
+
+.custom-cursor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--auth-accent, #ef4444);
+  position: fixed;
+  top: -4px;
+  left: -4px;
+  pointer-events: none;
+  z-index: 999999;
+  transition: background 0.8s ease;
+}
+
+.custom-cursor-ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--auth-accent, #ef4444);
+  position: fixed;
+  top: -18px;
+  left: -18px;
+  pointer-events: none;
+  z-index: 999998;
+  transition: border-color 0.8s ease, transform 0.15s ease-out;
+}
+
+.custom-cursor-ring.cursor-hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 20px var(--auth-glow, rgba(239, 68, 68, 0.4));
+}
+
+/* ==========================================================================
+   AETHER SNEAKER SIZING & LUXURY UNIT SWITCHER (AUTH / REGISTER)
+   ========================================================================== */
+.reg-size-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.luxury-unit-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.unit-toggle-pill {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #71717a);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.unit-toggle-pill:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.unit-toggle-pill.active {
+  background: var(--auth-accent, #a855f7);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--auth-glow, rgba(168, 85, 247, 0.5));
+}
+
+.reg-size-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.reg-size-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.reg-size-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+.reg-size-grid::-webkit-scrollbar-thumb {
+  background: var(--border-glass, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+}
+
+.reg-size-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary, #a1a1aa);
+  font-family: var(--font-mono, monospace);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+  min-height: 48px;
+  user-select: none;
+}
+
+.reg-size-pill .size-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary, #ffffff);
+  line-height: 1.1;
+}
+
+.reg-size-pill .size-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted, #71717a);
+  margin-top: 2px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.reg-size-pill:hover {
+  border-color: var(--auth-accent, #a855f7);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.reg-size-pill.active {
+  border-color: var(--auth-accent, #a855f7);
+  background: var(--auth-accent, #a855f7);
+  color: #fff;
+  box-shadow: 0 0 14px var(--auth-glow, rgba(168, 85, 247, 0.5));
+}
+
+.reg-size-pill.active .size-val {
+  color: #fff;
+}
+
+.reg-size-pill.active .size-sub {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.reg-size-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-secondary, #a1a1aa);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reg-size-badge strong {
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+

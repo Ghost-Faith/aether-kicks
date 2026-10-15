@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sobre Nós | AETHER KICKS - Atelier Manifesto & Sneakerhead Archive</title>
+  <link rel="stylesheet" href="assets/css/global.css">
+  <link rel="stylesheet" href="assets/css/store.css">
+  <link rel="stylesheet" href="assets/css/profile-wishlist.css">
+  <link rel="icon" href="assets/images/jordan-chicago.png" type="image/png">
+</head>
+<body class="about-page">
+
+  <!-- Ambient Dynamic Lighting Layer -->
+  <div class="ambient-glow-layer">
+    <div class="glow-orb-primary" style="background: radial-gradient(circle, rgba(220, 38, 38, 0.45) 0%, transparent 70%);"></div>
+    <div class="glow-orb-secondary" style="background: radial-gradient(circle, rgba(147, 51, 234, 0.25) 0%, transparent 70%);"></div>
+  </div>
+  <div class="noise-overlay"></div>
+
+  <!-- Fixed Luxury Squircle Navigation -->
+  <nav class="store-nav">
+    <!-- Brand Logo -->
+    <a href="index.html" class="nav-brand" title="Voltar à Página Principal">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+    </a>
+
+    <!-- Center Navigation Links -->
+    <ul class="nav-links">
+      <li><a href="index.html#hype-drops" class="nav-link">Drops</a></li>
+      <li><a href="index.html#square-grid-vault" class="nav-link">The Vault</a></li>
+      <li><a href="index.html#customizer-lab" class="nav-link">Bespoke Lab</a></li>
+      <li><a href="index.html#section-chicago" class="nav-link">Archive</a></li>
+      <li><a href="about.html" class="nav-link active">About Us</a></li>
+    </ul>
+
+    <!-- Right Header Actions -->
+    <div class="nav-actions">
+      <!-- Sound Toggle -->
+      <button id="btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
+        <div class="sound-bars">
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+        </div>
+        <span>AUDIO</span>
+      </button>
+
+      <!-- Wishlist Button -->
+      <a href="wishlist.html" class="btn-nav-wishlist" title="A tua Wishlist">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>WISHLIST</span>
+        <span class="wishlist-badge-count" style="display: none;">0</span>
+      </a>
+
+      <!-- Cart Button -->
+      <button class="btn-nav-cart" onclick="window.cartManager ? window.cartManager.openCart() : null" title="Ver Saco de Colecionador">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>BAG</span>
+        <span class="cart-badge-count" style="display: none;">0</span>
+      </button>
+
+      <!-- Auth Action Links -->
+      <div class="nav-auth-group">
+        <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Perfil</span>
+        </a>
+      </div>
+
+      <!-- Luxury Animated Hamburger Menu Toggle -->
+      <button id="btn-hamburger-toggle" class="btn-hamburger" title="Archive Menu" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Luxury Slide-Out Hamburger Drawer & Backdrop -->
+  <div id="hamburger-backdrop" class="modal-backdrop"></div>
+  <aside id="hamburger-drawer" class="hamburger-drawer">
+    <div class="hamburger-drawer-header">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+      </div>
+      <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer;" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+    </div>
+
+    <ul class="hamburger-menu-links">
+      <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span>Runway Archive</a></li>
+      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault (Grid)</a></li>
+      <li><a href="index.html#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
+      <li><a href="index.html#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
+      <li><a href="index.html#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
+      <li><a href="about.html" class="hamburger-menu-link" style="color: var(--theme-primary); font-weight: 700;"><span class="menu-idx" style="color: var(--theme-primary);">06</span>About Us / Sobre Nós</a></li>
+      <li><a href="javascript:void(0)" onclick="openNFCScanner()" class="hamburger-menu-link"><span class="menu-idx">07</span>NFC Verification</a></li>
+    </ul>
+
+    <div class="hamburger-drawer-footer">
+      <div style="display: flex; gap: 12px;">
+        <a href="login.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none;">Sign In</a>
+        <a href="register.html" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none;">Join Vault</a>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 10px;">AUTHENTICATED SNEAKERHEAD ARCHIVE © 2026</p>
+    </div>
+  </aside>
+
+  <!-- Slide-Over Shopping Cart Drawer -->
+  <div id="cart-backdrop" class="cart-backdrop" onclick="window.cartManager ? window.cartManager.closeCart() : null"></div>
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3 class="cart-drawer-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>Collector Bag</span>
+      </h3>
+      <button class="modal-close-btn" onclick="window.cartManager ? window.cartManager.closeCart() : null">✕</button>
+    </div>
+
+    <div id="cart-items-list" class="cart-items-list">
+      <!-- Populated via CartManager -->
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-promo-row">
+        <input type="text" id="promo-code-input" class="cart-promo-input" placeholder="Promo Code: GRAIL20" value="GRAIL20">
+        <button class="btn-secondary" style="padding: 10px 16px; font-size: 0.82rem;" onclick="window.cartManager ? window.cartManager.applyPromoCode(document.getElementById('promo-code-input').value) : null">
+          Apply
+        </button>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">$0.00</span>
+      </div>
+
+      <div id="cart-discount-row" class="cart-summary-row" style="display: none; color: #22c55e;">
+        <span>Promo Discount</span>
+        <span id="cart-discount-val">-$0.00</span>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Verified Express Shipping</span>
+        <span style="color: #22c55e;">FREE ($0.00)</span>
+      </div>
+
+      <div class="cart-summary-row cart-summary-total">
+        <span>Estimated Total</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+
+      <button class="btn-primary" style="width: 100%; padding: 16px;" onclick="window.cartManager ? window.cartManager.openCheckoutModal() : null">
+        <span>Proceed to Secure Checkout</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Checkout Success / NFC Scanner Modal -->
+  <div id="modal-backdrop" class="modal-backdrop" onclick="closeNFCModal()"></div>
+  <div id="nfc-modal" class="custom-modal">
+    <button class="modal-close-btn" onclick="closeNFCModal()">✕</button>
+    <div style="text-align: center; padding: 20px 10px;">
+      <div style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: rgba(220, 38, 38, 0.15); display: flex; align-items: center; justify-content: center; color: var(--theme-primary);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">AETHER NFC CIPHER</h3>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">Aproxime o seu smartphone da etiqueta da língua do par para verificar o certificado criptográfico inviolável.</p>
+      <div style="padding: 14px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--theme-primary); margin-bottom: 20px;">
+        STATUS: SISTEMA CRIPTOGRÁFICO ATIVO • SHA-256
+      </div>
+      <button class="btn-primary" style="width: 100%;" onclick="closeNFCModal()">Fechar Verificador</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ==========================================================================
+       MAIN CONTENT: ABOUT US / O MANIFESTO DO ATELIER
+       ========================================================================== -->
+  <main class="about-page-wrapper">
+
+    <!-- Breadcrumb Navigation -->
+    <nav class="about-breadcrumb" aria-label="Breadcrumb">
+      <a href="index.html">The Vault</a>
+      <span class="sep">/</span>
+      <a href="index.html#customizer-lab">Atelier</a>
+      <span class="sep">/</span>
+      <span class="current">Sobre Nós & Manifesto</span>
+    </nav>
+
+    <!-- ========================================================================
+         HERO SECTION: O MANIFESTO DO ATELIER
+         ======================================================================== -->
+    <header class="about-hero-layout">
+      <div class="about-hero-text">
+        <div class="about-hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>MANIFESTO DO ATELIER · EST. 2021</span>
+        </div>
+
+        <h1 class="about-hero-title">
+          Nascidos no Underground.<br>
+          Criados para Colecionadores de Grails.
+        </h1>
+
+        <p class="about-hero-subtitle">
+          Uma ponte inabalável entre a nostalgia visceral dos courts de 1985 e o artesanato bespoke de alta precisão. Custodiamos história e criamos obras de arte para calçar.
+        </p>
+
+        <div class="about-hero-ctas">
+          <a href="index.html#square-grid-vault" class="btn-primary">
+            <span>Explorar O Cofre de Grails</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="#contacto-atelier" class="btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Visitar O Atelier</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero Visual 3D Showcase Card -->
+      <div class="about-hero-showcase">
+        <div class="about-showcase-badge-row">
+          <span class="about-showcase-badge">OG SPECIMEN #001</span>
+          <span class="about-showcase-badge" style="color: var(--theme-primary); border-color: var(--theme-card-border);">DEADSTOCK ARCHIVE</span>
+        </div>
+
+        <div class="about-showcase-stage">
+          <div class="about-showcase-halo"></div>
+          <img src="assets/images/jordan-chicago.png" alt="Air Jordan 1 High Chicago 1985" class="about-showcase-img" loading="eager">
+          <div class="about-showcase-shadow"></div>
+        </div>
+
+        <div class="about-showcase-footer">
+          <div class="about-showcase-spec-item">
+            <div class="about-showcase-spec-label">SILHUETA MATRIZ</div>
+            <div class="about-showcase-spec-val">Air Jordan 1 High (1985 Cut)</div>
+          </div>
+          <div class="about-showcase-spec-item">
+            <div class="about-showcase-spec-label">CERTIFICAÇÃO</div>
+            <div class="about-showcase-spec-val" style="color: #22c55e;">14 Pontos Forenses + NFC</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================================================
+         DE ONDE VIEMOS / OUR ORIGINS (STORY & TIMELINE)
+         ======================================================================== -->
+    <section id="origens" class="about-block-section">
+      <div class="section-header-centered">
+        <span class="section-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          A NOSSA ORIGEM · FROM LISBON & PORTO TO THE WORLD
+        </span>
+        <h2 class="section-headline">Do Asfalto Underground à Vanguarda do Colecionismo.</h2>
+        <p class="section-desc">
+          O que começou como uma obsessão silenciosa por solas amareladas pelo tempo transformou-se no atelier de custódia e personalização mais exclusivo da Europa.
+        </p>
+      </div>
+
+      <div class="origins-content-grid">
+        <!-- Story Narrative Column -->
+        <div class="origins-text-wrap">
+          <p class="origins-lead-p">
+            A AETHER KICKS não nasceu numa sala de reuniões corporativa. Nasceu no piso em calçada do Bairro Alto e nas ruelas históricas do Chiado, em Lisboa, onde colecionadores de ténis trocavam pares raros no porta-bagagens de carros sob a luz fraca dos candeeiros urbanos.
+          </p>
+
+          <p class="origins-p">
+            Em 2021, o mercado de sapatilhas estava inundado de drops digitais instantâneos, bots impessoais e uma epidemia sem precedentes de réplicas quase impercetíveis a olho nu. O valor sagrado do "Grail" — a caça apaixonada por aquele par mítico com história real — estava a desvanecer-se.
+          </p>
+
+          <p class="origins-p">
+            Decidimos construir o refúgio oposto: um santuário físico e digital onde cada silhueta é tratada com a reverência de uma pintura renascentista. Estabelecemos o nosso cofre inicial com 40 pares originais de 1985 e aliámo-nos aos lendários mestres sapateiros do norte de Portugal, em São João da Madeira e no Porto, combinando a centenária manufatura do couro português com as silhuetas de basquetebol mais cobiçadas do planeta.
+          </p>
+
+          <div class="origins-quote-card">
+            <p>"Um grail autêntico não é mero couro e borracha prensada; é uma cápsula do tempo cultural. O nosso dever é preservá-lo com rigor cirúrgico para a próxima geração."</p>
+            <div class="origins-quote-author">— DIOGO V. & AETHER CURATORIAL GUILD</div>
+          </div>
+        </div>
+
+        <!-- Milestones Timeline Column -->
+        <div class="timeline-list">
+          <!-- 2021 -->
+          <div class="timeline-item-card">
+            <span class="timeline-node-dot"></span>
+            <div class="timeline-header-row">
+              <span class="timeline-year-tag">2021</span>
+              <span class="timeline-loc-tag">Chiado, Lisboa</span>
+            </div>
+            <h4>O Cofre Secreto do Chiado</h4>
+            <p>Aquisição do primeiro acervo privado de 40 pares deadstock de 1985. Instalação da primeira câmara de desumidificação com controlo barométrico e temperatura estabilizada.</p>
+          </div>
+
+          <!-- 2023 -->
+          <div class="timeline-item-card">
+            <span class="timeline-node-dot"></span>
+            <div class="timeline-header-row">
+              <span class="timeline-year-tag">2023</span>
+              <span class="timeline-loc-tag">Porto Atelier Lab</span>
+            </div>
+            <h4>O Atelier Bespoke & Restauração OG</h4>
+            <p>Abertura da oficina de manufatura no Quarteirão das Artes no Porto. Primeiras recriações 1-of-1 feitas à mão com peles de curtumes toscanos e solas donor restauradas.</p>
+          </div>
+
+          <!-- 2025 -->
+          <div class="timeline-item-card">
+            <span class="timeline-node-dot"></span>
+            <div class="timeline-header-row">
+              <span class="timeline-year-tag">2025</span>
+              <span class="timeline-loc-tag">Laboratório Forense</span>
+            </div>
+            <h4>Protocolo Criptográfico AETHER Tag™</h4>
+            <p>Implementação do chip NFC inviolável embutido na língua de cada exemplar, ligando cada par físico a uma prova de proveniência perpétua e imutável.</p>
+          </div>
+
+          <!-- 2026 -->
+          <div class="timeline-item-card">
+            <span class="timeline-node-dot"></span>
+            <div class="timeline-header-row">
+              <span class="timeline-year-tag">2026</span>
+              <span class="timeline-loc-tag">AETHER Global Runway</span>
+            </div>
+            <h4>A Passarela Cromática & Liquidez Vault</h4>
+            <p>Lançamento do showroom interativo em tempo real, garantia vitalícia com buyback assegurado e envios prioritários para colecionadores em toda a Europa.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         A NOSSA MISSÃO / OUR MISSION (3 CORE TENETS)
+         ======================================================================== -->
+    <section id="missao" class="about-block-section">
+      <div class="section-header-centered">
+        <span class="section-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          PROPÓSITO & PRINCÍPIOS · THE SACRED TENETS
+        </span>
+        <h2 class="section-headline">A Nossa Missão: Redefinir a Custódia de Grails.</h2>
+        <p class="section-desc">
+          Existimos para erradicar a incerteza no mercado de calçado de alto valor através de três princípios inegociáveis.
+        </p>
+      </div>
+
+      <div class="mission-tenets-grid">
+        <!-- Tenet 01 -->
+        <article class="tenet-card">
+          <div class="tenet-top-row">
+            <div class="tenet-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <span class="tenet-num">01</span>
+          </div>
+          <h3>Autenticidade Inegociável</h3>
+          <p>
+            Zero tolerância para réplicas ou representações dúbias. Cada exemplar admitido no cofre é submetido a uma auditoria física manual em 14 pontos forenses, análise espectrométrica de colas sob luz UV e selagem final com chip NFC criptográfico. Se não for 100% puro, não entra.
+          </p>
+          <div class="tenet-footer-tag">AUDITORIA FORENSE DE 14 PONTOS · ZERO TOLERÂNCIA</div>
+        </article>
+
+        <!-- Tenet 02 -->
+        <article class="tenet-card">
+          <div class="tenet-top-row">
+            <div class="tenet-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <span class="tenet-num">02</span>
+          </div>
+          <h3>Artesanato 1-of-1 Bespoke</h3>
+          <p>
+            Não produzimos em massa. O nosso atelier laboratorial constrói obras sob encomenda individual, utilizando peles nobres de curtumes certificados de Itália e Portugal, costuradas à mão com linhas enceradas alemãs e seguindo religiosamente os moldes anatómicos de corte alto de 1985.
+          </p>
+          <div class="tenet-footer-tag">PELES NOBRES EUROPEIAS · MANUFATURA ARTESANAL</div>
+        </article>
+
+        <!-- Tenet 03 -->
+        <article class="tenet-card">
+          <div class="tenet-top-row">
+            <div class="tenet-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <span class="tenet-num">03</span>
+          </div>
+          <h3>Preservação da Cultura Sneaker</h3>
+          <p>
+            Ténis históricos são marcos de design e contracultura que merecem conservação de nível museológico. As nossas câmaras de vácuo e climatização a 16°C travam a oxidação da borracha e a degradação de poliuretano, garantindo que os grails sobrevivem intactos para as próximas décadas.
+          </p>
+          <div class="tenet-footer-tag">CÂMARA CLIMATIZADA DEADSTOCK · PROTEÇÃO ANTI-HIDRÓLISE</div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         OS 4 PILARES DA AUTENTICIDADE (THE 4 PILLARS)
+         ======================================================================== -->
+    <section id="pilares" class="about-block-section">
+      <div class="section-header-centered">
+        <span class="section-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          SISTEMA DE PROTEÇÃO FORENSE · THE 4 PILLARS
+        </span>
+        <h2 class="section-headline">Os 4 Pilares da Autenticidade Absoluta.</h2>
+        <p class="section-desc">
+          Um protocolo em quatro camadas que combina peritagem humana especializada com criptografia de ponta a ponta.
+        </p>
+      </div>
+
+      <div class="pillars-luxury-grid">
+        <!-- Pilar 1 -->
+        <div class="pillar-luxury-card">
+          <div class="pillar-lux-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </div>
+          <h4>1. Micro-inspeção Forense</h4>
+          <p>
+            Auditoria microscópica 50x de densidade de costuras (8.5 pontos/polegada), espessura do corte da flor do couro e assinatura de luminescência sob luz UV para detetar resíduos químicos contemporâneos.
+          </p>
+          <span class="pillar-lux-badge">AUDITORIA FÍSICA · 14 PONTOS</span>
+        </div>
+
+        <!-- Pilar 2 -->
+        <div class="pillar-luxury-card">
+          <div class="pillar-lux-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </div>
+          <h4>2. Certificado Digital NFC</h4>
+          <p>
+            Microchip criptográfico NTAG de alta segurança embutido sob a etiqueta da língua. Ao aproximar qualquer smartphone moderno, é verificado o selo inviolável com assinatura SHA-256 no nosso ledger privado.
+          </p>
+          <span class="pillar-lux-badge">CHIP NFC SHA-256 IMUTÁVEL</span>
+        </div>
+
+        <!-- Pilar 3 -->
+        <div class="pillar-luxury-card">
+          <div class="pillar-lux-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <h4>3. Câmara Climatizada Deadstock</h4>
+          <p>
+            Antes de serem expedidos, todos os grails repousam no nosso cofre a 16°C com 48% de humidade relativa controlada, filtragem de partículas HEPA e proteção absoluta contra raios ultravioleta.
+          </p>
+          <span class="pillar-lux-badge">CUSTÓDIA ATÉ EXPEDIÇÃO</span>
+        </div>
+
+        <!-- Pilar 4 -->
+        <div class="pillar-luxury-card">
+          <div class="pillar-lux-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 15 8.5 17 9.5 13 6.5 10.5 10.5 10 12 6 13.5 10 17.5 10.5 14.5 13 15.5 17 12 15"/></svg>
+          </div>
+          <h4>4. Garantia Vitalícia & Buyback</h4>
+          <p>
+            Emitimos uma garantia contratual vitalícia de originalidade: se qualquer par AETHER for refutado por peritagem acreditada, reembolsamos 200% do valor. Oferecemos também recompra instantânea a valor de mercado.
+          </p>
+          <span class="pillar-lux-badge">200% REEMBOLSO + LIQUIDEZ</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         O PROCESSO DO ATELIER (STEP-BY-STEP WORKSHOP)
+         ======================================================================== -->
+    <section id="processo" class="about-block-section">
+      <div class="section-header-centered">
+        <span class="section-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          MANUFATURA PASSO A PASSO · THE ATELIER LAB
+        </span>
+        <h2 class="section-headline">O Processo do Atelier: Da Matriz ao Grail.</h2>
+        <p class="section-desc">
+          Conheça o ciclo rigoroso de intervenção artesanal aplicado a cada encomenda bespoke e par histórico curado.
+        </p>
+      </div>
+
+      <div class="process-steps-grid">
+        <!-- Step 01 -->
+        <div class="process-step-card">
+          <div class="process-step-indicator">
+            <span class="step-num-pill">PASSO 01</span>
+            <span class="step-status-dot"></span>
+          </div>
+          <h4>Seleção da Base OG</h4>
+          <p>
+            Triagem minuciosa de pares matriz autênticos ou recolha de soles vintage "donor". Avaliação da integridade estrutural da entressola de borracha e da caixa de ar encapsulada.
+          </p>
+          <div class="step-tech-spec">CRITÉRIO: 100% DEADSTOCK OU VINTAGE INTACTO</div>
+        </div>
+
+        <!-- Step 02 -->
+        <div class="process-step-card">
+          <div class="process-step-indicator">
+            <span class="step-num-pill">PASSO 02</span>
+            <span class="step-status-dot"></span>
+          </div>
+          <h4>Descontaminação & Preparação</h4>
+          <p>
+            Desconstrução cirúrgica com separação de pontos, higienização criogénica com CO2 seco para eliminar poeiras microscópicas e assentamento da estrutura no molde de last 1985.
+          </p>
+          <div class="step-tech-spec">PROCESSO: LIMPEZA CRIOGÉNICA & LAST 1985</div>
+        </div>
+
+        <!-- Step 03 -->
+        <div class="process-step-card">
+          <div class="process-step-indicator">
+            <span class="step-num-pill">PASSO 03</span>
+            <span class="step-status-dot"></span>
+          </div>
+          <h4>Tingimento Manual & Costura</h4>
+          <p>
+            Corte manual das peças de couro de flor integral provenientes dos curtumes toscanos. Aplicação de pigmentos resistentes a raios UV e costura individual com linha alemã de alta tensão.
+          </p>
+          <div class="step-tech-spec">MATERIAIS: COURO ITALIANO & LINHA ENCERADA</div>
+        </div>
+
+        <!-- Step 04 -->
+        <div class="process-step-card">
+          <div class="process-step-indicator">
+            <span class="step-num-pill">PASSO 04</span>
+            <span class="step-status-dot"></span>
+          </div>
+          <h4>Acabamento & Selagem NFC</h4>
+          <p>
+            Tratamento de impermeabilização com cera de abelha natural, inserção do microchip NFC sob a etiqueta da língua, auditoria final de 14 pontos e acondicionamento na Aether Vault Box.
+          </p>
+          <div class="step-tech-spec">EXPEDIÇÃO: ACRÍLICO FUMADO + CERTIFICADO NFC</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         ESTATÍSTICAS & NÚMEROS DO VAULT (METRICS)
+         ======================================================================== -->
+    <section class="vault-metrics-banner">
+      <div class="metrics-strip-grid">
+        <div class="metric-strip-item">
+          <div class="metric-strip-num">+1,200</div>
+          <div class="metric-strip-label">Grails Entregues em Portugal & Europa</div>
+        </div>
+
+        <div class="metric-strip-item">
+          <div class="metric-strip-num" style="color: #22c55e;">100%</div>
+          <div class="metric-strip-label">Taxa de Autenticidade Inviolável</div>
+        </div>
+
+        <div class="metric-strip-item">
+          <div class="metric-strip-num">48h</div>
+          <div class="metric-strip-label">Envio Prioritário Segurado em Mão</div>
+        </div>
+
+        <div class="metric-strip-item">
+          <div class="metric-strip-num" style="color: var(--theme-primary);">4.9 / 5</div>
+          <div class="metric-strip-label">Avaliação dos Colecionadores VIP</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         VISITAS AO ATELIER & CONTACTO / AGENDAMENTO BESPOKE
+         ======================================================================== -->
+    <section id="contacto-atelier" class="about-block-section">
+      <div class="section-header-centered">
+        <span class="section-eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          VISITAS PRIVADAS & ENCOMENDAS · CONTACT & BOOKING
+        </span>
+        <h2 class="section-headline">Entre no Nosso Atelier. Fale com os Curadores.</h2>
+        <p class="section-desc">
+          O nosso espaço físico em Lisboa e laboratório no Porto recebem colecionadores sob marcação prévia para inspeção de peças do cofre, consultoria de investimento ou projetos bespoke à medida.
+        </p>
+      </div>
+
+      <div class="concierge-layout-grid">
+        <!-- Studio Details & Channels -->
+        <div class="concierge-info-card">
+          <!-- Lisbon Studio -->
+          <div class="studio-loc-box">
+            <span class="studio-city-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              CONCEPT STUDIO LISBOA
+            </span>
+            <h3 class="studio-loc-name">AETHER Vault Chiado</h3>
+            <p class="studio-address">Rua da Prata, n.º 142, 2.º Andar<br>1100-420 Lisboa, Portugal</p>
+            <p class="studio-hours">Segunda a Sábado: 10h00 - 19h30 (Exclusivo com Marcação)</p>
+          </div>
+
+          <!-- Porto Lab -->
+          <div class="studio-loc-box">
+            <span class="studio-city-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              ATELIER LAB PORTO
+            </span>
+            <h3 class="studio-loc-name">AETHER Bespoke Workshop</h3>
+            <p class="studio-address">Rua de Miguel Bombarda, n.º 285<br>4050-377 Porto, Portugal</p>
+            <p class="studio-hours">Terça a Sexta: 11h00 - 19h00 (Visitas Técnicas de Artesanato)</p>
+          </div>
+
+          <!-- Contact Channels -->
+          <div class="concierge-contact-pills">
+            <a href="https://wa.me/351912851985" target="_blank" rel="noopener noreferrer" class="contact-pill-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>WhatsApp VIP Concierge: +351 912 851 985</span>
+            </a>
+
+            <a href="mailto:atelier@aetherkicks.io" class="contact-pill-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <span>Email: atelier@aetherkicks.io</span>
+            </a>
+
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="contact-pill-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              <span>Instagram: @aetherkicks.archive</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Interactive Consultation Booking Form -->
+        <div class="concierge-form-card">
+          <h3 class="concierge-form-title">Agendar Consulta Privada ou Pedido Bespoke</h3>
+          <p class="concierge-form-desc">
+            Preencha os dados abaixo para reservar uma sessão presencial no atelier ou submeter uma comissão de design personalizado. O nosso curador responderá em menos de 4 horas.
+          </p>
+
+          <form id="atelier-booking-form" onsubmit="handleAtelierSubmit(event)">
+            <div class="about-form-grid">
+              <!-- Nome -->
+              <div class="about-input-group">
+                <label class="about-input-label" for="booking-name">Nome do Colecionador</label>
+                <input type="text" id="booking-name" class="about-form-input" placeholder="Ex: Gonçalo Matos" required>
+              </div>
+
+              <!-- Email -->
+              <div class="about-input-group">
+                <label class="about-input-label" for="booking-email">Email de Contacto</label>
+                <input type="email" id="booking-email" class="about-form-input" placeholder="colecionador@exemplo.pt" required>
+              </div>
+
+              <!-- Telefone -->
+              <div class="about-input-group">
+                <label class="about-input-label" for="booking-phone">Telemóvel / WhatsApp</label>
+                <input type="tel" id="booking-phone" class="about-form-input" placeholder="+351 91X XXX XXX" required>
+              </div>
+
+              <!-- Tipo de Pedido -->
+              <div class="about-input-group">
+                <label class="about-input-label" for="booking-type">Finalidade da Consulta</label>
+                <select id="booking-type" class="about-form-select">
+                  <option value="bespoke">Comissão 1-of-1 Bespoke Atelier</option>
+                  <option value="visit-lisbon">Visita Privada ao Vault de Lisboa</option>
+                  <option value="visit-porto">Visita Técnica ao Lab do Porto</option>
+                  <option value="sourcing">Aquisição / Sourcing de Grail Específico</option>
+                  <option value="auth-check">Autenticação Forense de Par Próprio</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Detalhes -->
+            <div class="about-input-group full-width">
+              <label class="about-input-label" for="booking-details">Detalhes do Projeto / Silhueta de Interesse</label>
+              <textarea id="booking-details" class="about-form-textarea" placeholder="Descreva a silhueta, tamanho (US), personalizações pretendidas ou data preferencial para visita..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-concierge-submit">
+              <span>Submeter Pedido ao Concierge VIP</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       LUXURY FOOTER
+       ======================================================================== -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
+        </div>
+        <p>A plataforma definitiva de custódia e criação para colecionadores de ténis raros. Experiência de visualização imersiva, autenticação forense em 14 pontos físicos e preservação deadstock com chip NFC criptográfico.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Runway & Coleção</h5>
+        <ul>
+          <li><a href="index.html#section-chicago">Chicago 1985 (Varsity Red)</a></li>
+          <li><a href="index.html#section-purple">Court Purple 2.0 (Violet)</a></li>
+          <li><a href="index.html#section-blue">University Blue (Sky)</a></li>
+          <li><a href="index.html#section-green">Pine Green 2.0 (Emerald)</a></li>
+          <li><a href="index.html#square-grid-vault">Catálogo The Vault (Grid)</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Atelier & Autenticação</h5>
+        <ul>
+          <li><a href="about.html" style="color: var(--theme-primary); font-weight: 700;">Sobre Nós / O Manifesto</a></li>
+          <li><a href="about.html#origens">De Onde Viemos (Timeline)</a></li>
+          <li><a href="about.html#missao">A Nossa Missão</a></li>
+          <li><a href="about.html#pilares">Os 4 Pilares Forenses</a></li>
+          <li><a href="javascript:void(0)" onclick="openNFCScanner()">Verificador NFC</a></li>
+          <li><a href="#contacto-atelier">Marcar Visita no Atelier</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Área do Colecionador</h5>
+        <ul>
+          <li><a href="login.html">Sign In (Acesso ao Cofre)</a></li>
+          <li><a href="register.html">Registar Conta de Colecionador</a></li>
+          <li><a href="index.html#customizer-lab">Bespoke 3D Studio</a></li>
+          <li><a href="javascript:void(0)" onclick="window.cartManager ? window.cartManager.openCart() : null">Ver Saco de Compras</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 AETHER KICKS ARCHIVE. Todos os direitos reservados. Lisboa & Porto, Portugal.</span>
+      <span>Artesanato Bespoke, Proteção Criptográfica & Custódia Deadstock.</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="assets/js/db.js"></script>
+  <script src="assets/js/logo-particles.js"></script>
+  <script src="assets/js/cursor.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/wishlist.js"></script>
+  <script src="assets/js/store.js"></script>
+
+  <!-- Interactive Script for About Page -->
+  <script>
+    // Handle Interactive Consultation Form Submission
+    function handleAtelierSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('booking-name').value;
+      const email = document.getElementById('booking-email').value;
+      const type = document.getElementById('booking-type').value;
+
+      if (window.soundEngine) {
+        window.soundEngine.playSuccess();
+      }
+
+      if (typeof showToast === 'function') {
+        showToast(`Pedido de ${name} registado com sucesso! Entraremos em contacto via WhatsApp/Email dentro de 4 horas úteis. ✨`);
+      } else {
+        alert('Obrigado! O seu pedido de consulta foi enviado ao concierge do Atelier.');
+      }
+
+      document.getElementById('atelier-booking-form').reset();
+    }
+  </script>
+</body>
+</html>
