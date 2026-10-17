@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="assets/css/store.css">
   <link rel="stylesheet" href="assets/css/profile-wishlist.css">
   <link rel="icon" href="assets/images/jordan-chicago.png" type="image/png">
+  <script src="assets/js/i18n.js"></script>
 </head>
 <body class="theme-chicago">
 
@@ -32,16 +33,23 @@
 
     <!-- Desktop Navigation Links -->
     <ul class="nav-links">
-      <li><a href="index.html#section-chicago" class="nav-link">Vault</a></li>
-      <li><a href="index.html#square-grid-vault" class="nav-link">Archive</a></li>
-      <li><a href="index.html#customizer-lab" class="nav-link">Bespoke Lab</a></li>
-      <li><a href="index.html#hype-drops" class="nav-link">Drops</a></li>
-      <li><a href="index.html#market-analytics" class="nav-link">Analytics</a></li>
-      <li><a href="about.html" class="nav-link">About Us</a></li>
+      <li><a href="index.html#section-chicago" class="nav-link" data-i18n="nav_runway">Vault</a></li>
+      <li><a href="index.html#square-grid-vault" class="nav-link" data-i18n="nav_grid">Archive</a></li>
+      <li><a href="index.html#customizer-lab" class="nav-link" data-i18n="nav_lab">Bespoke Lab</a></li>
+      <li><a href="index.html#hype-drops" class="nav-link" data-i18n="nav_drops">Drops</a></li>
+      <li><a href="index.html#market-analytics" class="nav-link" data-i18n="nav_analytics">Analytics</a></li>
+      <li><a href="about.html" class="nav-link" data-i18n="nav_about">About Us</a></li>
     </ul>
 
     <!-- Right Header Actions -->
     <div class="nav-actions">
+      <!-- Luxury Bilingual Language Switcher -->
+      <button id="btn-lang-toggle" class="btn-lang-toggle" onclick="window.i18n ? window.i18n.toggleLanguage() : null" title="Mudar Idioma / Switch Language" aria-label="Switch Language">
+        <span class="lang-code active" data-lang="pt">PT</span>
+        <span class="lang-divider">/</span>
+        <span class="lang-code" data-lang="en">EN</span>
+      </button>
+
       <!-- Sound Toggle -->
       <button id="btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
         <div class="sound-bars">
@@ -49,20 +57,20 @@
           <span class="sound-bar"></span>
           <span class="sound-bar"></span>
         </div>
-        <span>AUDIO</span>
+        <span data-i18n="nav_audio">AUDIO</span>
       </button>
 
       <!-- Wishlist Button Active -->
       <a href="wishlist.html" class="btn-nav-wishlist active" style="border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.12);" title="A tua Wishlist de Grails">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <span>WISHLIST</span>
+        <span data-i18n="nav_wishlist">WISHLIST</span>
         <span class="wishlist-badge-count" style="display: none;">0</span>
       </a>
 
       <!-- Cart Button -->
       <button class="btn-nav-cart" onclick="window.cartManager ? window.cartManager.openCart() : null" title="Ver Saco de Colecionador">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        <span>BAG</span>
+        <span data-i18n="nav_bag">BAG</span>
         <span class="cart-badge-count" style="display: none;">0</span>
       </button>
 
@@ -70,7 +78,7 @@
       <div class="nav-auth-group">
         <a href="profile.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;" title="Painel do Colecionador">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span id="nav-profile-name">Perfil</span>
+          <span id="nav-profile-name" data-i18n="nav_profile">Perfil</span>
         </a>
       </div>
 
@@ -98,38 +106,38 @@
 
     <!-- Presentation Mode Toggle inside Drawer -->
     <div class="drawer-presentation-box">
-      <div class="drawer-presentation-label">Presentation Mode</div>
+      <div class="drawer-presentation-label" data-i18n="presentation_mode">Presentation Mode</div>
       <div class="nav-view-switcher">
         <button id="drawer-btn-runway" class="btn-view-opt active" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#section-chicago'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          <span>Runway</span>
+          <span data-i18n="nav_runway">Runway</span>
         </button>
         <button id="drawer-btn-grid" class="btn-view-opt" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#square-grid-vault'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          <span>Square Grid</span>
+          <span data-i18n="nav_grid">Square Grid</span>
         </button>
       </div>
     </div>
 
     <ul class="hamburger-menu-links">
-      <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span>Runway Archive</a></li>
-      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span>The Grail Vault</a></li>
-      <li><a href="index.html#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span>Bespoke Lab</a></li>
-      <li><a href="index.html#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span>Live Drops</a></li>
-      <li><a href="index.html#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span>Market Analytics</a></li>
-      <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span>About Us / Sobre Nós</a></li>
-      <li><a href="wishlist.html" class="hamburger-menu-link active"><span class="menu-idx">07</span>A Tua Wishlist</a></li>
-      <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span>Perfil de Colecionador</a></li>
-      <li><a href="index.html#nfc-modal" onclick="if(document.getElementById('nfc-modal')){ openNFCScanner(); return false; }" class="hamburger-menu-link"><span class="menu-idx">09</span>NFC Verification</a></li>
+      <li><a href="index.html#section-chicago" class="hamburger-menu-link"><span class="menu-idx">01</span><span class="menu-label" data-i18n="menu_01">Runway Archive</span></a></li>
+      <li><a href="index.html#square-grid-vault" class="hamburger-menu-link"><span class="menu-idx">02</span><span class="menu-label" data-i18n="menu_02">The Grail Vault</span></a></li>
+      <li><a href="index.html#customizer-lab" class="hamburger-menu-link"><span class="menu-idx">03</span><span class="menu-label" data-i18n="menu_03">Bespoke Lab</span></a></li>
+      <li><a href="index.html#hype-drops" class="hamburger-menu-link"><span class="menu-idx">04</span><span class="menu-label" data-i18n="menu_04">Live Drops</span></a></li>
+      <li><a href="index.html#market-analytics" class="hamburger-menu-link"><span class="menu-idx">05</span><span class="menu-label" data-i18n="menu_05">Market Analytics</span></a></li>
+      <li><a href="about.html" class="hamburger-menu-link"><span class="menu-idx">06</span><span class="menu-label" data-i18n="menu_06">About Us</span></a></li>
+      <li><a href="wishlist.html" class="hamburger-menu-link active"><span class="menu-idx">07</span><span class="menu-label" data-i18n="menu_07">A Tua Wishlist</span></a></li>
+      <li><a href="profile.html" class="hamburger-menu-link"><span class="menu-idx">08</span><span class="menu-label" data-i18n="menu_08">Perfil de Colecionador</span></a></li>
+      <li><a href="index.html#nfc-modal" onclick="if(document.getElementById('nfc-modal')){ openNFCScanner(); return false; }" class="hamburger-menu-link"><span class="menu-idx">09</span><span class="menu-label" data-i18n="menu_09">NFC Verification</span></a></li>
     </ul>
 
     <div class="hamburger-drawer-footer">
       <div style="display: flex; gap: 8px;">
-        <a href="login.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Sign In</a>
-        <a href="register.html" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Join Vault</a>
-        <a href="profile.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;">Perfil</a>
+        <a href="login.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;" data-i18n="nav_signin">Sign In</a>
+        <a href="register.html" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;" data-i18n="nav_join_vault">Join Vault</a>
+        <a href="profile.html" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; padding: 10px 4px; font-size: 0.82rem;" data-i18n="nav_profile">Perfil</a>
       </div>
-      <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 10px;">AUTHENTICATED SNEAKERHEAD ARCHIVE © 2026</p>
+      <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); text-align: center; margin-top: 10px;" data-i18n="menu_footer_auth">AUTHENTICATED SNEAKERHEAD ARCHIVE © 2026</p>
     </div>
   </aside>
 
@@ -138,10 +146,10 @@
     <header class="page-hero">
       <div class="page-hero-badge">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <span>COFRE PESSOAL DE SNEAKERS · LISTA DE GRAILS</span>
+        <span data-i18n="wishlist_hero_badge">COFRE PESSOAL DE SNEAKERS · LISTA DE GRAILS</span>
       </div>
-      <h1 class="page-hero-title">A Tua Wishlist de Grails</h1>
-      <p class="page-hero-subtitle">
+      <h1 class="page-hero-title" data-i18n="wishlist_hero_title">A Tua Wishlist de Grails</h1>
+      <p class="page-hero-subtitle" data-i18n="wishlist_hero_desc">
         Os pares mais cobiçados do mundo preservados no teu radar. Reserva, compra instantaneamente ou personaliza no nosso Atelier Bespoke.
       </p>
       <div class="wishlist-stats-row">

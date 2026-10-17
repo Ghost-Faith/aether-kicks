@@ -39,6 +39,11 @@ class Interactive3DSneaker {
     this.autoSpinBtn = containerEl.querySelector('.btn-auto-spin-3d');
     this.scrubberInput = containerEl.querySelector('.turntable-scrubber');
 
+    // Performance & Lifecycle
+    this.isVisible = true;
+    this.isAnimating = false;
+    this.animId = null;
+
     this.init();
   }
 
@@ -60,8 +65,39 @@ class Interactive3DSneaker {
     this.bindHoverTilt();
     this.bindHUDControls();
 
-    // Start render animation loop
-    this.render();
+    // IntersectionObserver to sleep render loop when off-screen
+    if ('IntersectionObserver' in window) {
+      this.observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          this.isVisible = entry.isIntersecting;
+          if (this.isVisible) {
+            this.requestRender();
+          } else {
+            this.stopRender();
+          }
+        });
+      }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
+      this.observer.observe(this.container);
+    }
+
+    // Initial render pass
+    this.requestRender();
+  }
+
+  requestRender() {
+    if (!this.isVisible && 'IntersectionObserver' in window) return;
+    if (!this.isAnimating) {
+      this.isAnimating = true;
+      this.animId = requestAnimationFrame(() => this.render());
+    }
+  }
+
+  stopRender() {
+    this.isAnimating = false;
+    if (this.animId) {
+      cancelAnimationFrame(this.animId);
+      this.animId = null;
+    }
   }
 
   bindMouseDrag() {
@@ -72,6 +108,7 @@ class Interactive3DSneaker {
       this.velocity = 0;
       this.wrap.style.cursor = 'grabbing';
       if (this.isAutoSpinning) this.toggleAutoSpin(false);
+      this.requestRender();
       e.preventDefault();
     });
 
@@ -82,12 +119,14 @@ class Interactive3DSneaker {
       const newAngle = this.dragStartAngle + deltaX * 0.85;
       this.velocity = (newAngle - this.targetAngle) * 0.3;
       this.targetAngle = newAngle;
-    });
+      this.requestRender();
+    }, { passive: true });
 
     window.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false;
         this.wrap.style.cursor = 'grab';
+        this.requestRender();
       }
     });
   }
@@ -100,6 +139,7 @@ class Interactive3DSneaker {
         this.dragStartAngle = this.targetAngle;
         this.velocity = 0;
         if (this.isAutoSpinning) this.toggleAutoSpin(false);
+        this.requestRender();
       }
     }, { passive: true });
 
@@ -109,16 +149,21 @@ class Interactive3DSneaker {
       const newAngle = this.dragStartAngle + deltaX * 0.85;
       this.velocity = (newAngle - this.targetAngle) * 0.3;
       this.targetAngle = newAngle;
+      this.requestRender();
     }, { passive: true });
 
     window.addEventListener('touchend', () => {
-      this.isDragging = false;
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.requestRender();
+      }
     });
   }
 
   bindHoverTilt() {
     this.container.addEventListener('mouseenter', () => {
       this.isHovering = true;
+      this.requestRender();
     });
 
     this.container.addEventListener('mousemove', (e) => {
@@ -127,12 +172,14 @@ class Interactive3DSneaker {
       const normY = ((e.clientY - rect.top) / rect.height) - 0.5;
       this.targetTiltX = -normY * 20; // Pitch
       this.targetTiltY = normX * 18;  // Yaw bias
-    });
+      this.requestRender();
+    }, { passive: true });
 
     this.container.addEventListener('mouseleave', () => {
       this.isHovering = false;
       this.targetTiltX = 0;
       this.targetTiltY = 0;
+      this.requestRender();
     });
   }
 
@@ -169,6 +216,7 @@ class Interactive3DSneaker {
     if (this.isAutoSpinning) this.toggleAutoSpin(false);
     // Smooth transition to target angle
     this.targetAngle = targetDeg;
+    this.requestRender();
   }
 
   toggleAutoSpin(forceState) {
@@ -180,11 +228,12 @@ class Interactive3DSneaker {
         textSpan.textContent = this.isAutoSpinning ? 'Pause 360°' : 'Auto 360°';
       }
     }
+    if (this.isAutoSpinning) {
+      this.requestRender();
+    }
   }
 
   render() {
-    requestAnimationFrame(() => this.render());
-
     // Auto-spin increment
     if (this.isAutoSpinning) {
       this.targetAngle += this.autoSpinSpeed;
@@ -202,6 +251,20 @@ class Interactive3DSneaker {
     this.tiltX += (this.targetTiltX - this.tiltX) * 0.1;
     this.tiltY += (this.targetTiltY - this.tiltY) * 0.1;
 
+    // Detect if motion has reached settled equilibrium
+    const angleDelta = Math.abs(this.targetAngle - this.currentAngle);
+    const tiltXDelta = Math.abs(this.targetTiltX - this.tiltX);
+    const tiltYDelta = Math.abs(this.targetTiltY - this.tiltY);
+    const hasActiveMotion = this.isAutoSpinning || this.isDragging || this.isHovering ||
+                            Math.abs(this.velocity) > 0.01 ||
+                            angleDelta > 0.02 || tiltXDelta > 0.02 || tiltYDelta > 0.02;
+
+    if (!hasActiveMotion) {
+      this.currentAngle = this.targetAngle;
+      this.tiltX = this.targetTiltX;
+      this.tiltY = this.targetTiltY;
+    }
+
     // Normalized display angle (0 to 360)
     let displayDeg = Math.round(this.currentAngle % 360);
     if (displayDeg < 0) displayDeg += 360;
@@ -215,7 +278,6 @@ class Interactive3DSneaker {
     }
 
     // 3D Perspective Matrix applied to wrap
-    // RotateY gives true 3D turntable spin, Tilt gives responsive depth
     const rotY = this.currentAngle;
     const finalTiltX = this.tiltX;
     const scale = this.isDragging ? 1.06 : 1.02;
@@ -235,6 +297,14 @@ class Interactive3DSneaker {
       const sheenPos = ((this.currentAngle % 360) / 360) * 200 - 50;
       this.sheen.style.transform = `translateX(${sheenPos}%) rotate(35deg)`;
       this.sheen.style.opacity = Math.abs(Math.sin((this.currentAngle * Math.PI) / 180)) * 0.65;
+    }
+
+    // Continue loop only if active motion continues and container is in viewport
+    if (hasActiveMotion && this.isVisible) {
+      this.animId = requestAnimationFrame(() => this.render());
+    } else {
+      this.isAnimating = false;
+      this.animId = null;
     }
   }
 }

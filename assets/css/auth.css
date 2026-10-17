@@ -638,11 +638,19 @@
   }
 
   .auth-header {
-    padding: 12px 14px;
+    padding: 12px 10px;
+    gap: 6px;
   }
 
   .auth-brand {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    gap: 6px;
+  }
+
+  .btn-lang-toggle {
+    padding: 3px 6px !important;
+    font-size: 0.64rem !important;
+    gap: 2px !important;
   }
 
   .auth-back-link span {
@@ -909,6 +917,49 @@
   border-color: #fff;
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 20px var(--auth-glow, rgba(239, 68, 68, 0.4));
+}
+
+/* Luxury Language Switcher Toggle */
+.btn-lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: var(--text-muted, #a1a1aa);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn-lang-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.btn-lang-toggle .lang-code {
+  transition: color 0.2s ease;
+  color: var(--text-muted, #a1a1aa);
+}
+
+.btn-lang-toggle .lang-code.active {
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 0 8px var(--auth-glow, rgba(239, 68, 68, 0.6));
+}
+
+.btn-lang-toggle .lang-divider {
+  opacity: 0.35;
+  font-size: 0.65rem;
+  margin: 0 1px;
 }
 
 /* ==========================================================================

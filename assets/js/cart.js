@@ -438,6 +438,25 @@ class CartManager {
     }, 1400);
   }
 
+  exploreShowcase() {
+    this.closeCart();
+    const isStorefront = !!(document.getElementById('section-chicago') || document.getElementById('square-grid-vault'));
+    if (isStorefront) {
+      if (typeof window.setCatalogLayout === 'function') {
+        window.setCatalogLayout('runway');
+      }
+      const target = document.getElementById('section-chicago') || document.getElementById('square-grid-vault');
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      }
+    } else {
+      window.location.href = 'index.html#section-chicago';
+    }
+    if (window.soundEngine) window.soundEngine.playClick();
+  }
+
   renderCartItems() {
     const list = document.getElementById('cart-items-list');
     if (!list) return;
@@ -446,13 +465,16 @@ class CartManager {
       list.innerHTML = `
         <div class="cart-empty-state">
           <div class="empty-icon">👟</div>
-          <h4>Your bag is currently empty</h4>
-          <p>Explore the color runway and lock down your preferred grail.</p>
-          <button class="btn-secondary" onclick="window.cartManager.closeCart();">Explore Showcase</button>
+          <h4 data-i18n="cart_empty_title">Your bag is currently empty</h4>
+          <p data-i18n="cart_empty_desc">Explore the color runway and lock down your preferred grail.</p>
+          <button class="btn-secondary" onclick="window.cartManager.exploreShowcase();" data-i18n="cart_explore_showcase">Explore Showcase</button>
         </div>
       `;
       document.getElementById('cart-subtotal').textContent = '$0.00';
       document.getElementById('cart-total').textContent = '$0.00';
+      if (window.i18n && typeof window.i18n.translateElement === 'function') {
+        window.i18n.translateElement(list);
+      }
       return;
     }
 

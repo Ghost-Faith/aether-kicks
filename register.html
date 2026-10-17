@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/css/global.css">
   <link rel="stylesheet" href="assets/css/auth.css">
   <link rel="icon" href="assets/images/jordan-purple.png" type="image/png">
+  <script src="assets/js/i18n.js"></script>
 </head>
 <body class="auth-page theme-purple">
 
@@ -27,15 +28,22 @@
     </a>
 
     <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- Luxury Bilingual Language Switcher -->
+      <button id="btn-lang-toggle" class="btn-lang-toggle" onclick="window.i18n ? window.i18n.toggleLanguage() : null" title="Mudar Idioma / Switch Language" aria-label="Switch Language">
+        <span class="lang-code active" data-lang="pt">PT</span>
+        <span class="lang-divider">/</span>
+        <span class="lang-code" data-lang="en">EN</span>
+      </button>
+
       <a href="about.html" class="auth-back-link">
-        <span>About Us</span>
+        <span data-i18n="nav_about">About Us</span>
       </a>
       <a href="wishlist.html" class="auth-back-link">
-        <span>Wishlist</span>
+        <span data-i18n="nav_wishlist">Wishlist</span>
       </a>
       <a href="index.html" class="auth-back-link">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        <span>Back to Storefront</span>
+        <span data-i18n="back_storefront">Back to Storefront</span>
       </a>
     </div>
   </header>
@@ -98,10 +106,10 @@
         <div class="auth-card-header">
           <div class="auth-badge-tag">
             <span class="badge-dot" style="width: 6px; height: 6px; border-radius: 50%; background: var(--auth-accent); display: inline-block;"></span>
-            <span>COURT PURPLE EXCLUSIVE ENROLLMENT</span>
+            <span data-i18n="auth_purple_badge">COURT PURPLE EXCLUSIVE ENROLLMENT</span>
           </div>
-          <h1 class="auth-card-title">Join The Vault</h1>
-          <p class="auth-card-subtitle">Create your collector profile to enter raffle drops, track portfolio value, and purchase authenticated pairs.</p>
+          <h1 class="auth-card-title" data-i18n="register_title">Join The Vault</h1>
+          <p class="auth-card-subtitle" data-i18n="register_subtitle">Create your collector profile to enter raffle drops, track portfolio value, and purchase authenticated pairs.</p>
         </div>
 
         <form id="register-form" class="auth-form">
@@ -109,7 +117,7 @@
           <!-- Full Name & Handle in row -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="input-group">
-              <label class="input-label" for="reg-name">Full Name</label>
+              <label class="input-label" for="reg-name" data-i18n="register_fullname_label">Full Name</label>
               <div class="input-wrapper">
                 <input type="text" id="reg-name" class="form-input" style="padding-left: 16px;" placeholder="Marcus Jordan" value="Marcus Jordan" required>
               </div>
@@ -194,13 +202,13 @@
           <div class="auth-options-row">
             <label class="checkbox-label">
               <input type="checkbox" checked required>
-              <span>I agree to Aether Terms, Deadstock Guarantee & Drop Rules</span>
+              <span data-i18n="register_terms_label">I agree to Aether Terms, Deadstock Guarantee & Drop Rules</span>
             </label>
           </div>
 
           <!-- Submit Button -->
           <button type="submit" class="btn-auth-submit">
-            <span>Create Collector Vault</span>
+            <span data-i18n="register_submit_btn">Create Collector Vault</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 8px; vertical-align: middle;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
 
@@ -223,8 +231,8 @@
         </form>
 
         <div class="auth-footer-switch">
-          <span>Already registered in the vault?</span>
-          <a href="login.html">Sign In Here →</a>
+          <span data-i18n="register_already_registered">Already registered in the vault?</span>
+          <a href="login.html" data-i18n="register_login_link">Sign In Here →</a>
         </div>
       </div>
     </section>

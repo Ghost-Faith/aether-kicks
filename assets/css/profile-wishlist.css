@@ -1017,12 +1017,13 @@
 
   .hamburger-menu-link {
     font-family: var(--font-display) !important;
-    font-size: clamp(0.85rem, 2.9vw, 0.95rem) !important;
+    font-size: clamp(0.82rem, 2.7vw, 0.92rem) !important;
     font-weight: 800 !important;
     letter-spacing: -0.02em !important;
     padding: 7px 10px !important;
     gap: 8px !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
   }
 
   .hamburger-drawer {
@@ -1091,12 +1092,13 @@
 
   .hamburger-menu-link {
     font-family: var(--font-display) !important;
-    font-size: 0.85rem !important;
+    font-size: 0.82rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.01em !important;
     padding: 6px 8px !important;
     gap: 6px !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
   }
 
   .hamburger-drawer-footer div {

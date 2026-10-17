@@ -80,9 +80,28 @@ class Sneaker3DStudio {
     this.buildParticleField();
 
     // 8. Event Listeners
-    window.addEventListener('resize', () => this.onResize());
+    window.addEventListener('resize', () => this.onResize(), { passive: true });
 
-    // 9. Start Render Loop
+    // 9. Intersection Observer to sleep WebGL when offscreen
+    this.isVisible = true;
+    if ('IntersectionObserver' in window && this.container) {
+      this.observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          this.isVisible = entry.isIntersecting;
+          if (this.isVisible) {
+            if (!this.animId) this.animate();
+          } else {
+            if (this.animId) {
+              cancelAnimationFrame(this.animId);
+              this.animId = null;
+            }
+          }
+        });
+      }, { rootMargin: '100px 0px 100px 0px', threshold: 0.02 });
+      this.observer.observe(this.container);
+    }
+
+    // 10. Start Render Loop
     this.animate();
   }
 
@@ -722,6 +741,10 @@ class Sneaker3DStudio {
   }
 
   animate() {
+    if (!this.isVisible) {
+      this.animId = null;
+      return;
+    }
     this.animId = requestAnimationFrame(() => this.animate());
 
     const time = Date.now() * 0.001;

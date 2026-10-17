@@ -37,17 +37,18 @@ class LogoParticleSystem {
     this.ctx = this.canvas.getContext('2d');
     this.resize();
 
-    window.addEventListener('resize', () => this.resize(), { passive: true });
-    window.addEventListener('mousemove', (e) => this.onMouseMove(e), { passive: true });
-
-    // Touch support for mobile devices
-    window.addEventListener('touchmove', (e) => {
-      if (e.touches && e.touches.length > 0) {
-        this.onMouseMove(e.touches[0]);
-      }
+    window.addEventListener('resize', () => {
+      this.resize();
+      this.updateCachedRects();
     }, { passive: true });
 
-    // Direct hover on logo elements for immediate spark burst
+    window.addEventListener('scroll', () => {
+      this.updateCachedRects();
+    }, { passive: true });
+
+    window.addEventListener('mousemove', (e) => this.onMouseMove(e), { passive: true });
+
+    // Direct hover/tap on logo elements for immediate spark burst
     this.logos.forEach(logo => {
       logo.addEventListener('mouseenter', () => {
         const rect = logo.getBoundingClientRect();
@@ -150,42 +151,51 @@ class LogoParticleSystem {
     };
   }
 
+  updateCachedRects() {
+    if (!this.logos || this.logos.length === 0) {
+      this.logos = Array.from(document.querySelectorAll('.nav-brand, .auth-brand'));
+    }
+    this.cachedRects = this.logos.map(logo => {
+      const rect = logo.getBoundingClientRect();
+      return {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height
+      };
+    }).filter(r => r.width > 0 && r.height > 0);
+  }
+
   onMouseMove(e) {
     this.cursorX = e.clientX;
     this.cursorY = e.clientY;
 
-    let nearAny = false;
-
-    if (!this.logos || this.logos.length === 0) {
-      this.logos = Array.from(document.querySelectorAll('.nav-brand, .auth-brand'));
+    if (!this.cachedRects || this.cachedRects.length === 0) {
+      this.updateCachedRects();
     }
 
-    this.logos.forEach(logo => {
-      const rect = logo.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) return;
+    let nearAny = false;
+    const padding = 15;
 
-      const padding = 15;
-      const inBounds = (
+    for (let i = 0; i < this.cachedRects.length; i++) {
+      const rect = this.cachedRects[i];
+      if (
         this.cursorX >= rect.left - padding &&
         this.cursorX <= rect.right + padding &&
         this.cursorY >= rect.top - padding &&
         this.cursorY <= rect.bottom + padding
-      );
-
-      // ONLY spawn particles when the cursor is strictly within this tight bounding area of the logo icon and brand text
-      if (inBounds) {
+      ) {
         nearAny = true;
-        // Spawn 1-2 sparks per movement event
         const count = Math.floor(Math.random() * 2) + 1;
-        for (let i = 0; i < count; i++) {
-          // Spawn coordinates MUST originate strictly ON or INSIDE the logo element boundaries
+        for (let j = 0; j < count; j++) {
           const spawnX = rect.left + Math.random() * rect.width;
           const spawnY = rect.top + Math.random() * rect.height;
           this.spawnParticle(spawnX, spawnY);
         }
       }
-    });
+    }
 
     if (nearAny && !this.isNearLogo) {
       this.isNearLogo = true;
@@ -196,7 +206,7 @@ class LogoParticleSystem {
   }
 
   spawnParticle(x, y) {
-    if (this.particles.length > 120) return; // Cap maximum active particles
+    if (this.particles.length > 80) return; // Cap maximum active particles
 
     const colors = this.getThemeColors();
 
@@ -244,13 +254,15 @@ class LogoParticleSystem {
       }
 
       this.ctx.save();
-      this.ctx.globalAlpha = Math.max(0, p.alpha);
-
-      // Glowing outer halo
-      this.ctx.shadowBlur = 10;
-      this.ctx.shadowColor = p.glowColor;
+      // Glowing outer halo without CPU-blocking shadowBlur
+      this.ctx.globalAlpha = Math.max(0, p.alpha * 0.28);
+      this.ctx.fillStyle = p.glowColor;
+      this.ctx.beginPath();
+      this.ctx.arc(p.x, p.y, p.size * p.alpha * 2.4, 0, Math.PI * 2);
+      this.ctx.fill();
 
       // Particle body
+      this.ctx.globalAlpha = Math.max(0, p.alpha);
       this.ctx.fillStyle = p.sparkle && Math.random() > 0.5 ? '#ffffff' : p.color;
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);

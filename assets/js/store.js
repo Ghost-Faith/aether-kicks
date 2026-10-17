@@ -282,7 +282,7 @@ function updateColorsContinuous(sections, dots) {
   const dsb = Math.abs(sb - lastAppliedTheme.sb);
 
   const hasAnyDiff = (dr > 0 || dg > 0 || db > 0 || dsr > 0 || dsg > 0 || dsb > 0);
-  const hasThresholdDiff = (dr >= 6 || dg >= 6 || db >= 6 || dsr >= 6 || dsg >= 6 || dsb >= 6);
+  const hasThresholdDiff = (dr >= 16 || dg >= 16 || db >= 16 || dsr >= 16 || dsg >= 16 || dsb >= 16);
   const isEdge = (t === 0 || t === 1);
 
   // Only update if colors actually changed AND (it crossed the 6-unit threshold OR snapped precisely at an edge)
@@ -327,7 +327,7 @@ function updateColorsContinuous(sections, dots) {
  * Refined 3D Sneaker Parallax & Levitation Physics (Matching Register & Exceeding It)
  */
 function initRefinedSneakerParallax() {
-  const stages = document.querySelectorAll('.stage-col-shoe, .floating-sneaker-stage');
+  const stages = document.querySelectorAll('.floating-sneaker-stage:not(.stage-col-shoe)');
 
   stages.forEach(stage => {
     const wrap = stage.querySelector('.stage-shoe-interactive-wrap, .floating-shoe-wrap');
