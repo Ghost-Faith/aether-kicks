@@ -277,21 +277,18 @@ button {
    CONTINUOUS DYNAMIC LIGHTING & ZERO-LAG SMOOTH MODE (data-perf-mode="off")
    ========================================================================== */
 
-/* 1. Dynamic Canvas Background Tint (Original 795b7c7 continuous body background) */
+/* 1. Dynamic Canvas Background Tint - Zero CSS transition lag, driven at 60/120fps by JS Kinetic Chaser */
 html[data-perf-mode="off"] body {
   background-color: var(--theme-bg-base) !important;
-  transition: background 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: none !important;
   background-attachment: fixed !important;
 }
 
-/* 2. Decouple backdrops & enable original continuous master ambient glow */
+/* 2. Decouple backdrops & enable continuous master ambient glow */
 html[data-perf-mode="off"] .ambient-glow-layer {
   contain: none !important;
-  opacity: 0.75 !important;
-  transition: opacity 0.8s ease !important;
+  opacity: 0.8 !important;
+  transition: opacity 0.5s ease !important;
 }
 
 html[data-perf-mode="off"] .glow-backdrop {
@@ -304,14 +301,14 @@ html[data-perf-mode="off"] .glow-backdrop:first-child {
   transition: none !important;
 }
 
-/* 3. Deep original ambient glow orbs (Commit 795b7c7: 650px/blur 80px & 500px/blur 90px with liquid 1s ease) */
+/* 3. Deep original ambient glow orbs: zero CSS transition conflict so JS gradient interpolation is instant & 100% fluid */
 html[data-perf-mode="off"] .glow-backdrop .glow-orb-primary {
   width: 650px !important;
   height: 650px !important;
   filter: blur(80px) !important;
   -webkit-filter: blur(80px) !important;
-  transition: background 1s ease, transform 1s ease !important;
-  will-change: transform !important;
+  transition: transform 1s ease !important;
+  will-change: transform;
   animation: orbDrift 14s ease-in-out infinite alternate !important;
 }
 
@@ -320,7 +317,7 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
   height: 500px !important;
   filter: blur(90px) !important;
   -webkit-filter: blur(90px) !important;
-  transition: background 1s ease !important;
+  transition: none !important;
   animation: orbDrift 18s ease-in-out infinite alternate-reverse !important;
 }
 
@@ -436,8 +433,7 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
 
   html[data-perf-mode="off"] body {
     background-attachment: scroll !important;
-    transition: background 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-                background-color 0.9s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: none !important;
   }
 
   .noise-overlay {

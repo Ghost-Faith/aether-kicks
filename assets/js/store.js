@@ -143,6 +143,9 @@ class PerformanceModeManager {
 
     // When switching to Performance Mode ON, clean up inline continuous overrides so GPU backdrops take over
     if (isPerfOn) {
+      if (typeof window.stopChaserLoop === 'function') {
+        window.stopChaserLoop();
+      }
       if (document.body) {
         document.body.style.backgroundColor = '';
         document.body.style.background = '';
@@ -307,10 +310,30 @@ function initGradualColorScroll() {
   }
 
   // ---------------------------------------------------------------------------
-  // MODE 2: CONTINUOUS SCROLL-DRIVEN RGB INTERPOLATION (Original Git Implementation)
-  // Exact original algorithm from initial repository commit 795b7c7
+  // MODE 2: KINETIC DAMPED CONTINUOUS RGB INTERPOLATION (Performance Mode OFF)
+  // Continuous smooth chaser loop powered by requestAnimationFrame physics dampening.
+  // Blends like liquid silk even across discrete mousewheel ticks and touch flings.
   // ---------------------------------------------------------------------------
-  function updateColorsContinuous() {
+  let chaserRafId = null;
+  let isChaserRunning = false;
+
+  // The interpolated current floating-point colors
+  const currentColor = {
+    r: 220, g: 38, b: 38,
+    sr: 185, sg: 28, sb: 28,
+    bgr: 15, bgg: 2, bgb: 2
+  };
+
+  // The target colors computed from the runway scroll position
+  const targetColor = {
+    r: 220, g: 38, b: 38,
+    sr: 185, sg: 28, sb: 28,
+    bgr: 15, bgg: 2, bgb: 2,
+    activeDotIndex: 0,
+    themeId: 'chicago'
+  };
+
+  function computeTargetColors() {
     if (sections.length < 2) return;
     if (window.currentCatalogLayout === 'grid') return;
 
@@ -344,27 +367,33 @@ function initGradualColorScroll() {
       }
     }
 
-    // Smoothstep easing for silky-smooth transition curve (exact 795b7c7)
+    // Smoothstep easing for silky-smooth distribution curve (exact 795b7c7)
     const easeT = t * t * (3 - 2 * t);
 
     const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
     const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
 
-    // Helper linear interpolation (exact 795b7c7)
-    const lerp = (a, b, factor) => Math.round(a + (b - a) * factor);
+    const lerp = (a, b, factor) => a + (b - a) * factor;
 
-    const r = lerp(stopA.primary[0], stopB.primary[0], easeT);
-    const g = lerp(stopA.primary[1], stopB.primary[1], easeT);
-    const b = lerp(stopA.primary[2], stopB.primary[2], easeT);
+    targetColor.r = lerp(stopA.primary[0], stopB.primary[0], easeT);
+    targetColor.g = lerp(stopA.primary[1], stopB.primary[1], easeT);
+    targetColor.b = lerp(stopA.primary[2], stopB.primary[2], easeT);
 
-    const sr = lerp(stopA.secondary[0], stopB.secondary[0], easeT);
-    const sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
-    const sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
+    targetColor.sr = lerp(stopA.secondary[0], stopB.secondary[0], easeT);
+    targetColor.sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
+    targetColor.sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
 
-    const bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
-    const bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
-    const bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
+    targetColor.bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
+    targetColor.bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
+    targetColor.bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
 
+    const closestIndex = t < 0.5 ? indexA : indexA + 1;
+    targetColor.activeDotIndex = closestIndex;
+    const activeSection = sections[closestIndex];
+    targetColor.themeId = activeSection ? activeSection.dataset.theme : 'chicago';
+  }
+
+  function applyColorsToDOM(r, g, b, sr, sg, sb, bgr, bgg, bgb, themeId, dotIdx) {
     const root = cachedRootEl || (cachedRootEl = document.documentElement);
     root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
     root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
@@ -373,50 +402,130 @@ function initGradualColorScroll() {
     root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
     root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
     root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+
     if (document.body) {
       document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
     }
 
-    // Update Ambient Atmospheric Orbs (exact 795b7c7)
-    const orb1 = document.querySelector('.glow-orb-primary');
-    const orb2 = document.querySelector('.glow-orb-secondary');
+    const orb1 = document.querySelector('.glow-backdrop .glow-orb-primary');
+    const orb2 = document.querySelector('.glow-backdrop .glow-orb-secondary');
     if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
     if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
 
-    // Highlight active dot (exact 795b7c7)
-    const closestIndex = t < 0.5 ? indexA : indexA + 1;
-    dots.forEach((dot, idx) => {
-      if (idx === closestIndex) {
-        dot.classList.add('active');
-      } else {
-        dot.classList.remove('active');
-      }
-    });
+    if (dots && dots.length) {
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === dotIdx);
+      });
+    }
 
-    const activeSection = sections[closestIndex];
-    const themeId = activeSection ? activeSection.dataset.theme : 'chicago';
-    if (document.documentElement.getAttribute('data-active-theme') !== themeId) {
+    if (themeId && document.documentElement.getAttribute('data-active-theme') !== themeId) {
       document.documentElement.setAttribute('data-active-theme', themeId);
     }
   }
 
-  // Unified RequestAnimationFrame Scroll Dispatcher
+  function chaserTick() {
+    if (window.currentCatalogLayout === 'grid' || (window.perfManager && window.perfManager.isEnabled())) {
+      isChaserRunning = false;
+      chaserRafId = null;
+      return;
+    }
+
+    // Liquid damping coefficient: 0.085 provides velvety, molten glass deceleration
+    const damping = 0.085;
+
+    currentColor.r += (targetColor.r - currentColor.r) * damping;
+    currentColor.g += (targetColor.g - currentColor.g) * damping;
+    currentColor.b += (targetColor.b - currentColor.b) * damping;
+
+    currentColor.sr += (targetColor.sr - currentColor.sr) * damping;
+    currentColor.sg += (targetColor.sg - currentColor.sg) * damping;
+    currentColor.sb += (targetColor.sb - currentColor.sb) * damping;
+
+    currentColor.bgr += (targetColor.bgr - currentColor.bgr) * damping;
+    currentColor.bgg += (targetColor.bgg - currentColor.bgg) * damping;
+    currentColor.bgb += (targetColor.bgb - currentColor.bgb) * damping;
+
+    const ir = Math.round(currentColor.r);
+    const ig = Math.round(currentColor.g);
+    const ib = Math.round(currentColor.b);
+
+    const isr = Math.round(currentColor.sr);
+    const isg = Math.round(currentColor.sg);
+    const isb = Math.round(currentColor.sb);
+
+    const ibgr = Math.round(currentColor.bgr);
+    const ibgg = Math.round(currentColor.bgg);
+    const ibgb = Math.round(currentColor.bgb);
+
+    applyColorsToDOM(ir, ig, ib, isr, isg, isb, ibgr, ibgg, ibgb, targetColor.themeId, targetColor.activeDotIndex);
+
+    // Continue running until currentColor has converged smoothly to target
+    const delta = Math.abs(targetColor.r - currentColor.r) +
+                  Math.abs(targetColor.g - currentColor.g) +
+                  Math.abs(targetColor.b - currentColor.b) +
+                  Math.abs(targetColor.bgr - currentColor.bgr) +
+                  Math.abs(targetColor.bgg - currentColor.bgg) +
+                  Math.abs(targetColor.bgb - currentColor.bgb);
+
+    if (delta > 0.3) {
+      chaserRafId = window.requestAnimationFrame(chaserTick);
+    } else {
+      currentColor.r = targetColor.r;
+      currentColor.g = targetColor.g;
+      currentColor.b = targetColor.b;
+      currentColor.sr = targetColor.sr;
+      currentColor.sg = targetColor.sg;
+      currentColor.sb = targetColor.sb;
+      currentColor.bgr = targetColor.bgr;
+      currentColor.bgg = targetColor.bgg;
+      currentColor.bgb = targetColor.bgb;
+
+      applyColorsToDOM(
+        Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
+        Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
+        Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
+        targetColor.themeId, targetColor.activeDotIndex
+      );
+      isChaserRunning = false;
+      chaserRafId = null;
+    }
+  }
+
+  function startChaserLoop() {
+    if (window.currentCatalogLayout === 'grid') return;
+    if (window.perfManager && window.perfManager.isEnabled()) return;
+
+    computeTargetColors();
+    if (!isChaserRunning) {
+      isChaserRunning = true;
+      chaserRafId = window.requestAnimationFrame(chaserTick);
+    }
+  }
+
+  window.stopChaserLoop = function() {
+    if (chaserRafId) {
+      window.cancelAnimationFrame(chaserRafId);
+      chaserRafId = null;
+    }
+    isChaserRunning = false;
+  };
+
+  // Unified Scroll Dispatcher
   function onScroll() {
     if (window.currentCatalogLayout === 'grid') return;
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        if (window.currentCatalogLayout === 'grid') {
+
+    if (window.perfManager && window.perfManager.isEnabled()) {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (window.currentCatalogLayout !== 'grid') {
+            checkActiveSection();
+          }
           ticking = false;
-          return;
-        }
-        if (window.perfManager && window.perfManager.isEnabled()) {
-          checkActiveSection();
-        } else {
-          updateColorsContinuous();
-        }
-        ticking = false;
-      });
-      ticking = true;
+        });
+        ticking = true;
+      }
+    } else {
+      startChaserLoop();
     }
   }
 
@@ -428,9 +537,27 @@ function initGradualColorScroll() {
     cacheSectionPositions(sections);
 
     if (mode === 'on') {
+      window.stopChaserLoop();
       checkActiveSection();
     } else {
-      updateColorsContinuous();
+      computeTargetColors();
+      currentColor.r = targetColor.r;
+      currentColor.g = targetColor.g;
+      currentColor.b = targetColor.b;
+      currentColor.sr = targetColor.sr;
+      currentColor.sg = targetColor.sg;
+      currentColor.sb = targetColor.sb;
+      currentColor.bgr = targetColor.bgr;
+      currentColor.bgg = targetColor.bgg;
+      currentColor.bgb = targetColor.bgb;
+
+      applyColorsToDOM(
+        Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
+        Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
+        Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
+        targetColor.themeId, targetColor.activeDotIndex
+      );
+      startChaserLoop();
     }
   };
 
@@ -469,7 +596,23 @@ function initGradualColorScroll() {
   if (window.perfManager && window.perfManager.isEnabled()) {
     checkActiveSection();
   } else {
-    updateColorsContinuous();
+    computeTargetColors();
+    currentColor.r = targetColor.r;
+    currentColor.g = targetColor.g;
+    currentColor.b = targetColor.b;
+    currentColor.sr = targetColor.sr;
+    currentColor.sg = targetColor.sg;
+    currentColor.sb = targetColor.sb;
+    currentColor.bgr = targetColor.bgr;
+    currentColor.bgg = targetColor.bgg;
+    currentColor.bgb = targetColor.bgb;
+
+    applyColorsToDOM(
+      Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
+      Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
+      Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
+      targetColor.themeId, targetColor.activeDotIndex
+    );
   }
 
   // Dot Navigation Click
@@ -956,6 +1099,9 @@ function setCatalogLayout(mode) {
   if (mode === 'grid') {
     window.currentCatalogLayout = 'grid';
     document.documentElement.setAttribute('data-catalog-layout', 'grid');
+    if (typeof window.stopChaserLoop === 'function') {
+      window.stopChaserLoop();
+    }
 
     if (runway) runway.style.display = 'none';
     if (squareGrid) squareGrid.classList.add('active');
