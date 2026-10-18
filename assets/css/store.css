@@ -25,12 +25,13 @@
   box-sizing: border-box;
   overflow: visible;
   border-radius: 16px;
-  background: rgba(14, 14, 18, 0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(14, 14, 18, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass-light);
   z-index: 1000;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px var(--theme-surface-glow);
+  isolation: isolate;
   transition: var(--transition-color), border-color 0.4s ease;
 }
 
@@ -1041,12 +1042,13 @@
   perspective: 1400px;
 }
 
-/* Floating Aura Halo - Scoped & Hardware-Cached Gradient Falloff */
+/* Floating Aura Halo - Scoped & Hardware-Cached Gradient Falloff (0 Blur Passes) */
 .shoe-runway-halo {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(0);
+  -webkit-transform: translate(-50%, -50%) translateZ(0);
   width: 480px;
   height: 480px;
   border-radius: 50%;
@@ -1055,6 +1057,10 @@
   pointer-events: none;
   animation: haloPulse 6s ease-in-out infinite alternate;
   will-change: transform;
+  filter: none;
+  -webkit-filter: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .runway-section[data-theme="chicago"] .shoe-runway-halo {
@@ -1079,10 +1085,15 @@
 /* In Continuous Smooth Mode (data-perf-mode="off"), sneaker halos dynamically morph with continuous scroll */
 html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   --section-glow: var(--theme-glow) !important;
-  background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%) !important;
-  filter: blur(75px) !important;
+  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 25%, transparent 70%) !important;
+  filter: none !important;
+  -webkit-filter: none !important;
   box-shadow: none !important;
   transition: none !important;
+  transform: translate(-50%, -50%) translateZ(0) !important;
+  -webkit-transform: translate(-50%, -50%) translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
 }
 
 @keyframes haloPulse {
@@ -1121,8 +1132,13 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   width: 400px;
   height: 44px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0) 75%);
-  filter: blur(14px);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 40%, rgba(0, 0, 0, 0.1) 65%, transparent 80%);
+  filter: none;
+  -webkit-filter: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   animation: shadowBreath 5s ease-in-out infinite;
   z-index: 3;
   pointer-events: none;
@@ -1139,12 +1155,18 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   font-family: var(--font-mono);
   font-weight: 700;
   color: var(--text-primary);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   gap: 8px;
   z-index: 10;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
   transition: transform 0.25s ease, border-color 0.25s ease, color 0.25s ease;
   user-select: none;
 }
@@ -1174,7 +1196,7 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
 }
 
 .stage-spec-tag:hover {
-  transform: scale(1.08);
+  transform: scale(1.08) translateZ(0);
   border-color: var(--theme-primary);
   color: #fff;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px var(--theme-glow);
@@ -1188,9 +1210,9 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
 }
 
 .buy-card {
-  background: rgba(18, 18, 24, 0.75);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(18, 18, 24, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass-light);
   border-radius: 24px;
   padding: 32px;
@@ -2282,7 +2304,13 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   width: 420px;
   height: 420px;
   border-radius: 50%;
-  filter: blur(80px);
+  background: radial-gradient(circle, var(--theme-glow, rgba(220, 38, 38, 0.5)) 0%, rgba(255, 255, 255, 0.02) 28%, transparent 70%);
+  filter: none;
+  -webkit-filter: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
   transition: background 0.6s ease;
   z-index: 1;
@@ -5865,8 +5893,13 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%);
-  filter: blur(40px);
+  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 28%, transparent 70%);
+  filter: none;
+  -webkit-filter: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
   animation: pulseHalo 4s ease-in-out infinite alternate;
 }

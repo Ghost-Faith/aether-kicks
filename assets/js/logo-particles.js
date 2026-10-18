@@ -36,21 +36,21 @@ class LogoParticleSystem {
 
     this.ctx = this.canvas.getContext('2d');
     this.resize();
+    this.updateCachedRects();
 
     window.addEventListener('resize', () => {
       this.resize();
       this.updateCachedRects();
     }, { passive: true });
 
-    let logoScrollTicking = false;
+    let logoScrollDebounce = null;
     window.addEventListener('scroll', () => {
-      if (!logoScrollTicking) {
-        window.requestAnimationFrame(() => {
-          this.updateCachedRects();
-          logoScrollTicking = false;
-        });
-        logoScrollTicking = true;
-      }
+      // .nav-brand is fixed in viewport, so rects do not shift during scroll.
+      // Debounce check only after scrolling completely settles to prevent forced synchronous reflows.
+      clearTimeout(logoScrollDebounce);
+      logoScrollDebounce = setTimeout(() => {
+        this.updateCachedRects();
+      }, 150);
     }, { passive: true });
 
     window.addEventListener('mousemove', (e) => this.onMouseMove(e), { passive: true });

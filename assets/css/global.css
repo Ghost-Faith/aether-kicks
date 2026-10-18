@@ -301,12 +301,16 @@ html[data-perf-mode="off"] .glow-backdrop:first-child {
   transition: none !important;
 }
 
-/* 3. Deep original ambient glow orbs: zero CSS transition conflict so JS gradient interpolation is instant & 100% fluid */
+/* 3. Deep original ambient glow orbs: GPU-native multi-stop radial gradients (0 blur shaders, 100% fluid) */
 html[data-perf-mode="off"] .glow-backdrop .glow-orb-primary {
   width: 650px !important;
   height: 650px !important;
-  filter: blur(80px) !important;
-  -webkit-filter: blur(80px) !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
   transition: transform 1s ease !important;
   will-change: transform;
   animation: orbDrift 14s ease-in-out infinite alternate !important;
@@ -315,55 +319,96 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-primary {
 html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
   width: 500px !important;
   height: 500px !important;
-  filter: blur(90px) !important;
-  -webkit-filter: blur(90px) !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
   transition: none !important;
   animation: orbDrift 18s ease-in-out infinite alternate-reverse !important;
 }
 
+/* 4. Zero-Transition Invalidation Barrier (Performance Mode OFF)
+   Eliminates CSS transition interpolation conflicts when JS updates CSS custom properties on scroll.
+   Ensures the browser never attempts to interpolate color/background/border/shadow transitions
+   while JS updates variables continuously at 60/120 FPS. */
+html[data-perf-mode="off"] *,
+html[data-perf-mode="off"] *::before,
+html[data-perf-mode="off"] *::after {
+  --transition-color: none !important;
+}
 
+html[data-perf-mode="off"] body,
+html[data-perf-mode="off"] .store-nav,
+html[data-perf-mode="off"] .buy-card,
+html[data-perf-mode="off"] .buy-card::before,
+html[data-perf-mode="off"] .buy-card::after,
+html[data-perf-mode="off"] .stage-spec-tag,
+html[data-perf-mode="off"] .stage-spec-tag .spec-dot,
+html[data-perf-mode="off"] .brand-icon,
+html[data-perf-mode="off"] .shoe-runway-halo,
+html[data-perf-mode="off"] .btn-primary,
+html[data-perf-mode="off"] .btn-secondary,
+html[data-perf-mode="off"] .btn-runway-wishlist,
+html[data-perf-mode="off"] .btn-card-wishlist,
+html[data-perf-mode="off"] .runway-dot,
+html[data-perf-mode="off"] .runway-dot-fill,
+html[data-perf-mode="off"] .card-badge,
+html[data-perf-mode="off"] .badge-pill,
+html[data-perf-mode="off"] .glass-panel,
+html[data-perf-mode="off"] .customizer-glow-bg,
+html[data-perf-mode="off"] .hero-brand-tag,
+html[data-perf-mode="off"] .stage-mode-btn,
+html[data-perf-mode="off"] .quick-add-btn,
+html[data-perf-mode="off"] .nav-link,
+html[data-perf-mode="off"] .form-input,
+html[data-perf-mode="off"] .stage-col-brand,
+html[data-perf-mode="off"] .runway-shoe-title {
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+}
 
 /* Static, permanently-cached GPU gradient textures per backdrop (Performance Mode ON) */
 .glow-backdrop[data-theme="chicago"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(220, 38, 38, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.55) 0%, rgba(220, 38, 38, 0.35) 24%, rgba(220, 38, 38, 0.14) 46%, rgba(220, 38, 38, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="chicago"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.28) 0%, rgba(220, 38, 38, 0.16) 25%, rgba(220, 38, 38, 0.05) 50%, transparent 70%);
 }
 
 .glow-backdrop[data-theme="purple"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(147, 51, 234, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.55) 0%, rgba(147, 51, 234, 0.35) 24%, rgba(147, 51, 234, 0.14) 46%, rgba(147, 51, 234, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="purple"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.28) 0%, rgba(147, 51, 234, 0.16) 25%, rgba(147, 51, 234, 0.05) 50%, transparent 70%);
 }
 
 .glow-backdrop[data-theme="blue"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.55) 0%, rgba(2, 132, 199, 0.35) 24%, rgba(2, 132, 199, 0.14) 46%, rgba(2, 132, 199, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="blue"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.28) 0%, rgba(2, 132, 199, 0.16) 25%, rgba(2, 132, 199, 0.05) 50%, transparent 70%);
 }
 
 .glow-backdrop[data-theme="green"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(22, 163, 74, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.55) 0%, rgba(22, 163, 74, 0.35) 24%, rgba(22, 163, 74, 0.14) 46%, rgba(22, 163, 74, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="green"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(22, 163, 74, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.28) 0%, rgba(22, 163, 74, 0.16) 25%, rgba(22, 163, 74, 0.05) 50%, transparent 70%);
 }
 
 .glow-backdrop[data-theme="orange"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(234, 88, 12, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.55) 0%, rgba(234, 88, 12, 0.35) 24%, rgba(234, 88, 12, 0.14) 46%, rgba(234, 88, 12, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="orange"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(234, 88, 12, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.28) 0%, rgba(234, 88, 12, 0.16) 25%, rgba(234, 88, 12, 0.05) 50%, transparent 70%);
 }
 
 .glow-backdrop[data-theme="shadow"] .glow-orb-primary {
-  background: radial-gradient(circle, rgba(161, 161, 170, 0.45) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(161, 161, 170, 0.48) 0%, rgba(161, 161, 170, 0.28) 24%, rgba(161, 161, 170, 0.12) 46%, rgba(161, 161, 170, 0.02) 64%, transparent 72%);
 }
 .glow-backdrop[data-theme="shadow"] .glow-orb-secondary {
-  background: radial-gradient(circle, rgba(161, 161, 170, 0.16) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(161, 161, 170, 0.24) 0%, rgba(161, 161, 170, 0.14) 25%, rgba(161, 161, 170, 0.04) 50%, transparent 70%);
 }
 
 .glow-orb-primary {
@@ -373,9 +418,9 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
   width: 650px;
   height: 650px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
-  filter: blur(28px);
-  -webkit-filter: blur(28px);
+  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 24%, transparent 70%);
+  filter: none;
+  -webkit-filter: none;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
@@ -391,9 +436,9 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--theme-glow-soft) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
-  filter: blur(32px);
-  -webkit-filter: blur(32px);
+  background: radial-gradient(circle, var(--theme-glow-soft) 0%, rgba(255, 255, 255, 0.01) 25%, transparent 70%);
+  filter: none;
+  -webkit-filter: none;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
@@ -440,22 +485,22 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
     display: none !important;
   }
 
-  /* Scale down ambient glow orbs & reduce heavy Gaussian blur convolutions (Perf Mode ON) */
+  /* Scale down ambient glow orbs with zero blur convolutions (Perf Mode ON) */
   html:not([data-perf-mode="off"]) .glow-orb-primary,
   html:not([data-perf-mode="off"]) .glow-orb-secondary {
     width: 320px !important;
     height: 320px !important;
-    filter: blur(28px) !important;
-    -webkit-filter: blur(28px) !important;
+    filter: none !important;
+    -webkit-filter: none !important;
     opacity: 0.55 !important;
   }
 
-  /* Deep liquid orbs for mobile in Perf Mode OFF - Optimized for mobile TBDR GPUs */
+  /* Deep liquid orbs for mobile in Perf Mode OFF - Zero blur passes for mobile TBDR GPUs */
   html[data-perf-mode="off"] .glow-backdrop:first-child .glow-orb-primary {
     width: 320px !important;
     height: 320px !important;
-    filter: blur(28px) !important;
-    -webkit-filter: blur(28px) !important;
+    filter: none !important;
+    -webkit-filter: none !important;
     opacity: 0.7 !important;
     transition: transform 1s ease !important;
   }
@@ -463,8 +508,8 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
   html[data-perf-mode="off"] .glow-backdrop:first-child .glow-orb-secondary {
     width: 260px !important;
     height: 260px !important;
-    filter: blur(28px) !important;
-    -webkit-filter: blur(28px) !important;
+    filter: none !important;
+    -webkit-filter: none !important;
     opacity: 0.7 !important;
     transition: none !important;
   }
@@ -504,12 +549,17 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
 /* Glassmorphism Containers */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
   transition: var(--transition-normal);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
 }
 
 .glass-panel:hover {

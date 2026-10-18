@@ -74,6 +74,7 @@ let cachedRootEl = null;
 let cachedOrb1El = null;
 let cachedOrb2El = null;
 let activeSectionIndex = -1;
+let lastActiveDotIdx = -1;
 let lastAppliedTheme = {
   r: -999,
   g: -999,
@@ -110,8 +111,8 @@ class PerformanceModeManager {
     try {
       saved = localStorage.getItem(this.storageKey);
     } catch (e) {}
-    // Default to 'on' as requested by the user
-    this.mode = (saved === 'off') ? 'off' : 'on';
+    // Default to 'off' (Continuous Silky Color Shift) for all devices, preserving user choice if set
+    this.mode = (saved === 'on') ? 'on' : 'off';
   }
 
   init() {
@@ -305,9 +306,12 @@ function initGradualColorScroll() {
     }
 
     // 4. Update sidebar active dot navigation
-    dots.forEach((dot, idx) => {
-      dot.classList.toggle('active', idx === newIndex);
-    });
+    if (dots && dots.length && newIndex !== lastActiveDotIdx) {
+      lastActiveDotIdx = newIndex;
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === newIndex);
+      });
+    }
   }
 
   function checkActiveSection() {
@@ -378,8 +382,8 @@ function initGradualColorScroll() {
     const dsg = Math.abs(sg - lastAppliedTheme.sg);
     const dsb = Math.abs(sb - lastAppliedTheme.sb);
 
-    // Filter imperceptible 1-2 unit color noise to prevent document-wide style recalculation thrashing
-    const threshold = isMobileDevice() ? 3 : 1.5;
+    // Filter imperceptible 2-unit color noise to prevent document-wide style recalculation thrashing
+    const threshold = isMobileDevice() ? 3 : 2.0;
     const shouldUpdateColors = force || dr >= threshold || dg >= threshold || db >= threshold ||
                                dsr >= threshold || dsg >= threshold || dsb >= threshold;
 
@@ -406,11 +410,16 @@ function initGradualColorScroll() {
 
       const orb1 = cachedOrb1El || (cachedOrb1El = document.querySelector('.glow-backdrop .glow-orb-primary'));
       const orb2 = cachedOrb2El || (cachedOrb2El = document.querySelector('.glow-backdrop .glow-orb-secondary'));
-      if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, transparent 70%)`;
-      if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.25) 0%, transparent 70%)`;
+      if (orb1) {
+        orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, rgba(${r}, ${g}, ${b}, 0.35) 24%, rgba(${r}, ${g}, ${b}, 0.14) 46%, rgba(${r}, ${g}, ${b}, 0.02) 64%, transparent 72%)`;
+      }
+      if (orb2) {
+        orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.28) 0%, rgba(${sr}, ${sg}, ${sb}, 0.16) 25%, rgba(${sr}, ${sg}, ${sb}, 0.05) 50%, transparent 70%)`;
+      }
     }
 
-    if (dots && dots.length) {
+    if (dots && dots.length && dotIdx !== lastActiveDotIdx) {
+      lastActiveDotIdx = dotIdx;
       dots.forEach((dot, idx) => {
         dot.classList.toggle('active', idx === dotIdx);
       });
@@ -548,6 +557,7 @@ function initGradualColorScroll() {
   window.refreshThemeCoordinator = function(mode) {
     if (window.currentCatalogLayout === 'grid') return;
     activeSectionIndex = -1;
+    lastActiveDotIdx = -1;
     lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
     cacheSectionPositions(sections);
 
@@ -564,6 +574,7 @@ function initGradualColorScroll() {
 
   window.addEventListener('resize', () => {
     activeSectionIndex = -1;
+    lastActiveDotIdx = -1;
     lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
     cacheSectionPositions(sections);
     onScroll();
@@ -572,6 +583,7 @@ function initGradualColorScroll() {
   window.addEventListener('orientationchange', () => {
     setTimeout(() => {
       activeSectionIndex = -1;
+      lastActiveDotIdx = -1;
       lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
       cacheSectionPositions(sections);
       onScroll();
