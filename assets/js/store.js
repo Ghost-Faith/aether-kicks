@@ -305,66 +305,40 @@ function initGradualColorScroll() {
     setActiveThemeIndex(closestIndex);
   }
 
-  // 10-Stop Harmonic Spectrum Segments for Ultra-Smooth Continuous Color Transitions (Mode OFF)
-  const CONTINUOUS_SEGMENTS = [
-    // 0: Chicago Red -> 1: Court Purple (via Neon Magenta)
-    {
-      start: { primary: [220, 38, 38], secondary: [153, 27, 27], bg: [14, 5, 8] },
-      mid:   { primary: [219, 39, 119], secondary: [157, 23, 77], bg: [16, 4, 14] },
-      end:   { primary: [147, 51, 234], secondary: [107, 33, 168], bg: [9, 3, 16] }
-    },
-    // 1: Court Purple -> 2: University Blue (via Electric Indigo)
-    {
-      start: { primary: [147, 51, 234], secondary: [107, 33, 168], bg: [9, 3, 16] },
-      mid:   { primary: [79, 70, 229], secondary: [67, 56, 202], bg: [5, 5, 20] },
-      end:   { primary: [2, 132, 199], secondary: [3, 105, 161], bg: [3, 9, 20] }
-    },
-    // 2: University Blue -> 3: Pine Green (via Radiant Cyan)
-    {
-      start: { primary: [2, 132, 199], secondary: [3, 105, 161], bg: [3, 9, 20] },
-      mid:   { primary: [6, 182, 212], secondary: [14, 116, 144], bg: [3, 15, 18] },
-      end:   { primary: [22, 163, 74], secondary: [21, 128, 61], bg: [3, 13, 6] }
-    },
-    // 3: Pine Green -> 4: Shattered Orange (via Cyber Gold - eliminates murky olive sludge!)
-    {
-      start: { primary: [22, 163, 74], secondary: [21, 128, 61], bg: [3, 13, 6] },
-      mid:   { primary: [234, 179, 8], secondary: [161, 98, 7], bg: [18, 14, 3] },
-      end:   { primary: [234, 88, 12], secondary: [194, 65, 12], bg: [18, 7, 2] }
-    },
-    // 4: Shattered Orange -> 5: Shadow Titanium (via Warm Bronze)
-    {
-      start: { primary: [234, 88, 12], secondary: [194, 65, 12], bg: [18, 7, 2] },
-      mid:   { primary: [180, 110, 60], secondary: [120, 75, 45], bg: [14, 10, 8] },
-      end:   { primary: [161, 161, 170], secondary: [63, 63, 70], bg: [8, 8, 10] }
-    }
-  ];
-
   // ---------------------------------------------------------------------------
-  // MODE 2: CONTINUOUS SCROLL-DRIVEN RGB INTERPOLATION (Classic Silky Smoothstep)
+  // MODE 2: CONTINUOUS SCROLL-DRIVEN RGB INTERPOLATION (Original Git Implementation)
+  // Exact original algorithm from initial repository commit 795b7c7
   // ---------------------------------------------------------------------------
   function updateColorsContinuous() {
-    if (!cachedSectionCenters || cachedSectionCenters.length !== sections.length) {
-      cacheSectionPositions(sections);
-    }
+    if (sections.length < 2) return;
 
     const scrollY = window.scrollY || window.pageYOffset || 0;
     const vh = window.innerHeight || 800;
     const currentCenter = scrollY + vh / 2;
-    const sectionCenters = cachedSectionCenters;
 
-    let segIndex = 0;
+    // Calculate the vertical center of each runway section (exact 795b7c7 math)
+    let sectionCenters = cachedSectionCenters;
+    if (!sectionCenters || sectionCenters.length !== sections.length) {
+      sectionCenters = sections.map(sec => {
+        const rect = sec.getBoundingClientRect();
+        return scrollY + rect.top + rect.height / 2;
+      });
+      cachedSectionCenters = sectionCenters;
+    }
+
+    let indexA = 0;
     let t = 0;
 
     if (currentCenter <= sectionCenters[0]) {
-      segIndex = 0;
+      indexA = 0;
       t = 0;
     } else if (currentCenter >= sectionCenters[sectionCenters.length - 1]) {
-      segIndex = CONTINUOUS_SEGMENTS.length - 1;
+      indexA = sectionCenters.length - 2;
       t = 1;
     } else {
       for (let i = 0; i < sectionCenters.length - 1; i++) {
         if (currentCenter >= sectionCenters[i] && currentCenter <= sectionCenters[i + 1]) {
-          segIndex = i;
+          indexA = i;
           const distance = sectionCenters[i + 1] - sectionCenters[i];
           t = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
           break;
@@ -372,100 +346,59 @@ function initGradualColorScroll() {
       }
     }
 
-    const seg = CONTINUOUS_SEGMENTS[segIndex] || CONTINUOUS_SEGMENTS[0];
+    // Smoothstep easing for silky-smooth transition curve (exact 795b7c7)
+    const easeT = t * t * (3 - 2 * t);
+
+    const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
+    const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
+
+    // Helper linear interpolation (exact 795b7c7)
     const lerp = (a, b, factor) => Math.round(a + (b - a) * factor);
 
-    let r, g, b, sr, sg, sb, bgr, bgg, bgb;
-    if (t <= 0.5) {
-      const localT = t * 2;
-      const ease = localT * localT * (3 - 2 * localT);
-      r = lerp(seg.start.primary[0], seg.mid.primary[0], ease);
-      g = lerp(seg.start.primary[1], seg.mid.primary[1], ease);
-      b = lerp(seg.start.primary[2], seg.mid.primary[2], ease);
-      sr = lerp(seg.start.secondary[0], seg.mid.secondary[0], ease);
-      sg = lerp(seg.start.secondary[1], seg.mid.secondary[1], ease);
-      sb = lerp(seg.start.secondary[2], seg.mid.secondary[2], ease);
-      bgr = lerp(seg.start.bg[0], seg.mid.bg[0], ease);
-      bgg = lerp(seg.start.bg[1], seg.mid.bg[1], ease);
-      bgb = lerp(seg.start.bg[2], seg.mid.bg[2], ease);
-    } else {
-      const localT = (t - 0.5) * 2;
-      const ease = localT * localT * (3 - 2 * localT);
-      r = lerp(seg.mid.primary[0], seg.end.primary[0], ease);
-      g = lerp(seg.mid.primary[1], seg.end.primary[1], ease);
-      b = lerp(seg.mid.primary[2], seg.end.primary[2], ease);
-      sr = lerp(seg.mid.secondary[0], seg.end.secondary[0], ease);
-      sg = lerp(seg.mid.secondary[1], seg.end.secondary[1], ease);
-      sb = lerp(seg.mid.secondary[2], seg.end.secondary[2], ease);
-      bgr = lerp(seg.mid.bg[0], seg.end.bg[0], ease);
-      bgg = lerp(seg.mid.bg[1], seg.end.bg[1], ease);
-      bgb = lerp(seg.mid.bg[2], seg.end.bg[2], ease);
+    const r = lerp(stopA.primary[0], stopB.primary[0], easeT);
+    const g = lerp(stopA.primary[1], stopB.primary[1], easeT);
+    const b = lerp(stopA.primary[2], stopB.primary[2], easeT);
+
+    const sr = lerp(stopA.secondary[0], stopB.secondary[0], easeT);
+    const sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
+    const sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
+
+    const bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
+    const bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
+    const bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
+
+    const root = cachedRootEl || (cachedRootEl = document.documentElement);
+    root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+    root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+    root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+    root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+    if (document.body) {
+      document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
     }
 
-    const dr = Math.abs(r - lastAppliedTheme.r);
-    const dg = Math.abs(g - lastAppliedTheme.g);
-    const db = Math.abs(b - lastAppliedTheme.b);
-    const isEdge = (t === 0 || t === 1);
+    // Update Ambient Atmospheric Orbs (exact 795b7c7)
+    const orb1 = document.querySelector('.glow-orb-primary');
+    const orb2 = document.querySelector('.glow-orb-secondary');
+    if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
+    if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
 
-    // Delta threshold of 1 unit guarantees silky continuous gradient morphing
-    if (dr >= 1 || dg >= 1 || db >= 1 || isEdge) {
-      lastAppliedTheme.r = r;
-      lastAppliedTheme.g = g;
-      lastAppliedTheme.b = b;
-      lastAppliedTheme.sr = sr;
-      lastAppliedTheme.sg = sg;
-      lastAppliedTheme.sb = sb;
-
-      const root = cachedRootEl || (cachedRootEl = document.documentElement);
-      root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
-      root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
-      root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.58)`);
-      root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.22)`);
-      root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.1)`);
-      root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.38)`);
-      root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
-
-      // 1. Direct Body Canvas Tint (Smooth ambient tone)
-      if (document.body) {
-        document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+    // Highlight active dot (exact 795b7c7)
+    const closestIndex = t < 0.5 ? indexA : indexA + 1;
+    dots.forEach((dot, idx) => {
+      if (idx === closestIndex) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
       }
+    });
 
-      // 2. Direct Ambient Atmospheric Orbs
-      const orb1 = document.querySelector('.glow-backdrop:first-child .glow-orb-primary') || document.querySelector('.glow-orb-primary');
-      const orb2 = document.querySelector('.glow-backdrop:first-child .glow-orb-secondary') || document.querySelector('.glow-orb-secondary');
-      if (orb1) {
-        orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.58) 0%, rgba(${r}, ${g}, ${b}, 0.12) 45%, transparent 72%)`;
-      }
-      if (orb2) {
-        orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.3) 0%, rgba(${sr}, ${sg}, ${sb}, 0.08) 40%, transparent 72%)`;
-      }
-
-      // 3. Direct Floating Sneaker Halo Aura
-      const haloA = sections[segIndex]?.querySelector('.shoe-runway-halo');
-      const haloB = sections[segIndex + 1]?.querySelector('.shoe-runway-halo');
-      if (haloA) {
-        haloA.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.6) 0%, rgba(255, 255, 255, 0.04) 28%, transparent 70%)`;
-        haloA.style.boxShadow = `0 0 60px rgba(${r}, ${g}, ${b}, 0.15)`;
-      }
-      if (haloB) {
-        haloB.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.6) 0%, rgba(255, 255, 255, 0.04) 28%, transparent 70%)`;
-        haloB.style.boxShadow = `0 0 60px rgba(${r}, ${g}, ${b}, 0.15)`;
-      }
-
-      const closestIndex = t < 0.5 ? segIndex : Math.min(segIndex + 1, sections.length - 1);
-      const activeSection = sections[closestIndex];
-      const themeId = activeSection ? activeSection.dataset.theme : 'chicago';
-      if (document.documentElement.getAttribute('data-active-theme') !== themeId) {
-        document.documentElement.setAttribute('data-active-theme', themeId);
-      }
-    }
-
-    const closestIndex = t < 0.5 ? segIndex : Math.min(segIndex + 1, sections.length - 1);
-    if (closestIndex !== activeSectionIndex) {
-      activeSectionIndex = closestIndex;
-      dots.forEach((dot, idx) => {
-        dot.classList.toggle('active', idx === closestIndex);
-      });
+    const activeSection = sections[closestIndex];
+    const themeId = activeSection ? activeSection.dataset.theme : 'chicago';
+    if (document.documentElement.getAttribute('data-active-theme') !== themeId) {
+      document.documentElement.setAttribute('data-active-theme', themeId);
     }
   }
 
