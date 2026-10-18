@@ -361,14 +361,27 @@ function initGradualColorScroll() {
         if (currentCenter >= sectionCenters[i] && currentCenter <= sectionCenters[i + 1]) {
           indexA = i;
           const distance = sectionCenters[i + 1] - sectionCenters[i];
-          t = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
+          const rawT = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
+
+          // Focus Zone / Plateau Margin:
+          // Gives a wide sweet spot (22% margin) around each sneaker where the color is 100% locked.
+          // The middle corridor smoothly transitions between the two sneakers via smoothstep.
+          // This guarantees that whenever a user is viewing a shoe (e.g. Pine Green), it is 100% pure green immediately!
+          const plateau = 0.22;
+          if (rawT <= plateau) {
+            t = 0;
+          } else if (rawT >= (1 - plateau)) {
+            t = 1;
+          } else {
+            const u = (rawT - plateau) / (1 - 2 * plateau);
+            t = u * u * (3 - 2 * u);
+          }
           break;
         }
       }
     }
 
-    // Smoothstep easing for silky-smooth distribution curve (exact 795b7c7)
-    const easeT = t * t * (3 - 2 * t);
+    const easeT = t;
 
     const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
     const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
@@ -430,8 +443,17 @@ function initGradualColorScroll() {
       return;
     }
 
-    // Liquid damping coefficient: 0.085 provides velvety, molten glass deceleration
-    const damping = 0.085;
+    // Dynamic Fast & Responsive Damping:
+    // Base 0.32 gives instant, crisp visual response within 3-4 frames (~50ms)
+    // When delta is large (fast scroll/swipe), damping boosts up to 0.42 to ensure zero lag.
+    const delta = Math.abs(targetColor.r - currentColor.r) +
+                  Math.abs(targetColor.g - currentColor.g) +
+                  Math.abs(targetColor.b - currentColor.b) +
+                  Math.abs(targetColor.bgr - currentColor.bgr) +
+                  Math.abs(targetColor.bgg - currentColor.bgg) +
+                  Math.abs(targetColor.bgb - currentColor.bgb);
+
+    const damping = delta > 50 ? 0.42 : 0.32;
 
     currentColor.r += (targetColor.r - currentColor.r) * damping;
     currentColor.g += (targetColor.g - currentColor.g) * damping;
@@ -460,14 +482,7 @@ function initGradualColorScroll() {
     applyColorsToDOM(ir, ig, ib, isr, isg, isb, ibgr, ibgg, ibgb, targetColor.themeId, targetColor.activeDotIndex);
 
     // Continue running until currentColor has converged smoothly to target
-    const delta = Math.abs(targetColor.r - currentColor.r) +
-                  Math.abs(targetColor.g - currentColor.g) +
-                  Math.abs(targetColor.b - currentColor.b) +
-                  Math.abs(targetColor.bgr - currentColor.bgr) +
-                  Math.abs(targetColor.bgg - currentColor.bgg) +
-                  Math.abs(targetColor.bgb - currentColor.bgb);
-
-    if (delta > 0.3) {
+    if (delta > 0.4) {
       chaserRafId = window.requestAnimationFrame(chaserTick);
     } else {
       currentColor.r = targetColor.r;
