@@ -52,14 +52,16 @@ class WishlistManager {
       this.saveWishlist();
       if (window.soundEngine) window.soundEngine.playClick();
       if (typeof showToast === 'function') {
-        showToast(`Removido da Wishlist: ${shoeName}`);
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        showToast(isEn ? `Removed from Wishlist: ${shoeName}` : `Removido da Wishlist: ${shoeName}`);
       }
     } else {
       this.items.unshift(shoeId);
       this.saveWishlist();
       if (window.soundEngine) window.soundEngine.playSuccess();
       if (typeof showToast === 'function') {
-        showToast(`❤️ Guardado na Wishlist: ${shoeName}!`);
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        showToast(isEn ? `❤️ Saved to Wishlist: ${shoeName}!` : `❤️ Guardado na Wishlist: ${shoeName}!`);
       }
     }
 
@@ -78,7 +80,8 @@ class WishlistManager {
         this.renderWishlistPage();
       }
       if (typeof showToast === 'function') {
-        showToast('Grail removido da Wishlist.');
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        showToast(isEn ? 'Grail removed from Wishlist.' : 'Grail removido da Wishlist.');
       }
     }
   }
@@ -136,7 +139,9 @@ class WishlistManager {
     const count = this.items.length;
 
     if (countDisplay) {
-      countDisplay.textContent = `${count} ${count === 1 ? 'Grail Guardado' : 'Grails Guardados'}`;
+      var singleWord = window.i18n ? window.i18n.t('wishlist_saved_single') : 'Grail Guardado';
+      var pluralWord = window.i18n ? window.i18n.t('wishlist_saved_plural') : 'Grails Guardados';
+      countDisplay.textContent = `${count} ${count === 1 ? singleWord : pluralWord}`;
     }
 
     if (count === 0) {
@@ -159,7 +164,7 @@ class WishlistManager {
             <span class="badge-pill wishlist-card-badge" style="background: rgba(255,255,255,0.06); border-color: ${shoe.theme}; color: ${shoe.theme};">
               ${shoe.year || 'OG LINEAGE'}
             </span>
-            <button class="wishlist-btn-remove" onclick="window.wishlistManager.remove('${shoe.id}')" title="Remover da Wishlist">
+            <button class="wishlist-btn-remove" onclick="window.wishlistManager.remove('${shoe.id}')" title="Remover da Wishlist" data-i18n-title="wishlist_remove_title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -176,24 +181,28 @@ class WishlistManager {
 
           <div class="wishlist-card-footer">
             <div class="wishlist-card-pricing">
-              <span class="wishlist-price-label">DEADSTOCK VAULT</span>
+              <span class="wishlist-price-label" data-i18n="badge_deadstock">DEADSTOCK VAULT</span>
               <span class="wishlist-price-val">$${shoe.price}</span>
             </div>
 
             <div class="wishlist-card-actions">
               <button class="btn-primary wishlist-btn-buy" style="background: linear-gradient(135deg, ${shoe.theme}, #09090b); box-shadow: 0 4px 16px ${shoe.glow};" onclick="window.wishlistManager.moveToBag('${shoe.id}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <span>Buy Now</span>
+                <span data-i18n="buy_now">Buy Now</span>
               </button>
               <a href="index.html#customizer-lab" class="btn-secondary wishlist-btn-atelier" title="Personalizar no Atelier Bespoke">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span>Atelier</span>
+                <span data-i18n="nav_lab">Atelier</span>
               </a>
             </div>
           </div>
         </article>
       `;
     }).join('');
+
+    if (window.i18n && typeof window.i18n.translateElement === 'function') {
+      window.i18n.translateElement(grid);
+    }
   }
 
   init() {
@@ -214,6 +223,12 @@ class WishlistManager {
           this.toggle(id);
         }
       });
+    });
+
+    window.addEventListener('aether:languageChange', () => {
+      if (document.getElementById('wishlist-grid')) {
+        this.renderWishlistPage();
+      }
     });
   }
 }

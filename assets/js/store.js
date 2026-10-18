@@ -212,57 +212,16 @@ function updateColorsContinuous(sections, dots) {
   }
 
   const closestIndex = t < 0.5 ? indexA : Math.min(indexA + 1, COLOR_STOPS.length - 1);
-  const isMobile = isMobileDevice();
-
-  if (isMobile) {
-    // -------------------------------------------------------------------------
-    // MOBILE / TOUCH OPTIMIZATION: Adaptive Section-Snapped Theme Transitioning
-    // Updates theme CSS variables ONLY when crossing into a new section boundary.
-    // Zero style recalculations during scrolling inside sections.
-    // Eliminates all smartphone scroll stutter, tile drops, and GPU compositor flicker!
-    // -------------------------------------------------------------------------
-    if (closestIndex !== activeSectionIndex) {
-      activeSectionIndex = closestIndex;
-      const stop = COLOR_STOPS[closestIndex] || COLOR_STOPS[0];
-      const [r, g, b] = stop.primary;
-      const [sr, sg, sb] = stop.secondary;
-
-      const root = cachedRootEl || (cachedRootEl = document.documentElement);
-      root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
-      root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
-      root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
-      root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
-      root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-      root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
-
-      // Update ambient atmospheric orbs ONLY on section change (eliminates per-frame Gaussian blur re-rasterization)
-      if (!cachedOrb1El) cachedOrb1El = document.querySelector('.glow-orb-primary');
-      if (!cachedOrb2El) cachedOrb2El = document.querySelector('.glow-orb-secondary');
-      if (cachedOrb1El) cachedOrb1El.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
-      if (cachedOrb2El) cachedOrb2El.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
-
-      // Update active dot without redundant DOM mutations
-      dots.forEach((dot, idx) => {
-        const shouldBeActive = (idx === closestIndex);
-        if (dot.classList.contains('active') !== shouldBeActive) {
-          dot.classList.toggle('active', shouldBeActive);
-        }
-      });
-    }
-    return;
-  }
-
   // ---------------------------------------------------------------------------
-  // DESKTOP: Smooth Gradual Lerping with Optimized Thresholds (>= 6)
-  // Completely avoids setting document.body.style.backgroundColor on scroll to prevent full-page repaint strobe!
+  // SILKY-SMOOTH CONTINUOUS COLOR TRANSITION (DESKTOP & MOBILE)
+  // Continuous smoothstep interpolation between colorway stops.
+  // Leverages registered CSS @property variables for hardware-accelerated color blending.
   // ---------------------------------------------------------------------------
-  // Smoothstep easing for silky-smooth transition curve
   const easeT = t * t * (3 - 2 * t);
 
   const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
   const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
 
-  // Helper linear interpolation
   const lerp = (a, b, factor) => Math.round(a + (b - a) * factor);
 
   const r = lerp(stopA.primary[0], stopB.primary[0], easeT);
@@ -273,22 +232,13 @@ function updateColorsContinuous(sections, dots) {
   const sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
   const sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
 
-  // Throttle updates: only mutate CSS custom properties if RGB values shifted by at least 6 units or hit edge boundary
   const dr = Math.abs(r - lastAppliedTheme.r);
   const dg = Math.abs(g - lastAppliedTheme.g);
   const db = Math.abs(b - lastAppliedTheme.b);
-  const dsr = Math.abs(sr - lastAppliedTheme.sr);
-  const dsg = Math.abs(sg - lastAppliedTheme.sg);
-  const dsb = Math.abs(sb - lastAppliedTheme.sb);
-
-  const hasAnyDiff = (dr > 0 || dg > 0 || db > 0 || dsr > 0 || dsg > 0 || dsb > 0);
-  const hasThresholdDiff = (dr >= 16 || dg >= 16 || db >= 16 || dsr >= 16 || dsg >= 16 || dsb >= 16);
   const isEdge = (t === 0 || t === 1);
 
-  // Only update if colors actually changed AND (it crossed the 6-unit threshold OR snapped precisely at an edge)
-  const shouldUpdateTheme = hasAnyDiff && (hasThresholdDiff || isEdge);
-
-  if (shouldUpdateTheme) {
+  // Micro-step threshold of 2 RGB units guarantees imperceptible gradient stepping
+  if (dr >= 2 || dg >= 2 || db >= 2 || isEdge) {
     lastAppliedTheme.r = r;
     lastAppliedTheme.g = g;
     lastAppliedTheme.b = b;
@@ -303,15 +253,6 @@ function updateColorsContinuous(sections, dots) {
     root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
     root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
     root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
-
-    // Note: document.body.style.backgroundColor is NEVER mutated on scroll!
-    // Body maintains its steady dark luxury background (var(--bg-dark)), while atmospheric orbs provide ambient color.
-
-    // Update Ambient Atmospheric Orbs
-    if (!cachedOrb1El) cachedOrb1El = document.querySelector('.glow-orb-primary');
-    if (!cachedOrb2El) cachedOrb2El = document.querySelector('.glow-orb-secondary');
-    if (cachedOrb1El) cachedOrb1El.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
-    if (cachedOrb2El) cachedOrb2El.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
   }
 
   // Highlight active dot without redundant DOM mutations

@@ -380,26 +380,26 @@
     gap: 8px;
   }
 
-  .btn-sound-toggle {
-    padding: 6px 10px;
-    font-size: 0.72rem;
+  /* Collapse button text to sleek luxury icon pills at 1080px */
+  #btn-sound-toggle > span,
+  .btn-sound-toggle > span,
+  .btn-nav-wishlist > span:not(.wishlist-badge-count),
+  .btn-nav-cart > span:not(.cart-badge-count),
+  .btn-nav-login > span {
+    display: none !important;
   }
 
-  .btn-nav-wishlist {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    gap: 6px;
-  }
-
-  .btn-nav-cart {
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    gap: 6px;
-  }
-
+  .btn-sound-toggle,
+  .btn-nav-wishlist,
+  .btn-nav-cart,
   .btn-nav-login {
-    padding: 6px 10px;
-    font-size: 0.78rem;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .btn-hamburger,
@@ -408,34 +408,81 @@
     width: 38px;
     height: 38px;
     padding: 8px;
+    flex-shrink: 0 !important;
   }
 }
 
-@media (max-width: 990px) {
-  .nav-center-switcher {
+/* Breakpoint <= 900px (Addresses 700px - 900px):
+   Keep ONLY essentials in top bar: Brand, Wishlist, Cart, Hamburger Toggle.
+   Non-essentials (Language Switcher, Sound Toggle, Profile, Presentation switcher)
+   are moved to the luxury slide-out drawer connected to the hamburger button.
+   Guarantees the hamburger NEVER disappears or clips between 700px and 900px. */
+@media (max-width: 900px) {
+  .nav-center-switcher,
+  .store-nav #btn-lang-toggle,
+  .store-nav .btn-lang-toggle,
+  .store-nav #btn-sound-toggle,
+  .store-nav .btn-sound-toggle,
+  .store-nav .nav-auth-group {
     display: none !important;
   }
-}
 
-@media (max-width: 768px) {
   .store-nav {
     width: calc(100% - 24px);
     padding: 0 12px;
     gap: 8px;
     height: 56px;
     top: 10px;
+    justify-content: space-between !important;
     transition: none !important;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
-  }
-
-  /* Presentation Mode is available in the luxury slide-out drawer */
-  .nav-center-switcher {
-    display: none !important;
   }
 
   .nav-brand {
     font-size: 1.05rem;
     gap: 7px;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .brand-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  .nav-actions {
+    gap: 8px;
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  #btn-hamburger-toggle,
+  .btn-hamburger-toggle,
+  .btn-hamburger {
+    display: flex !important;
+    flex-shrink: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 8px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-nav {
+    width: calc(100% - 20px);
+    padding: 0 12px;
+    gap: 8px;
+    height: 54px;
+    top: 8px;
+  }
+
+  .nav-brand {
+    font-size: 1.0rem;
+    gap: 6px;
   }
 
   .brand-icon {
@@ -444,44 +491,13 @@
   }
 
   .nav-actions {
-    gap: 8px;
+    gap: 7px;
   }
 
-  /* Compact Luxury Squircle Icon Pills: Hide text, keep crisp icons & badges */
-  #btn-sound-toggle > span,
-  .btn-sound-toggle > span {
-    display: none !important;
-  }
-
-  .btn-nav-wishlist > span:not(.wishlist-badge-count) {
-    display: none !important;
-  }
-
-  .btn-nav-cart > span:not(.cart-badge-count) {
-    display: none !important;
-  }
-
-  .nav-auth-group {
-    display: flex !important;
-  }
-
-  .btn-nav-login {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .btn-nav-login > span {
-    display: none !important;
-  }
-
-  /* Standardized 38x38px Squircle Action Buttons on 768px */
-  .btn-sound-toggle,
   .btn-nav-wishlist,
-  .btn-nav-cart,
-  .btn-nav-login {
-    min-width: 38px;
-    height: 38px;
+  .btn-nav-cart {
+    min-width: 36px;
+    height: 36px;
     padding: 0 9px;
     border-radius: 999px;
     display: inline-flex;
@@ -507,25 +523,21 @@
   .btn-hamburger,
   .btn-hamburger-toggle,
   #btn-hamburger-toggle {
-    width: 38px;
-    height: 38px;
-    padding: 8px;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 7px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
   }
 }
 
-/* Mobile Screen Breakpoint: Hide Audio & Profile in Top Bar (Available in Drawer) */
 @media (max-width: 680px) {
-  .btn-sound-toggle,
-  .nav-auth-group {
-    display: none !important;
-  }
-
   .store-nav {
     width: calc(100% - 16px);
-    padding: 0 12px;
-    gap: 8px;
-    height: 54px;
-    top: 8px;
+    padding: 0 10px;
+    gap: 7px;
+    height: 52px;
+    top: 6px;
   }
 
   .nav-brand {
@@ -1940,6 +1952,9 @@
 }
 
 @media (max-width: 600px) {
+  .store-footer {
+    padding: 48px 16px 32px !important;
+  }
   .footer-inner,
   .footer-grid {
     grid-template-columns: 1fr;
@@ -1950,6 +1965,12 @@
     flex-direction: column;
     text-align: center;
     gap: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .store-footer {
+    padding: 36px 10px 24px !important;
   }
 }
 
@@ -3319,6 +3340,42 @@
   font-family: var(--font-mono);
 }
 
+/* Language & Sound Drawer Controls Box */
+.drawer-lang-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.drawer-lang-label {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.drawer-lang-box .btn-lang-toggle {
+  display: inline-flex !important;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--theme-primary);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
 .hamburger-menu-links {
   list-style: none;
   display: flex;
@@ -3978,18 +4035,205 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* ==========================================================================
+   STRICT RESPONSIVE ARCHIVE & SQUARE GRID VAULT (DOWN TO 320PX)
+   ========================================================================== */
 @media (max-width: 1024px) {
   .square-cards-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .catalog-section {
+    padding: 70px 18px !important;
+  }
+  .catalog-title-group h2 {
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
+  }
+  .catalog-filters {
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .btn-filter-pill {
+    padding: 7px 14px;
+    font-size: 0.78rem;
   }
 }
 
 @media (max-width: 640px) {
-  .square-cards-grid {
-    grid-template-columns: 1fr;
-  }
   .square-grid-section {
-    padding: 0 20px;
+    padding: 0 14px 60px !important;
+  }
+  .square-grid-header h2 {
+    font-size: clamp(1.7rem, 6vw, 2.2rem) !important;
+  }
+  .square-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .square-sneaker-card {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .square-card-top {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .square-card-badge {
+    font-size: 0.68rem !important;
+    padding: 4px 8px !important;
+  }
+  .square-card-actions {
+    gap: 8px !important;
+  }
+  .btn-card-buy,
+  .btn-card-inspect {
+    padding: 9px 8px !important;
+    font-size: 0.75rem !important;
+  }
+  .square-card-price {
+    font-size: 1.35rem !important;
+  }
+
+  /* Catalog Vault Responsive Grid on Mobile */
+  .catalog-section {
+    padding: 50px 14px !important;
+  }
+  .catalog-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+  .catalog-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .sneaker-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+  .sneaker-card-thumb {
+    height: 180px !important;
+  }
+  .sneaker-card-thumb img {
+    max-width: 82% !important;
+    max-height: 160px !important;
+  }
+  .catalog-filters {
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .btn-filter-pill {
+    padding: 6px 12px !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* Ultra-Compact Smartphone Viewport (Down to 320px) */
+@media (max-width: 380px) {
+  .square-grid-section {
+    padding: 0 8px 45px !important;
+  }
+  .square-sneaker-card {
+    padding: 14px 10px !important;
+  }
+  .square-card-top {
+    gap: 6px !important;
+  }
+  .square-card-badge {
+    font-size: 0.62rem !important;
+    padding: 3px 6px !important;
+  }
+  .square-card-year {
+    font-size: 0.68rem !important;
+  }
+  .square-card-actions {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+  }
+  .btn-card-buy,
+  .btn-card-inspect {
+    padding: 8px 4px !important;
+    font-size: 0.70rem !important;
+  }
+  .btn-card-inspect svg {
+    display: none !important;
+  }
+  .square-card-price {
+    font-size: 1.25rem !important;
+  }
+
+  .catalog-section {
+    padding: 40px 8px !important;
+  }
+  .sneaker-card {
+    padding: 14px 10px !important;
+  }
+  .sneaker-card-thumb {
+    height: 160px !important;
+  }
+  .sneaker-card-thumb img {
+    max-width: 80% !important;
+    max-height: 140px !important;
+  }
+  .sneaker-card-name {
+    font-size: 1.1rem !important;
+  }
+  .sneaker-card-price {
+    font-size: 1.25rem !important;
+  }
+  .btn-filter-pill {
+    padding: 5px 9px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Runway Buy Card compact sizing on 320px */
+  .runway-section {
+    padding: 70px 8px 40px !important;
+  }
+  .buy-card {
+    padding: 16px 10px !important;
+    border-radius: 16px !important;
+  }
+  .buy-price-val {
+    font-size: 1.85rem !important;
+  }
+  .buy-sizes-scroll {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 3px !important;
+  }
+  .btn-stage-size {
+    padding: 4px 1px !important;
+    min-height: 40px !important;
+  }
+  .btn-stage-size .size-main {
+    font-size: 0.75rem !important;
+  }
+  .btn-stage-size .size-sub {
+    font-size: 0.55rem !important;
+  }
+  .stage-specs-table {
+    grid-template-columns: 1fr 1fr !important;
+    padding: 10px 8px !important;
+    gap: 6px !important;
+  }
+  .btn-stage-instant-buy,
+  .btn-stage-add-bag {
+    padding: 11px 8px !important;
+    font-size: 0.82rem !important;
   }
 }
 
@@ -4496,8 +4740,11 @@
   .customizer-mode-btn {
     flex: 1 1 auto !important;
     justify-content: center !important;
-    padding: 7px 10px !important;
-    font-size: 0.68rem !important;
+    padding: 6px 8px !important;
+    font-size: 0.65rem !important;
+    white-space: normal !important;
+    text-align: center !important;
+    gap: 4px !important;
   }
 
   .stage-badge-hud {
@@ -4901,7 +5148,9 @@
   .blueprint-callout,
   .blueprint-spec-badge,
   .blueprint-badge,
-  .blueprint-tag {
+  .blueprint-tag,
+  .spec-callout-pill,
+  .spec-lead-line {
     display: none !important;
   }
 
@@ -4940,6 +5189,28 @@
   .square-sneaker-card,
   .drop-hud-card {
     padding: 18px 12px !important;
+  }
+
+  .drop-hud-card .badge-pill {
+    max-width: calc(100% - 20px) !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .drop-hud-card [data-i18n="drops_msrp_badge"] {
+    right: 8px !important;
+    bottom: 8px !important;
+    font-size: 0.66rem !important;
+    padding: 4px 8px !important;
+  }
+
+  #btn-add-custom-bag,
+  .customizer-controls-box .btn-primary,
+  .customizer-controls-box .btn-secondary {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    text-align: center !important;
   }
 
   .drop-timer-display {
@@ -5007,7 +5278,26 @@
   .custom-modal {
     width: calc(100% - 16px) !important;
     padding: 20px 14px !important;
-    margin: 0 8px !important;
+    margin: 0 !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .analytics-date-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    overflow-x: hidden !important;
+  }
+
+  .analytics-date-row span:nth-child(even) {
+    display: none !important;
+  }
+
+  .analytics-date-row span {
+    font-size: 0.65rem !important;
+    white-space: nowrap !important;
   }
 
   .hamburger-drawer {
@@ -6467,3 +6757,173 @@
 .btn-customizer-size.selected .size-sub {
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* Modal Responsiveness Safeguards down to 320px */
+@media (max-width: 480px) {
+  .custom-modal {
+    max-height: 92vh !important;
+    overflow-x: hidden !important;
+  }
+  .custom-modal > div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+  }
+  .custom-modal .modal-sizes-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  /* 3D Turntable HUD Mobile Responsiveness */
+  .turntable-hud-bar {
+    max-width: 100% !important;
+    padding: 10px 10px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+  .turntable-presets-row {
+    gap: 4px !important;
+  }
+  .btn-angle-preset {
+    font-size: 0.64rem !important;
+    padding: 4px 2px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .custom-modal .modal-sizes-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .turntable-hud-bar {
+    padding: 8px 8px !important;
+  }
+  .turntable-presets-row {
+    gap: 3px !important;
+  }
+  .btn-angle-preset {
+    font-size: 0.58rem !important;
+    padding: 3px 1px !important;
+  }
+}
+
+/* ==========================================================================
+   TARGETED FIXES FOR 320px ULTRA-COMPACT MOBILE & DRAWER HARMONIZATION
+   ========================================================================== */
+@media (max-width: 380px) {
+  /* 1. Fix Bespoke Lab Studio Mode Switcher overflow */
+  .stage-mode-switch,
+  .customizer-mode-toggle,
+  #customizer-mode-toggle,
+  .mode-switcher-toggle {
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
+    gap: 5px !important;
+  }
+
+  .stage-mode-btn,
+  .mode-toggle-btn,
+  .btn-mode-toggle,
+  .customizer-mode-btn {
+    width: 100% !important;
+    white-space: normal !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* 2. Fix Bespoke Lab Customizer Action Buttons blowout */
+  .customizer-controls-box div:has(#btn-add-custom-bag),
+  .customizer-controls-box [style*="display: flex; gap: 10px"] {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  #btn-add-custom-bag {
+    width: 100% !important;
+    padding: 12px 16px !important;
+    font-size: 0.82rem !important;
+    justify-content: center !important;
+  }
+
+  #customizer-wishlist-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 10px 14px !important;
+  }
+
+  /* 3. Fix Buy Modal Preview Header & Action Buttons */
+  #buy-modal [style*="gap: 24px"] {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 12px !important;
+  }
+
+  #buy-modal div:has(#modal-wishlist-btn),
+  #buy-modal [style*="display: flex; gap: 10px"] {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  #buy-modal div:has(#modal-wishlist-btn) button,
+  #buy-modal div:has(#modal-wishlist-btn) a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* 4. Fix Hype Drops MSRP Absolute Badge */
+  .drop-hud-card [data-i18n="drops_msrp_badge"] {
+    position: static !important;
+    margin-top: 10px !important;
+    display: inline-flex !important;
+    font-size: 0.65rem !important;
+    text-align: center !important;
+  }
+
+  /* 5. Market Analytics Time Pills & Header Wrap */
+  .analytics-card [style*="gap: 8px"] {
+    flex-wrap: wrap !important;
+  }
+
+  .btn-hud-pill {
+    padding: 5px 9px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* 6. Drawer Lang Box & Presentation Box harmonization */
+  .drawer-lang-box {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .drawer-lang-label {
+    font-size: 0.68rem !important;
+  }
+
+  .hamburger-drawer-footer div {
+    flex-direction: column !important;
+  }
+  
+  .hamburger-drawer-footer div a,
+  .hamburger-drawer-footer div button {
+    width: 100% !important;
+  }
+
+  /* 7. Fix Cart Drawer width to 100% instead of 100vw */
+  .cart-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 8. Square Grid Vault Card Top Wrap */
+  .square-card-top {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+}
+
