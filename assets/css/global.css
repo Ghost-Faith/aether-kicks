@@ -457,7 +457,7 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
     filter: blur(55px) !important;
     -webkit-filter: blur(55px) !important;
     opacity: 0.72 !important;
-    transition: background 1s ease, transform 1s ease !important;
+    transition: transform 1s ease !important;
   }
 
   html[data-perf-mode="off"] .glow-backdrop:first-child .glow-orb-secondary {
@@ -466,7 +466,7 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
     filter: blur(60px) !important;
     -webkit-filter: blur(60px) !important;
     opacity: 0.72 !important;
-    transition: background 1s ease !important;
+    transition: none !important;
   }
 
   .glow-backdrop.active {

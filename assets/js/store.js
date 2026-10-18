@@ -328,12 +328,11 @@ function initGradualColorScroll() {
   }
 
   // ---------------------------------------------------------------------------
-  // MODE 2: CHROMATIC HUE SHIFT CONTINUOUS INTERPOLATION (Performance Mode OFF)
-  // Continuous chromatic wheel hue-rotation engine powered by high-speed RAF physics.
-  // Rotates the HUE fast across the spectrum preserving full electric saturation without muddy RGB midtones.
+  // MODE 2: DIRECT 1:1 SCROLL-TO-COLOR MAPPING (Performance Mode OFF)
+  // Direct instantaneous scroll-to-color interpolation with zero damping lag.
+  // Calculates linear scroll progress directly against section positions,
+  // interpolating hue/saturation/lightness and applying to the DOM on the very same frame.
   // ---------------------------------------------------------------------------
-  let chaserRafId = null;
-  let isChaserRunning = false;
 
   // Fast In-Browser HSL to RGB conversion
   function hslToRgb(h, s, l) {
@@ -360,98 +359,8 @@ function initGradualColorScroll() {
     ];
   }
 
-  // The interpolated current floating-point colors
-  const currentColor = {
-    r: 220, g: 38, b: 38,
-    sr: 153, sg: 27, sb: 27,
-    bgr: 12, bgg: 5, bgb: 8
-  };
-
-  // The target colors computed from the runway scroll position
-  const targetColor = {
-    r: 220, g: 38, b: 38,
-    sr: 153, sg: 27, sb: 27,
-    bgr: 12, bgg: 5, bgb: 8,
-    activeDotIndex: 0,
-    themeId: 'chicago'
-  };
-
-  function computeTargetColors() {
-    if (sections.length < 2) return;
-    if (window.currentCatalogLayout === 'grid') return;
-
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    const vh = window.innerHeight || 800;
-    const currentCenter = scrollY + vh / 2;
-
-    // Calculate the vertical center of each runway section live
-    const sectionCenters = sections.map(sec => {
-      const rect = sec.getBoundingClientRect();
-      return scrollY + rect.top + rect.height / 2;
-    });
-
-    let indexA = 0;
-    let t = 0;
-
-    if (currentCenter <= sectionCenters[0]) {
-      indexA = 0;
-      t = 0;
-    } else if (currentCenter >= sectionCenters[sectionCenters.length - 1]) {
-      indexA = sectionCenters.length - 2;
-      t = 1;
-    } else {
-      for (let i = 0; i < sectionCenters.length - 1; i++) {
-        if (currentCenter >= sectionCenters[i] && currentCenter <= sectionCenters[i + 1]) {
-          indexA = i;
-          const distance = sectionCenters[i + 1] - sectionCenters[i];
-          const rawT = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
-          t = Math.max(0, Math.min(1, rawT));
-          break;
-        }
-      }
-    }
-
-    // Natural, continuous cubic S-curve across the entire distance:
-    // Zero dead-zones or flat snapping plateaus, creating dozens of soft, delicate micro-hue shifts
-    const easeT = t * t * (3 - 2 * t);
-    const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
-    const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
-
-    // Luminous Breathing Effect:
-    // As the color begins to morph, it gently gains a subtle luminous lift
-    // ("red -> slight brighter red -> and then purple -> slight brighter -> until blue")
-    const lumBoost = 3.5 * Math.sin(Math.PI * easeT);
-
-    // Continuous chromatic HSL Hue Sweep:
-    let hDiff = stopB.h - stopA.h;
-    const targetH = stopA.h + hDiff * easeT;
-    const targetS = stopA.s + (stopB.s - stopA.s) * easeT;
-    const targetL = Math.min(100, (stopA.l + (stopB.l - stopA.l) * easeT) + lumBoost);
-
-    const [r, g, b] = hslToRgb(targetH, targetS, targetL);
-
-    const targetSecS = stopA.secS + (stopB.secS - stopA.secS) * easeT;
-    const targetSecL = Math.min(100, (stopA.secL + (stopB.secL - stopA.secL) * easeT) + lumBoost * 0.7);
-    const [sr, sg, sb] = hslToRgb(targetH, targetSecS, targetSecL);
-
-    const targetBgS = stopA.bgS + (stopB.bgS - stopA.bgS) * easeT;
-    const targetBgL = stopA.bgL + (stopB.bgL - stopA.bgL) * easeT + (lumBoost * 0.15);
-    const [bgr, bgg, bgb] = hslToRgb(targetH, targetBgS, targetBgL);
-
-    targetColor.r = r;
-    targetColor.g = g;
-    targetColor.b = b;
-    targetColor.sr = sr;
-    targetColor.sg = sg;
-    targetColor.sb = sb;
-    targetColor.bgr = bgr;
-    targetColor.bgg = bgg;
-    targetColor.bgb = bgb;
-
-    const closestIndex = t < 0.5 ? indexA : indexA + 1;
-    targetColor.activeDotIndex = closestIndex;
-    const activeSection = sections[closestIndex];
-    targetColor.themeId = activeSection ? activeSection.dataset.theme : 'chicago';
+  function clamp01(v) {
+    return Math.max(0, Math.min(1, v));
   }
 
   function applyColorsToDOM(r, g, b, sr, sg, sb, bgr, bgg, bgb, themeId, dotIdx) {
@@ -468,8 +377,8 @@ function initGradualColorScroll() {
       document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
     }
 
-    const orb1 = document.querySelector('.glow-backdrop .glow-orb-primary');
-    const orb2 = document.querySelector('.glow-backdrop .glow-orb-secondary');
+    const orb1 = cachedOrb1El || (cachedOrb1El = document.querySelector('.glow-backdrop .glow-orb-primary'));
+    const orb2 = cachedOrb2El || (cachedOrb2El = document.querySelector('.glow-backdrop .glow-orb-secondary'));
     if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, transparent 70%)`;
     if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.25) 0%, transparent 70%)`;
 
@@ -484,109 +393,92 @@ function initGradualColorScroll() {
     }
   }
 
-  function chaserTick() {
-    if (window.currentCatalogLayout === 'grid' || (window.perfManager && window.perfManager.isEnabled())) {
-      isChaserRunning = false;
-      chaserRafId = null;
-      return;
-    }
-
-    // Velvety Soft Damping:
-    // Produces dozens of buttery micro-frames per scroll notch, eliminating aggressive steppiness
-    const damping = 0.20;
-
-    currentColor.r += (targetColor.r - currentColor.r) * damping;
-    currentColor.g += (targetColor.g - currentColor.g) * damping;
-    currentColor.b += (targetColor.b - currentColor.b) * damping;
-
-    currentColor.sr += (targetColor.sr - currentColor.sr) * damping;
-    currentColor.sg += (targetColor.sg - currentColor.sg) * damping;
-    currentColor.sb += (targetColor.sb - currentColor.sb) * damping;
-
-    currentColor.bgr += (targetColor.bgr - currentColor.bgr) * damping;
-    currentColor.bgg += (targetColor.bgg - currentColor.bgg) * damping;
-    currentColor.bgb += (targetColor.bgb - currentColor.bgb) * damping;
-
-    const ir = Math.round(currentColor.r);
-    const ig = Math.round(currentColor.g);
-    const ib = Math.round(currentColor.b);
-
-    const isr = Math.round(currentColor.sr);
-    const isg = Math.round(currentColor.sg);
-    const isb = Math.round(currentColor.sb);
-
-    const ibgr = Math.round(currentColor.bgr);
-    const ibgg = Math.round(currentColor.bgg);
-    const ibgb = Math.round(currentColor.bgb);
-
-    applyColorsToDOM(ir, ig, ib, isr, isg, isb, ibgr, ibgg, ibgb, targetColor.themeId, targetColor.activeDotIndex);
-
-    const delta = Math.abs(targetColor.r - currentColor.r) +
-                  Math.abs(targetColor.g - currentColor.g) +
-                  Math.abs(targetColor.b - currentColor.b) +
-                  Math.abs(targetColor.bgr - currentColor.bgr) +
-                  Math.abs(targetColor.bgg - currentColor.bgg) +
-                  Math.abs(targetColor.bgb - currentColor.bgb);
-
-    if (delta > 0.5) {
-      chaserRafId = window.requestAnimationFrame(chaserTick);
-    } else {
-      currentColor.r = targetColor.r;
-      currentColor.g = targetColor.g;
-      currentColor.b = targetColor.b;
-      currentColor.sr = targetColor.sr;
-      currentColor.sg = targetColor.sg;
-      currentColor.sb = targetColor.sb;
-      currentColor.bgr = targetColor.bgr;
-      currentColor.bgg = targetColor.bgg;
-      currentColor.bgb = targetColor.bgb;
-
-      applyColorsToDOM(
-        targetColor.r, targetColor.g, targetColor.b,
-        targetColor.sr, targetColor.sg, targetColor.sb,
-        targetColor.bgr, targetColor.bgg, targetColor.bgb,
-        targetColor.themeId, targetColor.activeDotIndex
-      );
-      isChaserRunning = false;
-      chaserRafId = null;
-    }
-  }
-
-  function startChaserLoop() {
+  /**
+   * Direct 1:1 scroll-to-color mapping without damping lag or artificial smoothing curves.
+   * Calculates progress directly based on section center positions relative to viewport center,
+   * interpolates linearly between adjacent color stops, and applies to the DOM on the very same frame.
+   */
+  function updateColorsContinuous() {
+    if (sections.length < 2) return;
     if (window.currentCatalogLayout === 'grid') return;
-    if (window.perfManager && window.perfManager.isEnabled()) return;
 
-    computeTargetColors();
-    if (!isChaserRunning) {
-      isChaserRunning = true;
-      chaserRafId = window.requestAnimationFrame(chaserTick);
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const vh = window.innerHeight || 800;
+    const viewportCenter = scrollY + vh / 2;
+
+    if (!cachedSectionCenters || cachedSectionCenters.length !== sections.length) {
+      cacheSectionPositions(sections);
     }
+    const sectionCenters = cachedSectionCenters;
+
+    let indexA = 0;
+    let t = 0;
+
+    if (viewportCenter <= sectionCenters[0]) {
+      indexA = 0;
+      t = 0;
+    } else if (viewportCenter >= sectionCenters[sectionCenters.length - 1]) {
+      indexA = sectionCenters.length - 2;
+      t = 1;
+    } else {
+      for (let i = 0; i < sectionCenters.length - 1; i++) {
+        if (viewportCenter >= sectionCenters[i] && viewportCenter <= sectionCenters[i + 1]) {
+          indexA = i;
+          const distance = sectionCenters[i + 1] - sectionCenters[i];
+          t = distance > 0 ? clamp01((viewportCenter - sectionCenters[i]) / distance) : 0;
+          break;
+        }
+      }
+    }
+
+    const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
+    const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
+
+    // Linear HSL interpolation along shortest angular path for hue
+    let hDiff = (stopB.h - stopA.h) % 360;
+    if (hDiff > 180) hDiff -= 360;
+    if (hDiff < -180) hDiff += 360;
+
+    const currentH = ((stopA.h + hDiff * t) % 360 + 360) % 360;
+    const currentS = stopA.s + (stopB.s - stopA.s) * t;
+    const currentL = stopA.l + (stopB.l - stopA.l) * t;
+    const [r, g, b] = hslToRgb(currentH, currentS, currentL);
+
+    const secS = stopA.secS + (stopB.secS - stopA.secS) * t;
+    const secL = stopA.secL + (stopB.secL - stopA.secL) * t;
+    const [sr, sg, sb] = hslToRgb(currentH, secS, secL);
+
+    const bgS = stopA.bgS + (stopB.bgS - stopA.bgS) * t;
+    const bgL = stopA.bgL + (stopB.bgL - stopA.bgL) * t;
+    const [bgr, bgg, bgb] = hslToRgb(currentH, bgS, bgL);
+
+    const closestIndex = t < 0.5 ? indexA : indexA + 1;
+    const activeSection = sections[closestIndex];
+    const themeId = activeSection ? activeSection.dataset.theme : 'chicago';
+
+    applyColorsToDOM(r, g, b, sr, sg, sb, bgr, bgg, bgb, themeId, closestIndex);
   }
 
   window.stopChaserLoop = function() {
-    if (chaserRafId) {
-      window.cancelAnimationFrame(chaserRafId);
-      chaserRafId = null;
-    }
-    isChaserRunning = false;
+    // Retained for backward-compatibility with external callers
   };
 
-  // Unified Scroll Dispatcher
+  // Unified Scroll Dispatcher with single-frame RAF throttle
   function onScroll() {
     if (window.currentCatalogLayout === 'grid') return;
 
-    if (window.perfManager && window.perfManager.isEnabled()) {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          if (window.currentCatalogLayout !== 'grid') {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        if (window.currentCatalogLayout !== 'grid') {
+          if (window.perfManager && window.perfManager.isEnabled()) {
             checkActiveSection();
+          } else {
+            updateColorsContinuous();
           }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    } else {
-      startChaserLoop();
+        }
+        ticking = false;
+      });
+      ticking = true;
     }
   }
 
@@ -601,24 +493,7 @@ function initGradualColorScroll() {
       window.stopChaserLoop();
       checkActiveSection();
     } else {
-      computeTargetColors();
-      currentColor.r = targetColor.r;
-      currentColor.g = targetColor.g;
-      currentColor.b = targetColor.b;
-      currentColor.sr = targetColor.sr;
-      currentColor.sg = targetColor.sg;
-      currentColor.sb = targetColor.sb;
-      currentColor.bgr = targetColor.bgr;
-      currentColor.bgg = targetColor.bgg;
-      currentColor.bgb = targetColor.bgb;
-
-      applyColorsToDOM(
-        Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
-        Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
-        Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
-        targetColor.themeId, targetColor.activeDotIndex
-      );
-      startChaserLoop();
+      updateColorsContinuous();
     }
   };
 
@@ -657,23 +532,7 @@ function initGradualColorScroll() {
   if (window.perfManager && window.perfManager.isEnabled()) {
     checkActiveSection();
   } else {
-    computeTargetColors();
-    currentColor.r = targetColor.r;
-    currentColor.g = targetColor.g;
-    currentColor.b = targetColor.b;
-    currentColor.sr = targetColor.sr;
-    currentColor.sg = targetColor.sg;
-    currentColor.sb = targetColor.sb;
-    currentColor.bgr = targetColor.bgr;
-    currentColor.bgg = targetColor.bgg;
-    currentColor.bgb = targetColor.bgb;
-
-    applyColorsToDOM(
-      Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
-      Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
-      Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
-      targetColor.themeId, targetColor.activeDotIndex
-    );
+    updateColorsContinuous();
   }
 
   // Dot Navigation Click
