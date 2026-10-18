@@ -82,7 +82,119 @@ function cacheSectionPositions(sections) {
   });
 }
 
+// =============================================================================
+// PERFORMANCE MODE MANAGER (Mode 1: 60/120fps Locked vs Mode 2: Silky Continuous RGB)
+// =============================================================================
+class PerformanceModeManager {
+  constructor() {
+    this.storageKey = 'aether_perf_mode';
+    let saved = null;
+    try {
+      saved = localStorage.getItem(this.storageKey);
+    } catch (e) {}
+    // Default to 'on' as requested by the user
+    this.mode = (saved === 'off') ? 'off' : 'on';
+  }
+
+  init() {
+    this.applyMode(this.mode, false);
+    this.bindButtons();
+    window.addEventListener('aether:languageChange', () => {
+      this.applyMode(this.mode, false);
+    });
+  }
+
+  isEnabled() {
+    return this.mode === 'on';
+  }
+
+  setMode(newMode, notify = true) {
+    if (newMode !== 'on' && newMode !== 'off') return;
+    this.mode = newMode;
+    try {
+      localStorage.setItem(this.storageKey, newMode);
+    } catch (e) {}
+    this.applyMode(newMode, notify);
+  }
+
+  toggle() {
+    const nextMode = (this.mode === 'on') ? 'off' : 'on';
+    this.setMode(nextMode, true);
+    return this.mode;
+  }
+
+  bindButtons() {
+    const btns = document.querySelectorAll('.btn-perf-toggle, #btn-perf-toggle, #drawer-btn-perf-toggle');
+    btns.forEach(btn => {
+      btn.onclick = (e) => {
+        if (e) e.preventDefault();
+        this.toggle();
+      };
+    });
+  }
+
+  applyMode(mode, notify = true) {
+    const isPerfOn = (mode === 'on');
+    const root = document.documentElement;
+    root.setAttribute('data-perf-mode', mode);
+    if (document.body) {
+      document.body.setAttribute('data-perf-mode', mode);
+    }
+
+    // Update UI toggle buttons
+    const btns = document.querySelectorAll('.btn-perf-toggle, #btn-perf-toggle, #drawer-btn-perf-toggle');
+    btns.forEach(btn => {
+      btn.classList.toggle('active', isPerfOn);
+      btn.setAttribute('aria-pressed', isPerfOn ? 'true' : 'false');
+
+      const textSpan = btn.querySelector('.perf-text');
+      if (textSpan) {
+        textSpan.setAttribute('data-i18n', isPerfOn ? 'nav_perf_on' : 'nav_perf_off');
+        if (window.i18n && typeof window.i18n.t === 'function') {
+          textSpan.textContent = window.i18n.t(isPerfOn ? 'nav_perf_on' : 'nav_perf_off');
+        } else {
+          textSpan.textContent = isPerfOn ? 'PERF: ON' : 'ULTRA: ON';
+        }
+      }
+
+      const title = isPerfOn
+        ? (window.i18n ? window.i18n.t('toast_perf_on') : 'Modo Desempenho Ativo ⚡ (60-120 FPS)')
+        : (window.i18n ? window.i18n.t('toast_perf_off') : 'Modo Ultra Suave Ativo 🎨 (Cores Contínuas)');
+      btn.setAttribute('title', title);
+      btn.setAttribute('aria-label', title);
+    });
+
+    // Notify active theme coordinator to switch runtime behavior immediately
+    if (typeof window.refreshThemeCoordinator === 'function') {
+      window.refreshThemeCoordinator(mode);
+    }
+
+    if (notify) {
+      if (window.soundEngine && typeof window.soundEngine.playSwitch === 'function') {
+        window.soundEngine.playSwitch();
+      } else if (window.soundEngine && typeof window.soundEngine.playClick === 'function') {
+        window.soundEngine.playClick();
+      }
+
+      if (typeof window.showToast === 'function') {
+        const toastMsg = isPerfOn
+          ? (window.i18n ? window.i18n.t('toast_perf_on') : 'Modo Desempenho Ativo ⚡ (60-120 FPS)')
+          : (window.i18n ? window.i18n.t('toast_perf_off') : 'Modo Ultra Suave Ativo 🎨 (Cores Contínuas)');
+        window.showToast(toastMsg);
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('aether:perfModeChange', { detail: { mode: mode, isPerfOn: isPerfOn } }));
+  }
+}
+
+window.perfManager = new PerformanceModeManager();
+window.togglePerformanceMode = function() {
+  return window.perfManager ? window.perfManager.toggle() : null;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.perfManager) window.perfManager.init();
   initGradualColorScroll();
   initRefinedSneakerParallax();
   initStageControls();
@@ -102,9 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Ultra-Performant Runway Theme Coordinator (60fps/120fps Locked on PC & Mobile)
- * Dynamically coordinates colorway themes across sections and GPU-composited backdrops.
- * ZERO DOM mutations and ZERO style recalculations during scrolling!
+ * Dual-Mode Runway Theme Coordinator
+ * Mode 1 (ON): Section-snapped theme updates, GPU-composited backdrops, 0 DOM thrashing.
+ * Mode 2 (OFF): Silky smoothstep continuous RGB interpolation across color stops.
  */
 function initGradualColorScroll() {
   const sections = Array.from(document.querySelectorAll('.runway-section'));
@@ -113,7 +225,11 @@ function initGradualColorScroll() {
   if (sections.length < 2) return;
 
   cachedRootEl = document.documentElement;
+  cacheSectionPositions(sections);
 
+  // ---------------------------------------------------------------------------
+  // MODE 1: SECTION-SNAPPED THEME COORDINATOR (Locked 60/120 FPS)
+  // ---------------------------------------------------------------------------
   function setActiveThemeIndex(newIndex) {
     if (newIndex === activeSectionIndex || newIndex < 0 || newIndex >= sections.length) return;
     activeSectionIndex = newIndex;
@@ -123,11 +239,12 @@ function initGradualColorScroll() {
     const stop = COLOR_STOPS[newIndex] || COLOR_STOPS[0];
     const [r, g, b] = stop.primary;
     const [sr, sg, sb] = stop.secondary;
+    const [bgr, bgg, bgb] = stop.bg;
 
-    // 1. Set data-active-theme on html (triggers smooth CSS transitions on all themed UI elements)
+    // 1. Set scoped active theme attribute
     document.documentElement.setAttribute('data-active-theme', themeId);
 
-    // 2. Set root CSS custom properties ONCE on section crossing (ensures full compatibility with SVGs, canvas, and child components)
+    // 2. Set root CSS custom properties ONCE on section crossing
     const root = cachedRootEl || (cachedRootEl = document.documentElement);
     root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
     root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
@@ -135,8 +252,9 @@ function initGradualColorScroll() {
     root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
     root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
     root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+    root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
 
-    // 3. Cross-fade GPU-composited ambient backdrops via opacity (runs on compositor thread at 0 CPU cost)
+    // 3. Cross-fade GPU-composited ambient backdrops via opacity
     if (backdrops.length > 0) {
       backdrops.forEach((bd, idx) => {
         bd.classList.toggle('active', idx === newIndex);
@@ -148,9 +266,6 @@ function initGradualColorScroll() {
       dot.classList.toggle('active', idx === newIndex);
     });
   }
-
-  // Pre-calculate positions once for fast distance checking
-  cacheSectionPositions(sections);
 
   function checkActiveSection() {
     const scrollY = window.scrollY || window.pageYOffset || 0;
@@ -175,26 +290,140 @@ function initGradualColorScroll() {
     setActiveThemeIndex(closestIndex);
   }
 
+  // ---------------------------------------------------------------------------
+  // MODE 2: CONTINUOUS SCROLL-DRIVEN RGB INTERPOLATION (Classic Silky Smoothstep)
+  // ---------------------------------------------------------------------------
+  function updateColorsContinuous() {
+    if (!cachedSectionCenters || cachedSectionCenters.length !== sections.length) {
+      cacheSectionPositions(sections);
+    }
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const vh = window.innerHeight || 800;
+    const currentCenter = scrollY + vh / 2;
+    const sectionCenters = cachedSectionCenters;
+
+    let indexA = 0;
+    let t = 0;
+
+    if (currentCenter <= sectionCenters[0]) {
+      indexA = 0;
+      t = 0;
+    } else if (currentCenter >= sectionCenters[sectionCenters.length - 1]) {
+      indexA = sectionCenters.length - 2;
+      t = 1;
+    } else {
+      for (let i = 0; i < sectionCenters.length - 1; i++) {
+        if (currentCenter >= sectionCenters[i] && currentCenter <= sectionCenters[i + 1]) {
+          indexA = i;
+          const distance = sectionCenters[i + 1] - sectionCenters[i];
+          t = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
+          break;
+        }
+      }
+    }
+
+    const closestIndex = t < 0.5 ? indexA : Math.min(indexA + 1, COLOR_STOPS.length - 1);
+    const easeT = t * t * (3 - 2 * t);
+
+    const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
+    const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
+
+    const lerp = (a, b, factor) => Math.round(a + (b - a) * factor);
+
+    const r = lerp(stopA.primary[0], stopB.primary[0], easeT);
+    const g = lerp(stopA.primary[1], stopB.primary[1], easeT);
+    const b = lerp(stopA.primary[2], stopB.primary[2], easeT);
+
+    const sr = lerp(stopA.secondary[0], stopB.secondary[0], easeT);
+    const sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
+    const sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
+
+    const bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
+    const bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
+    const bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
+
+    const dr = Math.abs(r - lastAppliedTheme.r);
+    const dg = Math.abs(g - lastAppliedTheme.g);
+    const db = Math.abs(b - lastAppliedTheme.b);
+    const isEdge = (t === 0 || t === 1);
+
+    // Micro-step delta threshold of 2 RGB units prevents redundant DOM style recalculations
+    if (dr >= 2 || dg >= 2 || db >= 2 || isEdge) {
+      lastAppliedTheme.r = r;
+      lastAppliedTheme.g = g;
+      lastAppliedTheme.b = b;
+      lastAppliedTheme.sr = sr;
+      lastAppliedTheme.sg = sg;
+      lastAppliedTheme.sb = sb;
+
+      const root = cachedRootEl || (cachedRootEl = document.documentElement);
+      root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+      root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+      root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+      root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+      root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+      root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+
+      const activeSection = sections[closestIndex];
+      const themeId = activeSection ? activeSection.dataset.theme : 'chicago';
+      if (document.documentElement.getAttribute('data-active-theme') !== themeId) {
+        document.documentElement.setAttribute('data-active-theme', themeId);
+      }
+    }
+
+    // Highlight active dot without redundant DOM mutations
+    if (closestIndex !== activeSectionIndex) {
+      activeSectionIndex = closestIndex;
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === closestIndex);
+      });
+    }
+  }
+
+  // Unified RequestAnimationFrame Scroll Dispatcher
   function onScroll() {
     if (!ticking) {
       window.requestAnimationFrame(() => {
-        checkActiveSection();
+        if (window.perfManager && window.perfManager.isEnabled()) {
+          checkActiveSection();
+        } else {
+          updateColorsContinuous();
+        }
         ticking = false;
       });
       ticking = true;
     }
   }
 
-  // Bind passive listeners
+  // Seamless Mode Switcher (Zero Reload Required)
+  window.refreshThemeCoordinator = function(mode) {
+    activeSectionIndex = -1;
+    lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
+    cacheSectionPositions(sections);
+
+    if (mode === 'on') {
+      checkActiveSection();
+    } else {
+      updateColorsContinuous();
+    }
+  };
+
+  // Passive Event Listeners
   window.addEventListener('scroll', onScroll, { passive: true });
 
   window.addEventListener('resize', () => {
+    activeSectionIndex = -1;
+    lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
     cacheSectionPositions(sections);
     onScroll();
   }, { passive: true });
 
   window.addEventListener('orientationchange', () => {
     setTimeout(() => {
+      activeSectionIndex = -1;
+      lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
       cacheSectionPositions(sections);
       onScroll();
     }, 150);
@@ -212,8 +441,12 @@ function initGradualColorScroll() {
     });
   }
 
-  // Initial activation
-  checkActiveSection();
+  // Initial trigger
+  if (window.perfManager && window.perfManager.isEnabled()) {
+    checkActiveSection();
+  } else {
+    updateColorsContinuous();
+  }
 
   // Dot Navigation Click
   dots.forEach(dot => {

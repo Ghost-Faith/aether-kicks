@@ -273,7 +273,23 @@ button {
   opacity: 0.75;
 }
 
-/* Static, permanently-cached GPU gradient textures per backdrop */
+/* Continuous Dynamic Lighting in Ultra Mode (data-perf-mode="off") */
+html[data-perf-mode="off"] .glow-backdrop {
+  display: none !important;
+}
+html[data-perf-mode="off"] .glow-backdrop:first-child {
+  display: block !important;
+  opacity: 0.75 !important;
+  transition: none !important;
+}
+html[data-perf-mode="off"] .glow-backdrop .glow-orb-primary {
+  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%) !important;
+}
+html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
+  background: radial-gradient(circle, var(--theme-glow-soft) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%) !important;
+}
+
+/* Static, permanently-cached GPU gradient textures per backdrop (Performance Mode ON) */
 .glow-backdrop[data-theme="chicago"] .glow-orb-primary {
   background: radial-gradient(circle, rgba(220, 38, 38, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
 }
