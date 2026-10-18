@@ -298,7 +298,7 @@ class CartManager {
   }
 
   renderModalSizes() {
-    const sizeContainer = document.getElementById('modal-sizes-grid');
+    const sizeContainer = document.getElementById('modal-sizes-grid') || document.getElementById('modal-size-grid');
     if (!sizeContainer || !this.activeShoeForModal) return;
     sizeContainer.innerHTML = '';
 
@@ -361,6 +361,13 @@ class CartManager {
       document.body.style.overflow = '';
       if (window.soundEngine) window.soundEngine.playClick();
     }
+  }
+
+  addCurrentModalItem() {
+    if (!this.activeShoeForModal) return;
+    const size = this.selectedSize || 'EU 42 (US 8.5)';
+    this.addItem(this.activeShoeForModal.id, size, 'deadstock');
+    this.closeBuyModal();
   }
 
   openCheckoutModal() {

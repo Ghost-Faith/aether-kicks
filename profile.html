@@ -98,18 +98,18 @@
         </div>
         <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
       </a>
-      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="if(window.closeHamburgerMenu) window.closeHamburgerMenu();">✕</button>
     </div>
 
     <!-- Presentation Mode Toggle inside Drawer -->
     <div class="drawer-presentation-box">
       <div class="drawer-presentation-label" data-i18n="presentation_mode">Presentation Mode</div>
       <div class="nav-view-switcher">
-        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#section-chicago'; }">
+        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('runway'); if(window.closeHamburgerMenu) window.closeHamburgerMenu(); } else { window.location.href = 'index.html#section-chicago'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span data-i18n="nav_runway">Runway</span>
         </button>
-        <button id="drawer-btn-grid" class="btn-view-opt" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click(); } else { window.location.href = 'index.html#square-grid-vault'; }">
+        <button id="drawer-btn-grid" class="btn-view-opt" onclick="if(window.setCatalogLayout && document.querySelector('.runway-container')){ setCatalogLayout('grid'); if(window.closeHamburgerMenu) window.closeHamburgerMenu(); } else { window.location.href = 'index.html#square-grid-vault'; }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span data-i18n="nav_grid">Square Grid</span>
         </button>
@@ -133,6 +133,19 @@
         <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span class="perf-text" data-i18n="nav_perf_on">PERF: ON</span>
         <span class="perf-indicator-dot"></span>
+      </button>
+    </div>
+
+    <!-- Sound Atmosphere Switcher inside Drawer -->
+    <div class="drawer-perf-box">
+      <div class="drawer-perf-label" data-i18n="audio_atmosphere">Áudio Atmosférico</div>
+      <button id="drawer-btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
+        <div class="sound-bars">
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+        </div>
+        <span data-i18n="nav_audio">AUDIO</span>
       </button>
     </div>
 

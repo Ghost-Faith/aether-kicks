@@ -1084,7 +1084,7 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%) !important;
   filter: blur(75px) !important;
   box-shadow: none !important;
-  transition: none !important;
+  transition: background 0.8s ease, filter 0.8s ease !important;
 }
 
 @keyframes haloPulse {
@@ -6926,6 +6926,11 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   }
   .custom-modal .modal-sizes-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  #checkout-modal [style*="grid-template-columns: 1fr 1fr 1fr"] {
+    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)) !important;
     gap: 6px !important;
   }
 

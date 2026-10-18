@@ -135,18 +135,18 @@
         </div>
         <span>AETHER<span style="color: var(--theme-primary)">KICKS</span></span>
       </a>
-      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="document.getElementById('btn-hamburger-toggle').click()">✕</button>
+      <button type="button" class="btn-close-modal btn-close-hamburger" id="btn-close-hamburger" style="background: none; border: none; font-size: 1.4rem; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 8px;" aria-label="Close Navigation Menu" onclick="if(window.closeHamburgerMenu) window.closeHamburgerMenu();">✕</button>
     </div>
 
     <!-- Presentation Mode Toggle inside Drawer -->
     <div class="drawer-presentation-box">
       <div class="drawer-presentation-label" data-i18n="presentation_mode">Presentation Mode</div>
       <div class="nav-view-switcher">
-        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway'); document.getElementById('btn-hamburger-toggle').click();">
+        <button id="drawer-btn-runway" class="btn-view-opt active" onclick="setCatalogLayout('runway'); if(window.closeHamburgerMenu) window.closeHamburgerMenu();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           <span data-i18n="nav_runway">Runway</span>
         </button>
-        <button id="drawer-btn-grid" class="btn-view-opt" onclick="setCatalogLayout('grid'); document.getElementById('btn-hamburger-toggle').click();">
+        <button id="drawer-btn-grid" class="btn-view-opt" onclick="setCatalogLayout('grid'); if(window.closeHamburgerMenu) window.closeHamburgerMenu();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           <span data-i18n="nav_grid">Square Grid</span>
         </button>
@@ -170,6 +170,19 @@
         <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span class="perf-text" data-i18n="nav_perf_on">PERF: ON</span>
         <span class="perf-indicator-dot"></span>
+      </button>
+    </div>
+
+    <!-- Sound Atmosphere Switcher inside Drawer -->
+    <div class="drawer-perf-box">
+      <div class="drawer-perf-label" data-i18n="audio_atmosphere">Áudio Atmosférico</div>
+      <button id="drawer-btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
+        <div class="sound-bars">
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+          <span class="sound-bar"></span>
+        </div>
+        <span data-i18n="nav_audio">AUDIO</span>
       </button>
     </div>
 
@@ -1857,7 +1870,7 @@
   </aside>
 
   <!-- Quick Buy / Product Inspector Modal -->
-  <div id="modal-backdrop" class="modal-backdrop" onclick="window.cartManager.closeBuyModal(); closeNFCModal();"></div>
+  <div id="modal-backdrop" class="modal-backdrop" onclick="if(window.cartManager) window.cartManager.closeBuyModal(); if(window.closeNFCModal) closeNFCModal(); if(window.closeRaffleModal) closeRaffleModal();"></div>
   <div id="buy-modal" class="custom-modal">
     <button class="modal-close-btn" onclick="window.cartManager.closeBuyModal()">✕</button>
     
@@ -1902,7 +1915,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span data-i18n="nav_wishlist">Wishlist</span>
         </button>
-        <button class="btn-primary" onclick="window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize, 'deadstock'); window.cartManager.closeBuyModal();">
+        <button class="btn-primary" onclick="if(window.cartManager) { if(typeof window.cartManager.addCurrentModalItem === 'function') { window.cartManager.addCurrentModalItem(); } else if(window.cartManager.activeShoeForModal) { window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize || 'EU 42 (US 8.5)', 'deadstock'); window.cartManager.closeBuyModal(); } }">
           <span data-i18n="add_to_bag">Add Pair to Bag</span>
         </button>
       </div>

@@ -283,6 +283,7 @@ function initGradualColorScroll() {
   }
 
   function checkActiveSection() {
+    if (window.currentCatalogLayout === 'grid') return;
     const scrollY = window.scrollY || window.pageYOffset || 0;
     const vh = window.innerHeight || 800;
     const currentCenter = scrollY + vh / 2;
@@ -311,20 +312,17 @@ function initGradualColorScroll() {
   // ---------------------------------------------------------------------------
   function updateColorsContinuous() {
     if (sections.length < 2) return;
+    if (window.currentCatalogLayout === 'grid') return;
 
     const scrollY = window.scrollY || window.pageYOffset || 0;
     const vh = window.innerHeight || 800;
     const currentCenter = scrollY + vh / 2;
 
-    // Calculate the vertical center of each runway section (exact 795b7c7 math)
-    let sectionCenters = cachedSectionCenters;
-    if (!sectionCenters || sectionCenters.length !== sections.length) {
-      sectionCenters = sections.map(sec => {
-        const rect = sec.getBoundingClientRect();
-        return scrollY + rect.top + rect.height / 2;
-      });
-      cachedSectionCenters = sectionCenters;
-    }
+    // Calculate the vertical center of each runway section live (exact 795b7c7 math)
+    const sectionCenters = sections.map(sec => {
+      const rect = sec.getBoundingClientRect();
+      return scrollY + rect.top + rect.height / 2;
+    });
 
     let indexA = 0;
     let t = 0;
@@ -404,8 +402,13 @@ function initGradualColorScroll() {
 
   // Unified RequestAnimationFrame Scroll Dispatcher
   function onScroll() {
+    if (window.currentCatalogLayout === 'grid') return;
     if (!ticking) {
       window.requestAnimationFrame(() => {
+        if (window.currentCatalogLayout === 'grid') {
+          ticking = false;
+          return;
+        }
         if (window.perfManager && window.perfManager.isEnabled()) {
           checkActiveSection();
         } else {
@@ -419,6 +422,7 @@ function initGradualColorScroll() {
 
   // Seamless Mode Switcher (Zero Reload Required)
   window.refreshThemeCoordinator = function(mode) {
+    if (window.currentCatalogLayout === 'grid') return;
     activeSectionIndex = -1;
     lastAppliedTheme = { r: -999, g: -999, b: -999, sr: -999, sg: -999, sb: -999 };
     cacheSectionPositions(sections);
@@ -865,24 +869,30 @@ function initAuthUI() {
   }
 }
 
-// Audio Toggle Button UI
+// Audio Toggle Button UI (Supports both Top Bar and Drawer)
 function initSoundButton() {
-  const btn = document.getElementById('btn-sound-toggle');
-  if (!btn) return;
+  const btns = document.querySelectorAll('.btn-sound-toggle, #btn-sound-toggle, #drawer-btn-sound-toggle');
+  if (btns.length === 0) return;
 
-  if (window.soundEngine && window.soundEngine.enabled) {
-    btn.classList.add('playing');
+  function syncSoundUI(enabled) {
+    btns.forEach(b => b.classList.toggle('playing', !!enabled));
   }
 
-  btn.addEventListener('click', () => {
-    const isEnabled = window.soundEngine.toggle();
-    if (isEnabled) {
-      btn.classList.add('playing');
-      showToast('Sound Effects Enabled 🔊');
-    } else {
-      btn.classList.remove('playing');
-      showToast('Sound Effects Muted 🔇');
-    }
+  if (window.soundEngine) {
+    syncSoundUI(window.soundEngine.enabled);
+  }
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!window.soundEngine) return;
+      const isEnabled = window.soundEngine.toggle();
+      syncSoundUI(isEnabled);
+      const msg = isEnabled
+        ? (window.i18n && typeof window.i18n.t === 'function' && window.i18n.t('toast_sound_on') ? window.i18n.t('toast_sound_on') : 'Efeitos Sonoros Ativados 🔊 / Sound Effects Enabled')
+        : (window.i18n && typeof window.i18n.t === 'function' && window.i18n.t('toast_sound_off') ? window.i18n.t('toast_sound_off') : 'Efeitos Sonoros Silenciados 🔇 / Sound Effects Muted');
+      if (typeof showToast === 'function') showToast(msg);
+    });
   });
 }
 
@@ -922,11 +932,16 @@ function initHamburgerMenu() {
   drawer.querySelectorAll('.hamburger-menu-link, a').forEach(link => {
     link.addEventListener('click', closeMenu);
   });
+  window.closeHamburgerMenu = closeMenu;
+  window.toggleHamburgerMenu = toggleMenu;
 }
 
 window.initHamburgerMenu = initHamburgerMenu;
 window.openNFCScanner = openNFCScanner;
 window.closeNFCModal = closeNFCModal;
+
+// Global tracking of current catalog presentation layout
+window.currentCatalogLayout = 'runway';
 
 // Layout View Switcher: Runway Mode vs Square Grid Mode
 function setCatalogLayout(mode) {
@@ -939,6 +954,9 @@ function setCatalogLayout(mode) {
   const drawerGrid = document.getElementById('drawer-btn-grid');
 
   if (mode === 'grid') {
+    window.currentCatalogLayout = 'grid';
+    document.documentElement.setAttribute('data-catalog-layout', 'grid');
+
     if (runway) runway.style.display = 'none';
     if (squareGrid) squareGrid.classList.add('active');
     if (dots) dots.style.display = 'none';
@@ -946,9 +964,42 @@ function setCatalogLayout(mode) {
     if (btnGrid) btnGrid.classList.add('active');
     if (drawerRunway) drawerRunway.classList.remove('active');
     if (drawerGrid) drawerGrid.classList.add('active');
+
+    // Freeze theme on a steady, elegant default (chicago) and stop all scroll-triggered morphing
+    document.documentElement.setAttribute('data-active-theme', 'chicago');
+    const stop = COLOR_STOPS[0];
+    const [r, g, b] = stop.primary;
+    const [sr, sg, sb] = stop.secondary;
+    const [bgr, bgg, bgb] = stop.bg;
+    const root = document.documentElement;
+    root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+    root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+    root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+    root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+
+    if (document.body) {
+      document.body.style.backgroundColor = '';
+      document.body.style.background = '';
+    }
+
+    const orbs = document.querySelectorAll('.ambient-glow-layer .glow-orb-primary, .ambient-glow-layer .glow-orb-secondary');
+    orbs.forEach(o => { o.style.background = ''; });
+
+    const backdrops = document.querySelectorAll('.ambient-glow-layer .glow-backdrop');
+    backdrops.forEach((bd, idx) => bd.classList.toggle('active', idx === 0));
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (typeof showToast === 'function') showToast('Switched to Square Grid View ⊞');
+    const toastMsg = window.i18n && typeof window.i18n.t === 'function' && window.i18n.t('toast_grid')
+      ? window.i18n.t('toast_grid')
+      : 'Modo Grade Ativado ⊞ / Grid Mode Activated';
+    if (typeof showToast === 'function') showToast(toastMsg);
   } else {
+    window.currentCatalogLayout = 'runway';
+    document.documentElement.setAttribute('data-catalog-layout', 'runway');
+
     if (runway) runway.style.display = '';
     if (squareGrid) squareGrid.classList.remove('active');
     if (dots) dots.style.display = '';
@@ -956,7 +1007,16 @@ function setCatalogLayout(mode) {
     if (btnGrid) btnGrid.classList.remove('active');
     if (drawerRunway) drawerRunway.classList.add('active');
     if (drawerGrid) drawerGrid.classList.remove('active');
-    if (typeof showToast === 'function') showToast('Switched to Color Runway View ☰');
+
+    // Immediately re-coordinate theme to the current scroll position
+    if (typeof window.refreshThemeCoordinator === 'function') {
+      window.refreshThemeCoordinator(window.perfManager && window.perfManager.isEnabled() ? 'on' : 'off');
+    }
+
+    const toastMsg = window.i18n && typeof window.i18n.t === 'function' && window.i18n.t('toast_runway')
+      ? window.i18n.t('toast_runway')
+      : 'Modo Passarela Ativado ☰ / Runway Mode Activated';
+    if (typeof showToast === 'function') showToast(toastMsg);
   }
   if (window.soundEngine) window.soundEngine.playSwitch();
 }
