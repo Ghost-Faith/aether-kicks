@@ -277,6 +277,13 @@ function initGradualColorScroll() {
     const [sr, sg, sb] = stop.secondary;
     const [bgr, bgg, bgb] = stop.bg;
 
+    lastAppliedTheme.r = r;
+    lastAppliedTheme.g = g;
+    lastAppliedTheme.b = b;
+    lastAppliedTheme.sr = sr;
+    lastAppliedTheme.sg = sg;
+    lastAppliedTheme.sb = sb;
+
     // 1. Set scoped active theme attribute
     document.documentElement.setAttribute('data-active-theme', themeId);
 
@@ -363,24 +370,45 @@ function initGradualColorScroll() {
     return Math.max(0, Math.min(1, v));
   }
 
-  function applyColorsToDOM(r, g, b, sr, sg, sb, bgr, bgg, bgb, themeId, dotIdx) {
-    const root = cachedRootEl || (cachedRootEl = document.documentElement);
-    root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
-    root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
-    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.55)`);
-    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.18)`);
-    root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.38)`);
-    root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+  function applyColorsToDOM(r, g, b, sr, sg, sb, bgr, bgg, bgb, themeId, dotIdx, force = false) {
+    const dr = Math.abs(r - lastAppliedTheme.r);
+    const dg = Math.abs(g - lastAppliedTheme.g);
+    const db = Math.abs(b - lastAppliedTheme.b);
+    const dsr = Math.abs(sr - lastAppliedTheme.sr);
+    const dsg = Math.abs(sg - lastAppliedTheme.sg);
+    const dsb = Math.abs(sb - lastAppliedTheme.sb);
 
-    if (document.body) {
-      document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+    // Filter imperceptible 1-2 unit color noise to prevent document-wide style recalculation thrashing
+    const threshold = isMobileDevice() ? 3 : 1.5;
+    const shouldUpdateColors = force || dr >= threshold || dg >= threshold || db >= threshold ||
+                               dsr >= threshold || dsg >= threshold || dsb >= threshold;
+
+    if (shouldUpdateColors) {
+      lastAppliedTheme.r = r;
+      lastAppliedTheme.g = g;
+      lastAppliedTheme.b = b;
+      lastAppliedTheme.sr = sr;
+      lastAppliedTheme.sg = sg;
+      lastAppliedTheme.sb = sb;
+
+      const root = cachedRootEl || (cachedRootEl = document.documentElement);
+      root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
+      root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.55)`);
+      root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.18)`);
+      root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
+      root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.38)`);
+      root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
+
+      if (document.body) {
+        document.body.style.backgroundColor = `rgb(${bgr}, ${bgg}, ${bgb})`;
+      }
+
+      const orb1 = cachedOrb1El || (cachedOrb1El = document.querySelector('.glow-backdrop .glow-orb-primary'));
+      const orb2 = cachedOrb2El || (cachedOrb2El = document.querySelector('.glow-backdrop .glow-orb-secondary'));
+      if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, transparent 70%)`;
+      if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.25) 0%, transparent 70%)`;
     }
-
-    const orb1 = cachedOrb1El || (cachedOrb1El = document.querySelector('.glow-backdrop .glow-orb-primary'));
-    const orb2 = cachedOrb2El || (cachedOrb2El = document.querySelector('.glow-backdrop .glow-orb-secondary'));
-    if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, transparent 70%)`;
-    if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.25) 0%, transparent 70%)`;
 
     if (dots && dots.length) {
       dots.forEach((dot, idx) => {
@@ -463,14 +491,33 @@ function initGradualColorScroll() {
     // Retained for backward-compatibility with external callers
   };
 
-  // Unified Scroll Dispatcher with single-frame RAF throttle
+  let lastScrollY = window.scrollY || window.pageYOffset || 0;
+  let lastScrollTime = performance.now();
+  let scrollVelocity = 0;
+  let scrollEndTimer = null;
+
+  // Unified Scroll Dispatcher with single-frame RAF throttle and mobile fast-fling protection
   function onScroll() {
     if (window.currentCatalogLayout === 'grid') return;
+
+    const now = performance.now();
+    const currentY = window.scrollY || window.pageYOffset || 0;
+    const dt = Math.max(1, now - lastScrollTime);
+    const dy = Math.abs(currentY - lastScrollY);
+    scrollVelocity = (dy / dt) * 16.67; // Normalized scroll speed (pixels per 60fps frame)
+    lastScrollY = currentY;
+    lastScrollTime = now;
 
     if (!ticking) {
       window.requestAnimationFrame(() => {
         if (window.currentCatalogLayout !== 'grid') {
-          if (window.perfManager && window.perfManager.isEnabled()) {
+          const isMobile = isMobileDevice();
+          const isPerfOn = window.perfManager && window.perfManager.isEnabled();
+
+          // On mobile during high-velocity flings (> 18px/frame), avoid continuous 60fps
+          // CSS root variable writes across the entire DOM tree which cause mobile GPU tile drops.
+          // Instead, snap cleanly to the active section stop.
+          if (isPerfOn || (isMobile && scrollVelocity > 18)) {
             checkActiveSection();
           } else {
             updateColorsContinuous();
@@ -479,6 +526,21 @@ function initGradualColorScroll() {
         ticking = false;
       });
       ticking = true;
+    }
+
+    // When fast scrolling on mobile decelerates or settles, coordinate exact continuous colors
+    if (isMobileDevice()) {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(() => {
+        scrollVelocity = 0;
+        if (window.currentCatalogLayout !== 'grid') {
+          if (window.perfManager && window.perfManager.isEnabled()) {
+            checkActiveSection();
+          } else {
+            updateColorsContinuous();
+          }
+        }
+      }, 100);
     }
   }
 

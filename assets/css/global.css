@@ -450,22 +450,22 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
     opacity: 0.55 !important;
   }
 
-  /* Deep liquid orbs for mobile in Perf Mode OFF */
+  /* Deep liquid orbs for mobile in Perf Mode OFF - Optimized for mobile TBDR GPUs */
   html[data-perf-mode="off"] .glow-backdrop:first-child .glow-orb-primary {
-    width: 420px !important;
-    height: 420px !important;
-    filter: blur(55px) !important;
-    -webkit-filter: blur(55px) !important;
-    opacity: 0.72 !important;
+    width: 320px !important;
+    height: 320px !important;
+    filter: blur(28px) !important;
+    -webkit-filter: blur(28px) !important;
+    opacity: 0.7 !important;
     transition: transform 1s ease !important;
   }
 
   html[data-perf-mode="off"] .glow-backdrop:first-child .glow-orb-secondary {
-    width: 340px !important;
-    height: 340px !important;
-    filter: blur(60px) !important;
-    -webkit-filter: blur(60px) !important;
-    opacity: 0.72 !important;
+    width: 260px !important;
+    height: 260px !important;
+    filter: blur(28px) !important;
+    -webkit-filter: blur(28px) !important;
+    opacity: 0.7 !important;
     transition: none !important;
   }
 
@@ -473,8 +473,20 @@ html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
     opacity: 0.55 !important;
   }
 
+  /* Disable expensive backdrop-filter on mobile and use hardware-accelerated solid glass fallback */
+  .glass-panel {
+    transition: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(16, 16, 22, 0.94) !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    isolation: isolate !important;
+  }
+
   /* Remove slow, conflicting transitions on elements using dynamic theme variables */
-  .glass-panel,
   .btn-primary,
   .btn-secondary,
   .btn-icon,

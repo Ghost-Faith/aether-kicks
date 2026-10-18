@@ -915,8 +915,6 @@
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  content-visibility: auto;
-  contain-intrinsic-size: 100vh;
 }
 
 /* Giant Watermark Typography in Background of Each Section */
@@ -1199,6 +1197,11 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 30px var(--theme-surface-glow);
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
   transition: var(--transition-color);
 }
 
@@ -3967,21 +3970,61 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
   }
 }
 
-/* Eliminate heavy dynamic transitions on fixed/backdrop-filter elements on mobile to prevent scroll flicker */
+/* Eliminate mobile GPU compositor tile drops, black squares, and scroll flicker */
 @media (max-width: 768px), (hover: none) and (pointer: coarse) {
+  .runway-section {
+    content-visibility: visible !important;
+    contain-intrinsic-size: auto !important;
+  }
+
   .store-nav {
     transition: none !important;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
 
   .buy-card {
     transition: none !important;
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(16, 16, 22, 0.94) !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    isolation: isolate !important;
   }
 
   .buy-card::before,
   .brand-icon {
     transition: none !important;
+  }
+
+  /* Eliminate nested backdrop-filters on mobile */
+  .stage-spec-tag {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(14, 14, 18, 0.92) !important;
+  }
+
+  .btn-runway-wishlist,
+  .btn-card-wishlist {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(26, 26, 34, 0.9) !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+  }
+
+  /* Eliminate heavy blur shader convolutions on mobile sneaker halos */
+  .shoe-runway-halo,
+  html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
+    filter: none !important;
+    -webkit-filter: none !important;
+    box-shadow: none !important;
+    background: radial-gradient(circle, var(--section-glow, var(--theme-glow)) 0%, rgba(255, 255, 255, 0.02) 28%, transparent 70%) !important;
   }
 }
 
