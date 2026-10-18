@@ -43,7 +43,7 @@
 }
 
 :root {
-  /* Default Theme Variables (Dynamically altered by scroll/page) */
+  /* Default Theme Variables (Dynamically coordinated by active shoe section) */
   --theme-primary: #dc2626;
   --theme-secondary: #991b1b;
   --theme-glow: rgba(220, 38, 38, 0.45);
@@ -51,7 +51,6 @@
   --theme-surface-glow: rgba(220, 38, 38, 0.06);
   --theme-bg-base: #080608;
   --theme-card-border: rgba(220, 38, 38, 0.25);
-  transition: --theme-primary 0.35s ease, --theme-secondary 0.35s ease, --theme-glow 0.35s ease, --theme-glow-soft 0.35s ease, --theme-surface-glow 0.35s ease, --theme-card-border 0.35s ease, --theme-bg-base 0.35s ease;
   
   /* Constant Base Colors */
   --bg-dark: #070709;
@@ -86,6 +85,88 @@
   --transition-color: background 0.9s cubic-bezier(0.16, 1, 0.3, 1),
                       border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
                       box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   SCOPED COLORWAY THEMES (ZERO DOM THRASHING & ZERO COMPOSITOR STUTTER)
+   ========================================================================== */
+[data-active-theme="chicago"] {
+  --theme-primary: #dc2626;
+  --theme-secondary: #991b1b;
+  --theme-glow: rgba(220, 38, 38, 0.45);
+  --theme-glow-soft: rgba(220, 38, 38, 0.15);
+  --theme-surface-glow: rgba(220, 38, 38, 0.06);
+  --theme-card-border: rgba(220, 38, 38, 0.25);
+  --theme-bg-base: #0c0508;
+}
+
+[data-active-theme="purple"] {
+  --theme-primary: #9333ea;
+  --theme-secondary: #6b21a8;
+  --theme-glow: rgba(147, 51, 234, 0.45);
+  --theme-glow-soft: rgba(147, 51, 234, 0.15);
+  --theme-surface-glow: rgba(147, 51, 234, 0.06);
+  --theme-card-border: rgba(147, 51, 234, 0.25);
+  --theme-bg-base: #090310;
+}
+
+[data-active-theme="blue"] {
+  --theme-primary: #0284c7;
+  --theme-secondary: #0369a1;
+  --theme-glow: rgba(2, 132, 199, 0.45);
+  --theme-glow-soft: rgba(2, 132, 199, 0.15);
+  --theme-surface-glow: rgba(2, 132, 199, 0.06);
+  --theme-card-border: rgba(2, 132, 199, 0.25);
+  --theme-bg-base: #030914;
+}
+
+[data-active-theme="green"] {
+  --theme-primary: #16a34a;
+  --theme-secondary: #15803d;
+  --theme-glow: rgba(22, 163, 74, 0.45);
+  --theme-glow-soft: rgba(22, 163, 74, 0.15);
+  --theme-surface-glow: rgba(22, 163, 74, 0.06);
+  --theme-card-border: rgba(22, 163, 74, 0.25);
+  --theme-bg-base: #030d06;
+}
+
+[data-active-theme="orange"] {
+  --theme-primary: #ea580c;
+  --theme-secondary: #c2410c;
+  --theme-glow: rgba(234, 88, 12, 0.45);
+  --theme-glow-soft: rgba(234, 88, 12, 0.15);
+  --theme-surface-glow: rgba(234, 88, 12, 0.06);
+  --theme-card-border: rgba(234, 88, 12, 0.25);
+  --theme-bg-base: #120702;
+}
+
+[data-active-theme="shadow"] {
+  --theme-primary: #a1a1aa;
+  --theme-secondary: #3f3f46;
+  --theme-glow: rgba(161, 161, 170, 0.4);
+  --theme-glow-soft: rgba(161, 161, 170, 0.14);
+  --theme-surface-glow: rgba(161, 161, 170, 0.05);
+  --theme-card-border: rgba(161, 161, 170, 0.25);
+  --theme-bg-base: #08080a;
+}
+
+/* UI Elements transition their visual properties smoothly on section theme change */
+.nav-brand span,
+.brand-icon,
+.btn-primary,
+.btn-secondary,
+.btn-icon,
+.badge-pill,
+.glass-panel,
+.form-input,
+.runway-dot,
+.stage-colorway-label,
+.stage-colorway-label::before,
+.sound-bar {
+  transition: color 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Base Reset */
@@ -163,20 +244,76 @@ button {
   outline: none;
 }
 
-/* Ambient Backdrop Glow Orbs - GPU Accelerated */
+/* Ambient Backdrop Glow Orbs - Decoupled GPU Accelerated */
 .ambient-glow-layer {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  opacity: 0.75;
-  transition: opacity 0.8s ease;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform;
+  contain: strict;
+}
+
+.glow-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  pointer-events: none;
+}
+
+.glow-backdrop.active {
+  opacity: 0.75;
+}
+
+/* Static, permanently-cached GPU gradient textures per backdrop */
+.glow-backdrop[data-theme="chicago"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="chicago"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+}
+
+.glow-backdrop[data-theme="purple"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="purple"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+}
+
+.glow-backdrop[data-theme="blue"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="blue"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+}
+
+.glow-backdrop[data-theme="green"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="green"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+}
+
+.glow-backdrop[data-theme="orange"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.5) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="orange"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.18) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
+}
+
+.glow-backdrop[data-theme="shadow"] .glow-orb-primary {
+  background: radial-gradient(circle, rgba(161, 161, 170, 0.45) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+}
+.glow-backdrop[data-theme="shadow"] .glow-orb-secondary {
+  background: radial-gradient(circle, rgba(161, 161, 170, 0.16) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%);
 }
 
 .glow-orb-primary {
@@ -253,8 +390,12 @@ button {
   .glow-orb-secondary {
     width: 320px !important;
     height: 320px !important;
-    filter: blur(40px) !important;
-    -webkit-filter: blur(40px) !important;
+    filter: blur(28px) !important;
+    -webkit-filter: blur(28px) !important;
+    opacity: 0.55 !important;
+  }
+
+  .glow-backdrop.active {
     opacity: 0.55 !important;
   }
 

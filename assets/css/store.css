@@ -130,6 +130,8 @@
   padding: 0;
   flex-shrink: 1;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   white-space: nowrap;
 }
 
@@ -169,6 +171,7 @@
   gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
+  z-index: 2;
 }
 
 /* Audio Synthesizer Wave Button */
@@ -344,17 +347,39 @@
   filter: brightness(1.1);
 }
 
-/* Strict Responsive Navigation Breakpoints */
-@media (max-width: 1360px) {
+/* Strict Responsive Navigation Breakpoints (Zero Element Overlap Guarantee) */
+@media (max-width: 1400px) {
+  /* Collapse text labels in right actions to sleek luxury icon pills before nav-links can crowd */
+  #btn-sound-toggle > span,
+  .btn-sound-toggle > span,
+  .btn-nav-wishlist > span:not(.wishlist-badge-count),
+  .btn-nav-cart > span:not(.cart-badge-count),
+  .btn-nav-login > span {
+    display: none !important;
+  }
+
+  .btn-sound-toggle,
+  .btn-nav-wishlist,
+  .btn-nav-cart,
+  .btn-nav-login {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .nav-links {
     gap: 12px;
   }
   .nav-actions {
-    gap: 6px;
+    gap: 7px;
   }
 }
 
-@media (max-width: 1260px) {
+@media (max-width: 1220px) {
   .nav-links {
     display: none !important;
   }
@@ -378,28 +403,6 @@
 
   .nav-actions {
     gap: 8px;
-  }
-
-  /* Collapse button text to sleek luxury icon pills at 1080px */
-  #btn-sound-toggle > span,
-  .btn-sound-toggle > span,
-  .btn-nav-wishlist > span:not(.wishlist-badge-count),
-  .btn-nav-cart > span:not(.cart-badge-count),
-  .btn-nav-login > span {
-    display: none !important;
-  }
-
-  .btn-sound-toggle,
-  .btn-nav-wishlist,
-  .btn-nav-cart,
-  .btn-nav-login {
-    min-width: 38px;
-    height: 38px;
-    padding: 0 9px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .btn-hamburger,
@@ -821,6 +824,8 @@
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 100vh;
 }
 
 /* Giant Watermark Typography in Background of Each Section */
@@ -947,7 +952,7 @@
   perspective: 1400px;
 }
 
-/* Floating Aura Halo */
+/* Floating Aura Halo - Scoped & Hardware-Cached Gradient Falloff */
 .shoe-runway-halo {
   position: absolute;
   top: 50%;
@@ -956,12 +961,30 @@
   width: 480px;
   height: 480px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--theme-glow) 0%, transparent 70%);
-  filter: blur(75px);
+  background: radial-gradient(circle, var(--section-glow, var(--theme-glow)) 0%, rgba(255, 255, 255, 0.02) 25%, transparent 68%);
   z-index: 2;
   pointer-events: none;
   animation: haloPulse 6s ease-in-out infinite alternate;
   will-change: transform;
+}
+
+.runway-section[data-theme="chicago"] .shoe-runway-halo {
+  --section-glow: rgba(220, 38, 38, 0.55);
+}
+.runway-section[data-theme="purple"] .shoe-runway-halo {
+  --section-glow: rgba(147, 51, 234, 0.55);
+}
+.runway-section[data-theme="blue"] .shoe-runway-halo {
+  --section-glow: rgba(2, 132, 199, 0.55);
+}
+.runway-section[data-theme="green"] .shoe-runway-halo {
+  --section-glow: rgba(22, 163, 74, 0.55);
+}
+.runway-section[data-theme="orange"] .shoe-runway-halo {
+  --section-glow: rgba(234, 88, 12, 0.55);
+}
+.runway-section[data-theme="shadow"] .shoe-runway-halo {
+  --section-glow: rgba(161, 161, 170, 0.45);
 }
 
 @keyframes haloPulse {

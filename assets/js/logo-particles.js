@@ -42,8 +42,15 @@ class LogoParticleSystem {
       this.updateCachedRects();
     }, { passive: true });
 
+    let logoScrollTicking = false;
     window.addEventListener('scroll', () => {
-      this.updateCachedRects();
+      if (!logoScrollTicking) {
+        window.requestAnimationFrame(() => {
+          this.updateCachedRects();
+          logoScrollTicking = false;
+        });
+        logoScrollTicking = true;
+      }
     }, { passive: true });
 
     window.addEventListener('mousemove', (e) => this.onMouseMove(e), { passive: true });
