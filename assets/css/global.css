@@ -273,20 +273,69 @@ button {
   opacity: 0.75;
 }
 
-/* Continuous Dynamic Lighting in Ultra Mode (data-perf-mode="off") */
+/* ==========================================================================
+   CONTINUOUS DYNAMIC LIGHTING & ZERO-LAG SMOOTH MODE (data-perf-mode="off")
+   ========================================================================== */
+
+/* 1. Dynamic Canvas Background Tint */
+html[data-perf-mode="off"] body {
+  background-color: var(--theme-bg-base, #070709) !important;
+  transition: background-color 0.08s linear !important;
+}
+
+/* 2. Decouple backdrops & enable continuous master ambient glow */
+html[data-perf-mode="off"] .ambient-glow-layer {
+  contain: none !important;
+}
+
 html[data-perf-mode="off"] .glow-backdrop {
   display: none !important;
 }
+
 html[data-perf-mode="off"] .glow-backdrop:first-child {
   display: block !important;
-  opacity: 0.75 !important;
+  opacity: 0.9 !important;
   transition: none !important;
 }
+
+/* 3. Deep, luminous, widened ambient glow orbs */
 html[data-perf-mode="off"] .glow-backdrop .glow-orb-primary {
-  background: radial-gradient(circle, var(--theme-glow) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%) !important;
+  width: 800px !important;
+  height: 800px !important;
+  filter: blur(48px) !important;
+  -webkit-filter: blur(48px) !important;
+  background: radial-gradient(circle, var(--theme-glow) 0%, var(--theme-surface-glow) 45%, transparent 72%) !important;
+  transition: none !important;
 }
+
 html[data-perf-mode="off"] .glow-backdrop .glow-orb-secondary {
-  background: radial-gradient(circle, var(--theme-glow-soft) 0%, rgba(255, 255, 255, 0.01) 40%, transparent 70%) !important;
+  width: 650px !important;
+  height: 650px !important;
+  filter: blur(52px) !important;
+  -webkit-filter: blur(52px) !important;
+  background: radial-gradient(circle, var(--theme-glow-soft) 0%, var(--theme-surface-glow) 40%, transparent 72%) !important;
+  transition: none !important;
+}
+
+/* 4. ZERO-LAG DIRECT COUPLING: Eliminate 0.5s-0.8s CSS transitions so scroll tracks 1:1 */
+html[data-perf-mode="off"] .nav-brand span,
+html[data-perf-mode="off"] .brand-icon,
+html[data-perf-mode="off"] .btn-primary,
+html[data-perf-mode="off"] .btn-secondary,
+html[data-perf-mode="off"] .btn-icon,
+html[data-perf-mode="off"] .badge-pill,
+html[data-perf-mode="off"] .glass-panel,
+html[data-perf-mode="off"] .form-input,
+html[data-perf-mode="off"] .runway-dot,
+html[data-perf-mode="off"] .stage-colorway-label,
+html[data-perf-mode="off"] .stage-colorway-label::before,
+html[data-perf-mode="off"] .sound-bar,
+html[data-perf-mode="off"] .custom-cursor-dot,
+html[data-perf-mode="off"] .custom-cursor-ring,
+html[data-perf-mode="off"] .nav-view-opt.active,
+html[data-perf-mode="off"] .nav-view-btn.active,
+html[data-perf-mode="off"] .store-nav {
+  transition: none !important;
 }
 
 /* Static, permanently-cached GPU gradient textures per backdrop (Performance Mode ON) */
