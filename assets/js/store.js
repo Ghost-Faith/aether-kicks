@@ -405,42 +405,37 @@ function initGradualColorScroll() {
           indexA = i;
           const distance = sectionCenters[i + 1] - sectionCenters[i];
           const rawT = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
-
-          // Arrival Focus Zone:
-          // 15% margin on each side locks 100% onto the sneaker colorway as soon as it arrives in view!
-          const plateau = 0.15;
-          if (rawT <= plateau) {
-            t = 0;
-          } else if (rawT >= (1 - plateau)) {
-            t = 1;
-          } else {
-            const u = (rawT - plateau) / (1 - 2 * plateau);
-            t = u * u * (3 - 2 * u);
-          }
+          t = Math.max(0, Math.min(1, rawT));
           break;
         }
       }
     }
 
-    const easeT = t;
+    // Natural, continuous cubic S-curve across the entire distance:
+    // Zero dead-zones or flat snapping plateaus, creating dozens of soft, delicate micro-hue shifts
+    const easeT = t * t * (3 - 2 * t);
     const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
     const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
 
-    // Ultra-smooth, electric Chromatic HSL Hue Sweep:
-    // Continuously rotates the hue along the color spectrum preserving rich luminescence & saturation!
+    // Luminous Breathing Effect:
+    // As the color begins to morph, it gently gains a subtle luminous lift
+    // ("red -> slight brighter red -> and then purple -> slight brighter -> until blue")
+    const lumBoost = 3.5 * Math.sin(Math.PI * easeT);
+
+    // Continuous chromatic HSL Hue Sweep:
     let hDiff = stopB.h - stopA.h;
     const targetH = stopA.h + hDiff * easeT;
     const targetS = stopA.s + (stopB.s - stopA.s) * easeT;
-    const targetL = stopA.l + (stopB.l - stopA.l) * easeT;
+    const targetL = Math.min(100, (stopA.l + (stopB.l - stopA.l) * easeT) + lumBoost);
 
     const [r, g, b] = hslToRgb(targetH, targetS, targetL);
 
     const targetSecS = stopA.secS + (stopB.secS - stopA.secS) * easeT;
-    const targetSecL = stopA.secL + (stopB.secL - stopA.secL) * easeT;
+    const targetSecL = Math.min(100, (stopA.secL + (stopB.secL - stopA.secL) * easeT) + lumBoost * 0.7);
     const [sr, sg, sb] = hslToRgb(targetH, targetSecS, targetSecL);
 
     const targetBgS = stopA.bgS + (stopB.bgS - stopA.bgS) * easeT;
-    const targetBgL = stopA.bgL + (stopB.bgL - stopA.bgL) * easeT;
+    const targetBgL = stopA.bgL + (stopB.bgL - stopA.bgL) * easeT + (lumBoost * 0.15);
     const [bgr, bgg, bgb] = hslToRgb(targetH, targetBgS, targetBgL);
 
     targetColor.r = r;
@@ -496,9 +491,9 @@ function initGradualColorScroll() {
       return;
     }
 
-    // High-speed responsiveness: 0.65 damping locks within 2-3 frames (~35ms)
-    // so the HUE changes fast and in direct synchronization with scroll gestures!
-    const damping = 0.65;
+    // Velvety Soft Damping:
+    // Produces dozens of buttery micro-frames per scroll notch, eliminating aggressive steppiness
+    const damping = 0.20;
 
     currentColor.r += (targetColor.r - currentColor.r) * damping;
     currentColor.g += (targetColor.g - currentColor.g) * damping;
