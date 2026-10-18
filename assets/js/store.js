@@ -3,49 +3,67 @@
  * Features Continuous Scroll RGB Interpolation & 3D Sneaker Levitation Physics
  */
 
-// Continuous Colorway Stops for Gradual Scroll Interpolation
+// Continuous Colorway Stops for Gradual Scroll Interpolation (RGB + Chromatic HSL coordinates)
 const COLOR_STOPS = [
   {
     id: 'chicago',
     primary: [220, 38, 38],       // #dc2626 (Varsity Red)
     secondary: [153, 27, 27],     // #991b1b
-    glow: 'rgba(220, 38, 38, 0.5)',
-    bg: [12, 5, 8]                // Deep crimson noir
+    glow: 'rgba(220, 38, 38, 0.55)',
+    bg: [12, 5, 8],               // Deep crimson noir
+    h: 358, s: 86, l: 50,
+    secS: 78, secL: 38,
+    bgS: 45, bgL: 3.5
   },
   {
     id: 'purple',
     primary: [147, 51, 234],      // #9333ea (Court Purple)
     secondary: [107, 33, 168],    // #6b21a8
-    glow: 'rgba(147, 51, 234, 0.5)',
-    bg: [9, 3, 16]                // Deep violet noir
+    glow: 'rgba(147, 51, 234, 0.55)',
+    bg: [9, 3, 16],               // Deep violet noir
+    h: 275, s: 82, l: 56,
+    secS: 75, secL: 44,
+    bgS: 50, bgL: 4.0
   },
   {
     id: 'blue',
     primary: [2, 132, 199],       // #0284c7 (University Blue)
     secondary: [3, 105, 161],     // #0369a1
-    glow: 'rgba(2, 132, 199, 0.5)',
-    bg: [3, 9, 20]                // Deep sky navy
+    glow: 'rgba(2, 132, 199, 0.55)',
+    bg: [3, 9, 20],               // Deep sky navy
+    h: 202, s: 98, l: 42,
+    secS: 88, secL: 32,
+    bgS: 55, bgL: 3.8
   },
   {
     id: 'green',
     primary: [22, 163, 74],       // #16a34a (Pine Green)
     secondary: [21, 128, 61],     // #15803d
-    glow: 'rgba(22, 163, 74, 0.5)',
-    bg: [3, 13, 6]                // Deep emerald noir
+    glow: 'rgba(22, 163, 74, 0.55)',
+    bg: [3, 13, 6],               // Deep emerald noir
+    h: 142, s: 76, l: 38,
+    secS: 70, secL: 28,
+    bgS: 50, bgL: 3.2
   },
   {
     id: 'orange',
     primary: [234, 88, 12],       // #ea580c (Shattered Backboard Orange)
     secondary: [194, 65, 12],     // #c2410c
-    glow: 'rgba(234, 88, 12, 0.5)',
-    bg: [18, 7, 2]                // Deep amber noir
+    glow: 'rgba(234, 88, 12, 0.55)',
+    bg: [18, 7, 2],               // Deep amber noir
+    h: 22, s: 92, l: 48,
+    secS: 86, secL: 38,
+    bgS: 55, bgL: 3.8
   },
   {
     id: 'shadow',
     primary: [161, 161, 170],     // #a1a1aa (Stealth Black Cat Titanium)
     secondary: [63, 63, 70],      // #3f3f46
-    glow: 'rgba(161, 161, 170, 0.4)',
-    bg: [8, 8, 10]                // Deep onyx noir
+    glow: 'rgba(161, 161, 170, 0.45)',
+    bg: [8, 8, 10],               // Deep onyx noir
+    h: 220, s: 6, l: 65,
+    secS: 6, secL: 35,
+    bgS: 10, bgL: 3.5
   }
 ];
 
@@ -310,25 +328,50 @@ function initGradualColorScroll() {
   }
 
   // ---------------------------------------------------------------------------
-  // MODE 2: KINETIC DAMPED CONTINUOUS RGB INTERPOLATION (Performance Mode OFF)
-  // Continuous smooth chaser loop powered by requestAnimationFrame physics dampening.
-  // Blends like liquid silk even across discrete mousewheel ticks and touch flings.
+  // MODE 2: CHROMATIC HUE SHIFT CONTINUOUS INTERPOLATION (Performance Mode OFF)
+  // Continuous chromatic wheel hue-rotation engine powered by high-speed RAF physics.
+  // Rotates the HUE fast across the spectrum preserving full electric saturation without muddy RGB midtones.
   // ---------------------------------------------------------------------------
   let chaserRafId = null;
   let isChaserRunning = false;
 
+  // Fast In-Browser HSL to RGB conversion
+  function hslToRgb(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    s = Math.max(0, Math.min(100, s)) / 100;
+    l = Math.max(0, Math.min(100, l)) / 100;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+
+    return [
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
+    ];
+  }
+
   // The interpolated current floating-point colors
   const currentColor = {
     r: 220, g: 38, b: 38,
-    sr: 185, sg: 28, sb: 28,
-    bgr: 15, bgg: 2, bgb: 2
+    sr: 153, sg: 27, sb: 27,
+    bgr: 12, bgg: 5, bgb: 8
   };
 
   // The target colors computed from the runway scroll position
   const targetColor = {
     r: 220, g: 38, b: 38,
-    sr: 185, sg: 28, sb: 28,
-    bgr: 15, bgg: 2, bgb: 2,
+    sr: 153, sg: 27, sb: 27,
+    bgr: 12, bgg: 5, bgb: 8,
     activeDotIndex: 0,
     themeId: 'chicago'
   };
@@ -341,7 +384,7 @@ function initGradualColorScroll() {
     const vh = window.innerHeight || 800;
     const currentCenter = scrollY + vh / 2;
 
-    // Calculate the vertical center of each runway section live (exact 795b7c7 math)
+    // Calculate the vertical center of each runway section live
     const sectionCenters = sections.map(sec => {
       const rect = sec.getBoundingClientRect();
       return scrollY + rect.top + rect.height / 2;
@@ -363,11 +406,9 @@ function initGradualColorScroll() {
           const distance = sectionCenters[i + 1] - sectionCenters[i];
           const rawT = distance > 0 ? (currentCenter - sectionCenters[i]) / distance : 0;
 
-          // Focus Zone / Plateau Margin:
-          // Gives a wide sweet spot (22% margin) around each sneaker where the color is 100% locked.
-          // The middle corridor smoothly transitions between the two sneakers via smoothstep.
-          // This guarantees that whenever a user is viewing a shoe (e.g. Pine Green), it is 100% pure green immediately!
-          const plateau = 0.22;
+          // Arrival Focus Zone:
+          // 15% margin on each side locks 100% onto the sneaker colorway as soon as it arrives in view!
+          const plateau = 0.15;
           if (rawT <= plateau) {
             t = 0;
           } else if (rawT >= (1 - plateau)) {
@@ -382,23 +423,35 @@ function initGradualColorScroll() {
     }
 
     const easeT = t;
-
     const stopA = COLOR_STOPS[indexA] || COLOR_STOPS[0];
     const stopB = COLOR_STOPS[indexA + 1] || COLOR_STOPS[COLOR_STOPS.length - 1];
 
-    const lerp = (a, b, factor) => a + (b - a) * factor;
+    // Ultra-smooth, electric Chromatic HSL Hue Sweep:
+    // Continuously rotates the hue along the color spectrum preserving rich luminescence & saturation!
+    let hDiff = stopB.h - stopA.h;
+    const targetH = stopA.h + hDiff * easeT;
+    const targetS = stopA.s + (stopB.s - stopA.s) * easeT;
+    const targetL = stopA.l + (stopB.l - stopA.l) * easeT;
 
-    targetColor.r = lerp(stopA.primary[0], stopB.primary[0], easeT);
-    targetColor.g = lerp(stopA.primary[1], stopB.primary[1], easeT);
-    targetColor.b = lerp(stopA.primary[2], stopB.primary[2], easeT);
+    const [r, g, b] = hslToRgb(targetH, targetS, targetL);
 
-    targetColor.sr = lerp(stopA.secondary[0], stopB.secondary[0], easeT);
-    targetColor.sg = lerp(stopA.secondary[1], stopB.secondary[1], easeT);
-    targetColor.sb = lerp(stopA.secondary[2], stopB.secondary[2], easeT);
+    const targetSecS = stopA.secS + (stopB.secS - stopA.secS) * easeT;
+    const targetSecL = stopA.secL + (stopB.secL - stopA.secL) * easeT;
+    const [sr, sg, sb] = hslToRgb(targetH, targetSecS, targetSecL);
 
-    targetColor.bgr = lerp(stopA.bg[0], stopB.bg[0], easeT);
-    targetColor.bgg = lerp(stopA.bg[1], stopB.bg[1], easeT);
-    targetColor.bgb = lerp(stopA.bg[2], stopB.bg[2], easeT);
+    const targetBgS = stopA.bgS + (stopB.bgS - stopA.bgS) * easeT;
+    const targetBgL = stopA.bgL + (stopB.bgL - stopA.bgL) * easeT;
+    const [bgr, bgg, bgb] = hslToRgb(targetH, targetBgS, targetBgL);
+
+    targetColor.r = r;
+    targetColor.g = g;
+    targetColor.b = b;
+    targetColor.sr = sr;
+    targetColor.sg = sg;
+    targetColor.sb = sb;
+    targetColor.bgr = bgr;
+    targetColor.bgg = bgg;
+    targetColor.bgb = bgb;
 
     const closestIndex = t < 0.5 ? indexA : indexA + 1;
     targetColor.activeDotIndex = closestIndex;
@@ -410,10 +463,10 @@ function initGradualColorScroll() {
     const root = cachedRootEl || (cachedRootEl = document.documentElement);
     root.style.setProperty('--theme-primary', `rgb(${r}, ${g}, ${b})`);
     root.style.setProperty('--theme-secondary', `rgb(${sr}, ${sg}, ${sb})`);
-    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
-    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
+    root.style.setProperty('--theme-glow', `rgba(${r}, ${g}, ${b}, 0.55)`);
+    root.style.setProperty('--theme-glow-soft', `rgba(${r}, ${g}, ${b}, 0.18)`);
     root.style.setProperty('--theme-surface-glow', `rgba(${r}, ${g}, ${b}, 0.08)`);
-    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+    root.style.setProperty('--theme-card-border', `rgba(${r}, ${g}, ${b}, 0.38)`);
     root.style.setProperty('--theme-bg-base', `rgb(${bgr}, ${bgg}, ${bgb})`);
 
     if (document.body) {
@@ -422,8 +475,8 @@ function initGradualColorScroll() {
 
     const orb1 = document.querySelector('.glow-backdrop .glow-orb-primary');
     const orb2 = document.querySelector('.glow-backdrop .glow-orb-secondary');
-    if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.5) 0%, transparent 70%)`;
-    if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.22) 0%, transparent 70%)`;
+    if (orb1) orb1.style.background = `radial-gradient(circle, rgba(${r}, ${g}, ${b}, 0.55) 0%, transparent 70%)`;
+    if (orb2) orb2.style.background = `radial-gradient(circle, rgba(${sr}, ${sg}, ${sb}, 0.25) 0%, transparent 70%)`;
 
     if (dots && dots.length) {
       dots.forEach((dot, idx) => {
@@ -443,17 +496,9 @@ function initGradualColorScroll() {
       return;
     }
 
-    // Dynamic Fast & Responsive Damping:
-    // Base 0.32 gives instant, crisp visual response within 3-4 frames (~50ms)
-    // When delta is large (fast scroll/swipe), damping boosts up to 0.42 to ensure zero lag.
-    const delta = Math.abs(targetColor.r - currentColor.r) +
-                  Math.abs(targetColor.g - currentColor.g) +
-                  Math.abs(targetColor.b - currentColor.b) +
-                  Math.abs(targetColor.bgr - currentColor.bgr) +
-                  Math.abs(targetColor.bgg - currentColor.bgg) +
-                  Math.abs(targetColor.bgb - currentColor.bgb);
-
-    const damping = delta > 50 ? 0.42 : 0.32;
+    // High-speed responsiveness: 0.65 damping locks within 2-3 frames (~35ms)
+    // so the HUE changes fast and in direct synchronization with scroll gestures!
+    const damping = 0.65;
 
     currentColor.r += (targetColor.r - currentColor.r) * damping;
     currentColor.g += (targetColor.g - currentColor.g) * damping;
@@ -481,8 +526,14 @@ function initGradualColorScroll() {
 
     applyColorsToDOM(ir, ig, ib, isr, isg, isb, ibgr, ibgg, ibgb, targetColor.themeId, targetColor.activeDotIndex);
 
-    // Continue running until currentColor has converged smoothly to target
-    if (delta > 0.4) {
+    const delta = Math.abs(targetColor.r - currentColor.r) +
+                  Math.abs(targetColor.g - currentColor.g) +
+                  Math.abs(targetColor.b - currentColor.b) +
+                  Math.abs(targetColor.bgr - currentColor.bgr) +
+                  Math.abs(targetColor.bgg - currentColor.bgg) +
+                  Math.abs(targetColor.bgb - currentColor.bgb);
+
+    if (delta > 0.5) {
       chaserRafId = window.requestAnimationFrame(chaserTick);
     } else {
       currentColor.r = targetColor.r;
@@ -496,9 +547,9 @@ function initGradualColorScroll() {
       currentColor.bgb = targetColor.bgb;
 
       applyColorsToDOM(
-        Math.round(targetColor.r), Math.round(targetColor.g), Math.round(targetColor.b),
-        Math.round(targetColor.sr), Math.round(targetColor.sg), Math.round(targetColor.sb),
-        Math.round(targetColor.bgr), Math.round(targetColor.bgg), Math.round(targetColor.bgb),
+        targetColor.r, targetColor.g, targetColor.b,
+        targetColor.sr, targetColor.sg, targetColor.sb,
+        targetColor.bgr, targetColor.bgg, targetColor.bgb,
         targetColor.themeId, targetColor.activeDotIndex
       );
       isChaserRunning = false;
