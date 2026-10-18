@@ -117,30 +117,19 @@
       </div>
     </div>
 
-    <!-- Luxury Bilingual Language Switcher inside Drawer -->
-    <div class="drawer-lang-box">
-      <div class="drawer-lang-label" data-i18n="drawer_language">Idioma / Language</div>
-      <button id="drawer-lang-toggle" class="btn-lang-toggle" onclick="window.i18n ? window.i18n.toggleLanguage() : null" title="Mudar Idioma / Switch Language" aria-label="Switch Language">
+    <!-- Unified Drawer Controls (Language, Performance, Audio side-by-side) -->
+    <div class="drawer-controls-row">
+      <button id="drawer-lang-toggle" class="btn-drawer-action btn-lang-toggle" onclick="window.i18n ? window.i18n.toggleLanguage() : null" title="Mudar Idioma / Switch Language" aria-label="Switch Language">
         <span class="lang-code active" data-lang="pt">PT</span>
         <span class="lang-divider">/</span>
         <span class="lang-code" data-lang="en">EN</span>
       </button>
-    </div>
-
-    <!-- Performance Mode Switcher inside Drawer -->
-    <div class="drawer-perf-box">
-      <div class="drawer-perf-label" data-i18n="drawer_perf_mode">Modo Desempenho / Performance</div>
-      <button id="drawer-btn-perf-toggle" class="btn-perf-toggle active" onclick="window.togglePerformanceMode ? window.togglePerformanceMode() : null" title="Alternar Modo Desempenho" aria-label="Toggle Performance Mode">
+      <button id="drawer-btn-perf-toggle" class="btn-drawer-action btn-perf-toggle active" onclick="window.togglePerformanceMode ? window.togglePerformanceMode() : null" title="Alternar Modo Desempenho" aria-label="Toggle Performance Mode">
         <svg class="perf-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <span class="perf-text" data-i18n="nav_perf_on">PERF: ON</span>
         <span class="perf-indicator-dot"></span>
       </button>
-    </div>
-
-    <!-- Sound Atmosphere Switcher inside Drawer -->
-    <div class="drawer-perf-box">
-      <div class="drawer-perf-label" data-i18n="audio_atmosphere">Áudio Atmosférico</div>
-      <button id="drawer-btn-sound-toggle" class="btn-sound-toggle" title="Toggle Sound Feedback">
+      <button id="drawer-btn-sound-toggle" class="btn-drawer-action btn-sound-toggle" title="Toggle Sound Feedback">
         <div class="sound-bars">
           <span class="sound-bar"></span>
           <span class="sound-bar"></span>
