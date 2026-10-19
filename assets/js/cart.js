@@ -556,23 +556,24 @@ class CartManager {
       return;
     }
 
+    const esc = (typeof window !== 'undefined' && window.escapeHTML) ? window.escapeHTML : (s => s);
     list.innerHTML = this.items.map((item, idx) => `
       <div class="cart-item-card">
         <div class="cart-item-thumb">
-          <img src="${item.image}" alt="${item.colorway}" />
+          <img src="${esc(item.image)}" alt="${esc(item.colorway)}" />
         </div>
         <div class="cart-item-info">
-          <h5 class="cart-item-name">${item.name}</h5>
-          <p class="cart-item-colorway" style="color: ${item.theme};">${item.colorway}</p>
+          <h5 class="cart-item-name">${esc(item.name)}</h5>
+          <p class="cart-item-colorway" style="color: ${esc(item.theme)};">${esc(item.colorway)}</p>
           <div class="cart-item-specs">
-            <span class="badge-pill">${item.size}</span>
+            <span class="badge-pill">${esc(item.size)}</span>
             <span class="badge-pill">${item.condition === 'deadstock' ? 'DS New' : 'Collector'}</span>
           </div>
           <div class="cart-item-bottom">
-            <span class="cart-item-price">$${item.price * item.quantity}</span>
+            <span class="cart-item-price">$${Number(item.price * item.quantity)}</span>
             <div class="cart-item-qty">
               <button onclick="window.cartManager.updateQuantity(${idx}, -1)">-</button>
-              <span>${item.quantity}</span>
+              <span>${Number(item.quantity)}</span>
               <button onclick="window.cartManager.updateQuantity(${idx}, 1)">+</button>
             </div>
             <button class="btn-remove-item" onclick="window.cartManager.removeItem(${idx})" title="Remove">

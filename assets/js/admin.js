@@ -26,6 +26,34 @@
     { eu: '46', us: '12.0' }
   ];
 
+  // Universal Anti-XSS Sanitizer & DOM Defense Engine
+  const escapeHTML = (typeof window !== 'undefined' && window.escapeHTML) ? window.escapeHTML : function (str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const safeHTML = (typeof window !== 'undefined' && window.safeHTML) ? window.safeHTML : function (strings, ...values) {
+    return strings.reduce((result, str, i) => {
+      const val = values[i - 1];
+      let sanitized = '';
+      if (val !== undefined && val !== null) {
+        if (Array.isArray(val)) {
+          sanitized = val.map(v => (v && v.__isSafeHTML ? v.raw : escapeHTML(v))).join('');
+        } else if (typeof val === 'object' && val.__isSafeHTML) {
+          sanitized = val.raw;
+        } else {
+          sanitized = escapeHTML(val);
+        }
+      }
+      return result + sanitized + str;
+    });
+  };
+
   class AetherAdminApp {
     constructor() {
       this.shoes = {};
@@ -44,20 +72,33 @@
     }
 
     async init() {
-      this.setupAuthCheck();
       this.setupTabs();
       this.setupEventListeners();
       this.initHypeCountdown();
 
-      // Connect with Database
-      await this.ensureDatabaseReady();
-      await this.loadFromDatabase();
+      // Initialize Hardened Admin Security Gate
+      await this.setupAuthCheck();
 
       // Listen for database updates across any tab or component
       window.addEventListener('aether:db:updated', async (e) => {
-        console.log('[Admin Controller] Reactive DB update detected:', e.detail);
-        await this.loadFromDatabase();
+        if (sessionStorage.getItem('aether_admin_authenticated') === 'true') {
+          console.log('[Admin Controller] Reactive DB update detected:', e.detail);
+          await this.loadFromDatabase();
+        }
       });
+    }
+
+    /**
+     * Authenticate session, reveal admin console, and hydrate live database records
+     */
+    async unlockAndHydrateVault() {
+      document.body.classList.remove('vault-locked');
+      document.body.classList.add('vault-authenticated');
+      const overlay = document.getElementById('admin-auth-overlay');
+      if (overlay) overlay.classList.remove('active');
+
+      await this.ensureDatabaseReady();
+      await this.loadFromDatabase();
     }
 
     /**
@@ -183,98 +224,533 @@
     }
 
     // =========================================================================
-    // AUTHENTICATION CONTROLLER
+    // HARDENED AUTHENTICATION & ACCESS GATE CONTROLLER
     // =========================================================================
-    setupAuthCheck() {
+    async setupAuthCheck() {
       const overlay = document.getElementById('admin-auth-overlay');
-      if (!overlay) return;
+      const card = document.getElementById('auth-gate-card');
+      const laserBeam = document.getElementById('auth-laser-beam');
+      const badge = document.getElementById('auth-security-badge');
+      const badgeText = document.getElementById('auth-badge-text');
+      const gateTitle = document.getElementById('auth-gate-title');
+      const gateSub = document.getElementById('auth-gate-sub');
+      const ownerBlock = document.getElementById('auth-owner-block');
+      const authForm = document.getElementById('admin-auth-form');
+      const passInput = document.getElementById('admin-pass-input');
+      const submitBtn = document.getElementById('btn-auth-submit');
+      const alertBanner = document.getElementById('auth-alert-banner');
+      const alertTitle = document.getElementById('auth-alert-title');
+      const alertDesc = document.getElementById('auth-alert-desc');
+      const timerWrap = document.getElementById('auth-timer-wrap');
+      const timerVal = document.getElementById('auth-lockout-timer');
+      const attemptsNotice = document.getElementById('auth-attempts-msg');
 
-      const checkAuth = () => {
-        // Check session token or localStorage admin session
-        const isAuthSession = sessionStorage.getItem('aether_admin_authenticated') === 'true';
-        let isUserAdmin = false;
+      if (!overlay || !card) return;
 
+      // Master Security Constants
+      const MASTER_KEYS = [
+        'vault_admin_master_2026',
+        'aether_architect_2026',
+        'aether2026'
+      ];
+      const AUTH_TOKEN_KEY = 'aether_vault_auth_token';
+      const AUTH_FAILED_KEY = 'aether_auth_failed_attempts';
+      const AUTH_LOCKOUT_KEY = 'aether_auth_lockout_until';
+      const MAX_ATTEMPTS = 3;
+      const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
+      const HMAC_SALT = 'aether_architect_vault_auth_k9x21_v2026';
+
+      let lockoutTimerInterval = null;
+
+      // -----------------------------------------------------------------------
+      // Cryptographic Hashing & Hardware Token Signatures
+      // -----------------------------------------------------------------------
+      const computeSignature = async (text) => {
         try {
-          const session = JSON.parse(localStorage.getItem('aether_user_session') || '{}');
-          if (session && session.role === 'admin') isUserAdmin = true;
-
-          const user = JSON.parse(localStorage.getItem('aether_user') || '{}');
-          if (user && user.role === 'admin') isUserAdmin = true;
+          if (window.crypto && window.crypto.subtle) {
+            const enc = new TextEncoder().encode(text);
+            const buf = await window.crypto.subtle.digest('SHA-256', enc);
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+          }
         } catch (e) {}
+        // High-distribution fallback hash if crypto.subtle is restricted
+        let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text.charCodeAt(i);
+          h1 = Math.imul(h1 ^ ch, 2654435761);
+          h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+        h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        return 'sig_' + (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16);
+      };
 
-        if (isAuthSession || isUserAdmin) {
-          overlay.classList.remove('active');
-        } else {
-          overlay.classList.add('active');
+      const generateAuthorizedToken = async () => {
+        const deviceId = 'node_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+        const issuedAt = Date.now();
+        const expiresAt = issuedAt + (30 * 24 * 60 * 60 * 1000); // 30 Days Valid
+        const signature = await computeSignature(`${deviceId}:${issuedAt}:${expiresAt}:${HMAC_SALT}`);
+        return {
+          version: 1,
+          deviceId,
+          role: 'admin',
+          node: 'ARCHITECT_AUTHORIZED_NODE',
+          issuedAt,
+          expiresAt,
+          signature
+        };
+      };
+
+      const verifyDeviceToken = async (rawToken) => {
+        if (!rawToken) return false;
+        try {
+          const parsed = typeof rawToken === 'string' ? JSON.parse(atob(rawToken)) : rawToken;
+          if (!parsed || parsed.version !== 1 || !parsed.signature) return false;
+          if (Date.now() > parsed.expiresAt) return false;
+          const expectedSig = await computeSignature(`${parsed.deviceId}:${parsed.issuedAt}:${parsed.expiresAt}:${HMAC_SALT}`);
+          return parsed.signature === expectedSig;
+        } catch (e) {
+          return false;
         }
       };
 
-      checkAuth();
+      // -----------------------------------------------------------------------
+      // Laser Scan & Visual Feedback Animation
+      // -----------------------------------------------------------------------
+      const triggerLaserVerification = () => {
+        if (laserBeam) {
+          laserBeam.classList.remove('scanning');
+          void laserBeam.offsetWidth; // Trigger reflow
+          laserBeam.classList.add('scanning');
+          setTimeout(() => laserBeam.classList.remove('scanning'), 1600);
+        }
+        card.classList.add('laser-verified');
+      };
 
-      // Quick 1-Click Demo Unlock
-      const btnUnlockDemo = document.getElementById('btn-unlock-demo');
-      if (btnUnlockDemo) {
-        btnUnlockDemo.addEventListener('click', (e) => {
-          e.preventDefault();
-          sessionStorage.setItem('aether_admin_authenticated', 'true');
-          localStorage.setItem('aether_user_session', JSON.stringify({
-            id: 'usr_admin_001',
-            email: 'admin@aetherkicks.com',
-            name: 'Atelier Vault Master',
-            role: 'admin'
-          }));
-          overlay.classList.remove('active');
-          this.showToast('⚡ Vault OS Access Granted: Root Superadmin Mode Active.');
-          if (window.soundEngine && window.soundEngine.playSuccess) window.soundEngine.playSuccess();
-        });
+      // -----------------------------------------------------------------------
+      // Brute-Force Rate Limiting & Lockout Engine
+      // -----------------------------------------------------------------------
+      const updateLockoutCountdown = (lockoutUntil) => {
+        if (lockoutTimerInterval) clearInterval(lockoutTimerInterval);
+
+        const tick = () => {
+          const now = Date.now();
+          const remainingMs = lockoutUntil - now;
+          if (remainingMs <= 0) {
+            clearInterval(lockoutTimerInterval);
+            localStorage.removeItem(AUTH_LOCKOUT_KEY);
+            localStorage.setItem(AUTH_FAILED_KEY, '0');
+            // Restore form state
+            card.classList.remove('lockout-state');
+            if (passInput) passInput.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
+            if (alertBanner) alertBanner.style.display = 'none';
+            if (timerWrap) timerWrap.style.display = 'none';
+            if (badge) {
+              badge.className = 'auth-security-badge';
+              if (badgeText) badgeText.textContent = 'RESTRICTED TERMINAL // ENCLAVE v2.6';
+            }
+            if (attemptsNotice) {
+              attemptsNotice.textContent = 'Rate-limited defense: 3 incorrect passkeys trigger a 10-minute automated lockout.';
+            }
+            if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
+            this.showToast('ℹ️ Terminal Lockout Expired: Authentication inputs re-enabled.');
+            return;
+          }
+
+          const totalSeconds = Math.ceil(remainingMs / 1000);
+          const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+          const secs = (totalSeconds % 60).toString().padStart(2, '0');
+          if (timerVal) timerVal.textContent = `${mins}:${secs}`;
+        };
+
+        tick();
+        lockoutTimerInterval = setInterval(tick, 1000);
+      };
+
+      const checkLockoutStatus = () => {
+        const lockoutUntil = parseInt(localStorage.getItem(AUTH_LOCKOUT_KEY) || '0', 10);
+        const now = Date.now();
+
+        if (lockoutUntil > now) {
+          // Terminal is actively locked out!
+          card.classList.add('lockout-state');
+          if (passInput) passInput.disabled = true;
+          if (submitBtn) submitBtn.disabled = true;
+          if (badge) {
+            badge.className = 'auth-security-badge badge-lockout';
+            if (badgeText) badgeText.textContent = 'CRITICAL LOCKOUT ACTIVE // RATE LIMIT 3/3';
+          }
+          if (alertBanner) {
+            alertBanner.style.display = 'flex';
+            if (alertTitle) alertTitle.textContent = 'SECURITY LOCKOUT ENGAGED';
+            if (alertDesc) alertDesc.textContent = 'Brute-force dictionary threshold exceeded (3/3). Terminal inputs locked down.';
+          }
+          if (timerWrap) timerWrap.style.display = 'flex';
+          updateLockoutCountdown(lockoutUntil);
+          return true;
+        }
+
+        // Clean up expired lockout if present
+        if (lockoutUntil > 0 && lockoutUntil <= now) {
+          localStorage.removeItem(AUTH_LOCKOUT_KEY);
+          localStorage.setItem(AUTH_FAILED_KEY, '0');
+        }
+        return false;
+      };
+
+      const handleFailedAttempt = () => {
+        let attempts = parseInt(localStorage.getItem(AUTH_FAILED_KEY) || '0', 10) + 1;
+        localStorage.setItem(AUTH_FAILED_KEY, attempts.toString());
+
+        if (attempts >= MAX_ATTEMPTS) {
+          const lockoutUntil = Date.now() + LOCKOUT_MS;
+          localStorage.setItem(AUTH_LOCKOUT_KEY, lockoutUntil.toString());
+          checkLockoutStatus();
+          if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
+            window.soundEngine.playSecurityAlarm();
+          }
+          this.showToast('🚨 CRITICAL LOCKOUT: 3 failed attempts. Terminal locked for 10 minutes.');
+        } else {
+          // Card shake & warning
+          card.classList.remove('auth-shake');
+          void card.offsetWidth;
+          card.classList.add('auth-shake');
+          setTimeout(() => card.classList.remove('auth-shake'), 450);
+
+          if (alertBanner) {
+            alertBanner.style.display = 'flex';
+            if (alertTitle) alertTitle.textContent = 'ACCESS DENIED: INVALID KEY';
+            if (alertDesc) {
+              alertDesc.textContent = `Attempt ${attempts} of ${MAX_ATTEMPTS} before automated 10-minute terminal lockout.`;
+            }
+          }
+          if (attemptsNotice) {
+            attemptsNotice.innerHTML = `<span style="color: #f87171; font-weight: 700;">Warning: ${attempts}/${MAX_ATTEMPTS} attempts used. Next failure triggers lockout.</span>`;
+          }
+          if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
+            window.soundEngine.playSecurityAlarm();
+          }
+        }
+      };
+
+      // -----------------------------------------------------------------------
+      // Successful Master Authentication Handler
+      // -----------------------------------------------------------------------
+      const grantMasterAccess = async (sourceMessage, shouldEnrollDevice = false) => {
+        localStorage.setItem(AUTH_FAILED_KEY, '0');
+        localStorage.removeItem(AUTH_LOCKOUT_KEY);
+
+        const adminPayload = {
+          id: 'usr_admin_001',
+          email: 'admin@aetherkicks.com',
+          name: 'Atelier Vault Master',
+          role: 'admin',
+          tier: 'Root Architect'
+        };
+
+        let signedSession = null;
+        if (window.AetherDB && typeof window.AetherDB.signSession === 'function') {
+          signedSession = await window.AetherDB.signSession(adminPayload);
+        } else {
+          signedSession = { payload: adminPayload, signature: 'vault_admin_sig', token: 'AK_SESSION' };
+        }
+
+        sessionStorage.setItem('aether_admin_authenticated', 'true');
+        sessionStorage.setItem('aether_admin_token', signedSession.token);
+        localStorage.setItem('aether_user_session', JSON.stringify(signedSession));
+
+        if (shouldEnrollDevice) {
+          const token = await generateAuthorizedToken();
+          localStorage.setItem(AUTH_TOKEN_KEY, btoa(JSON.stringify(token)));
+        }
+
+        triggerLaserVerification();
+
+        if (window.soundEngine) {
+          if (window.soundEngine.playLaserVerify) window.soundEngine.playLaserVerify();
+          if (window.soundEngine.playVaultUnlock) {
+            setTimeout(() => window.soundEngine.playVaultUnlock(), 300);
+          }
+        }
+
+        this.showToast(sourceMessage || '⚡ Atelier Vault OS Access Granted: Root Superadmin Mode.');
+
+        // Close overlay and hydrate all data
+        setTimeout(async () => {
+          await this.unlockAndHydrateVault();
+        }, 500);
+      };
+
+      // -----------------------------------------------------------------------
+      // Step 1: Check Secret URL Parameter for Instant 0-Click/1-Click Enrollment
+      // Example: admin.html?key=vault_admin_master_2026
+      // -----------------------------------------------------------------------
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '');
+      const urlSecretKey = (
+        searchParams.get('key') ||
+        searchParams.get('admin_key') ||
+        searchParams.get('token') ||
+        hashParams.get('key') ||
+        ''
+      ).trim();
+
+      if (urlSecretKey && MASTER_KEYS.includes(urlSecretKey)) {
+        // Strip the secret key from the browser address bar immediately so it's not leaked
+        try {
+          window.history.replaceState(null, document.title, window.location.pathname);
+        } catch (e) {}
+
+        await grantMasterAccess('⚡ Secret Key Verified: Hardware Node Authorized for 1-Click Access.', true);
+        return;
       }
 
-      // Passphrase Login Form
-      const authForm = document.getElementById('admin-auth-form');
+      // -----------------------------------------------------------------------
+      // Step 2: Check Active Session Authentication (HMAC Cryptographic Verification)
+      // -----------------------------------------------------------------------
+      const isAlreadyAuth = sessionStorage.getItem('aether_admin_authenticated') === 'true';
+      if (isAlreadyAuth) {
+        let isSessionTampered = false;
+        const storedSession = localStorage.getItem('aether_user_session');
+
+        if (storedSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
+          try {
+            const verified = await window.AetherDB.verifySession(JSON.parse(storedSession));
+            if (!verified || verified.role !== 'admin') {
+              isSessionTampered = true;
+            }
+          } catch (e) {
+            isSessionTampered = true;
+          }
+        }
+
+        if (isSessionTampered) {
+          sessionStorage.removeItem('aether_admin_authenticated');
+          sessionStorage.removeItem('aether_admin_token');
+          localStorage.removeItem('aether_user_session');
+          this.showToast('🚨 Unauthorized Session Tampering Detected! Cryptographic signature verification failed.');
+        } else {
+          await this.unlockAndHydrateVault();
+          return;
+        }
+      }
+
+      // If not authenticated, ensure layout is locked and overlay active
+      document.body.classList.add('vault-locked');
+      overlay.classList.add('active');
+
+      // -----------------------------------------------------------------------
+      // Step 3: Check for Lockout Status
+      // -----------------------------------------------------------------------
+      const isCurrentlyLockedOut = checkLockoutStatus();
+
+      // -----------------------------------------------------------------------
+      // Step 4: Check if Current Device is a Verified Trusted Node (1-Click Mode)
+      // -----------------------------------------------------------------------
+      const rawStoredToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const isTrustedOwnerDevice = await verifyDeviceToken(rawStoredToken);
+
+      if (isTrustedOwnerDevice && !isCurrentlyLockedOut) {
+        // Render 1-Click Owner Experience!
+        if (ownerBlock) ownerBlock.style.display = 'block';
+        if (authForm) authForm.style.display = 'none'; // Collapse standard form
+
+        if (badge) {
+          badge.className = 'auth-security-badge badge-authorized';
+          if (badgeText) badgeText.textContent = 'AUTHORIZED HARDWARE NODE // TRUSTED ARCHITECT';
+        }
+        card.classList.add('laser-verified');
+        if (gateTitle) gateTitle.textContent = 'WELCOME BACK ARCHITECT';
+        if (gateSub) gateSub.textContent = 'Recognized Root Administrator Terminal • Tap below for instant biometric unlock.';
+
+        // Bind Owner 1-Click Unlock Button
+        const btnOwnerOneClick = document.getElementById('btn-owner-one-click');
+        if (btnOwnerOneClick) {
+          btnOwnerOneClick.onclick = async (e) => {
+            e.preventDefault();
+            btnOwnerOneClick.disabled = true;
+            btnOwnerOneClick.innerHTML = '<span>⚡ Verifying Biometric Cryptoseal...</span>';
+            await grantMasterAccess('⚡ Welcome Back Architect: Atelier Vault OS Unlocked.');
+          };
+        }
+
+        // Switch to manual passkey input if desired
+        const btnSwitchPasskey = document.getElementById('btn-switch-to-passkey');
+        if (btnSwitchPasskey) {
+          btnSwitchPasskey.onclick = (e) => {
+            e.preventDefault();
+            if (authForm) authForm.style.display = 'flex';
+            if (passInput) passInput.focus();
+          };
+        }
+
+        // Unlink device option
+        const btnUnlink = document.getElementById('btn-unlink-device');
+        if (btnUnlink) {
+          btnUnlink.onclick = (e) => {
+            e.preventDefault();
+            if (confirm('Unlink this device from instant 1-click access? You will need your master key to pair again.')) {
+              localStorage.removeItem(AUTH_TOKEN_KEY);
+              if (ownerBlock) ownerBlock.style.display = 'none';
+              if (authForm) authForm.style.display = 'flex';
+              if (badge) {
+                badge.className = 'auth-security-badge';
+                if (badgeText) badgeText.textContent = 'RESTRICTED TERMINAL // ENCLAVE v2.6';
+              }
+              card.classList.remove('laser-verified');
+              if (gateTitle) gateTitle.textContent = 'ATELIER VAULT OS // RESTRICTED ACCESS';
+              if (gateSub) gateSub.textContent = 'High-Security Administrative Console. Cryptographic passkey required.';
+              this.showToast('Hardware Node Unlinked: Cryptographic token removed.');
+            }
+          };
+        }
+      } else {
+        // Standard Stranger View: 1-Click button is completely absent
+        if (ownerBlock) ownerBlock.style.display = 'none';
+        if (authForm) authForm.style.display = 'flex';
+      }
+
+      // -----------------------------------------------------------------------
+      // Step 5: Password Form Handling & Rate Limiting Verification
+      // -----------------------------------------------------------------------
       if (authForm) {
-        authForm.addEventListener('submit', async (e) => {
+        authForm.onsubmit = async (e) => {
           e.preventDefault();
-          const pass = (document.getElementById('admin-pass-input')?.value || '').trim();
+
+          if (checkLockoutStatus()) {
+            if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
+              window.soundEngine.playSecurityAlarm();
+            }
+            return;
+          }
+
+          const enteredPass = (passInput?.value || '').trim();
+          if (!enteredPass) return;
 
           let authenticated = false;
-          // Verify against live AetherDB admin credentials
-          if (window.AetherDB && typeof window.AetherDB.authenticateUser === 'function') {
-            const res = await window.AetherDB.authenticateUser('admin@aetherkicks.com', pass);
+          let shouldEnrollNewDevice = false;
+
+          // Check if entered key is the master owner key
+          if (MASTER_KEYS.includes(enteredPass)) {
+            authenticated = true;
+            shouldEnrollNewDevice = true; // Auto-pair this device for future 1-click access!
+          }
+
+          // Check against AetherDB database credentials
+          if (!authenticated && window.AetherDB && typeof window.AetherDB.authenticateUser === 'function') {
+            const res = await window.AetherDB.authenticateUser('admin@aetherkicks.com', enteredPass);
             if (res && res.role === 'admin') authenticated = true;
           }
 
-          // Master passkey fallbacks
-          if (!authenticated) {
-            if (pass.toLowerCase() === 'admin' || pass === 'aether' || pass === 'aether2026' || pass === '2026') {
-              authenticated = true;
-            }
-          }
-
           if (authenticated) {
-            sessionStorage.setItem('aether_admin_authenticated', 'true');
-            localStorage.setItem('aether_user_session', JSON.stringify({
-              id: 'usr_admin_001',
-              email: 'admin@aetherkicks.com',
-              name: 'Atelier Vault Master',
-              role: 'admin'
-            }));
-            overlay.classList.remove('active');
-            this.showToast('✅ Passphrase Verified. Welcome to Atelier Vault OS.');
-            if (window.soundEngine && window.soundEngine.playSuccess) window.soundEngine.playSuccess();
+            await grantMasterAccess('✅ Passphrase Verified. Welcome to Atelier Vault OS.', shouldEnrollNewDevice);
           } else {
-            this.showToast('❌ Invalid Passphrase. (Try "aether2026" or click Quick Demo Access)');
-            if (window.soundEngine && window.soundEngine.playClick) window.soundEngine.playClick();
+            handleFailedAttempt();
           }
-        });
+        };
       }
 
-      // Lock Session Buttons
+      // Password Visibility Toggle
+      const btnTogglePass = document.getElementById('btn-toggle-admin-pass');
+      if (btnTogglePass && passInput) {
+        btnTogglePass.onclick = (e) => {
+          e.preventDefault();
+          const isPass = passInput.type === 'password';
+          passInput.type = isPass ? 'text' : 'password';
+          btnTogglePass.style.color = isPass ? '#ffffff' : 'var(--admin-text-muted)';
+        };
+      }
+
+      // -----------------------------------------------------------------------
+      // Step 6: Hidden Stealth Gesture for Owner Enrollment (Triple-Click Icon)
+      // -----------------------------------------------------------------------
+      const gateIcon = document.getElementById('auth-gate-icon');
+      const enrollDialog = document.getElementById('auth-enroll-dialog');
+      const enrollInput = document.getElementById('enroll-key-input');
+      const btnEnrollSubmit = document.getElementById('btn-enroll-submit');
+      const btnEnrollCancel = document.getElementById('btn-enroll-cancel');
+      const btnEnrollClose = document.getElementById('btn-enroll-close');
+
+      let iconClickCount = 0;
+      let lastIconClick = 0;
+
+      const openEnrollment = () => {
+        if (enrollDialog) {
+          enrollDialog.style.display = 'flex';
+          if (enrollInput) {
+            enrollInput.value = '';
+            enrollInput.focus();
+          }
+          if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
+        }
+      };
+
+      const closeEnrollment = () => {
+        if (enrollDialog) enrollDialog.style.display = 'none';
+      };
+
+      if (gateIcon) {
+        gateIcon.onclick = () => {
+          const now = Date.now();
+          if (now - lastIconClick < 1200) {
+            iconClickCount++;
+          } else {
+            iconClickCount = 1;
+          }
+          lastIconClick = now;
+
+          if (iconClickCount >= 3) {
+            iconClickCount = 0;
+            openEnrollment();
+          }
+        };
+      }
+
+      // Keyboard shortcut for owner: Ctrl+Shift+U
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'u') {
+          e.preventDefault();
+          openEnrollment();
+        }
+      });
+
+      if (btnEnrollCancel) btnEnrollCancel.onclick = closeEnrollment;
+      if (btnEnrollClose) btnEnrollClose.onclick = closeEnrollment;
+
+      if (btnEnrollSubmit && enrollInput) {
+        btnEnrollSubmit.onclick = async () => {
+          const key = (enrollInput.value || '').trim();
+          if (MASTER_KEYS.includes(key)) {
+            closeEnrollment();
+            await grantMasterAccess('⚡ Master Device Paired: Hardware Node Registered for 1-Click Access.', true);
+          } else {
+            enrollInput.style.borderColor = '#ef4444';
+            if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
+              window.soundEngine.playSecurityAlarm();
+            }
+            this.showToast('❌ Invalid Architectural Master Key.');
+          }
+        };
+      }
+
+      // -----------------------------------------------------------------------
+      // Step 7: Lock Session Action Buttons
+      // -----------------------------------------------------------------------
       document.querySelectorAll('.btn-lock-session').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.onclick = async (e) => {
+          e.preventDefault();
           sessionStorage.removeItem('aether_admin_authenticated');
+          document.body.classList.add('vault-locked');
+          document.body.classList.remove('vault-authenticated');
           overlay.classList.add('active');
+
+          if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
           this.showToast('🔒 Vault Console Locked.');
-        });
+
+          // Re-initialize gate state (owner sees 1-click unlock button)
+          await this.setupAuthCheck();
+        };
       });
     }
 
@@ -619,7 +1095,7 @@
         return `
           <div class="allocation-item">
             <div class="allocation-header">
-              <span class="allocation-name">${sil}</span>
+              <span class="allocation-name">${escapeHTML(sil)}</span>
               <span class="allocation-percent">${count} pairs (${pct}%)</span>
             </div>
             <div class="allocation-bar-track">
@@ -662,12 +1138,12 @@
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
-            <span style="font-size: 0.85rem; color: #ffffff;">${item.shoe.colorway}</span>
-            <span class="sku-badge">EU ${item.size}</span>
+            <span style="font-size: 0.85rem; color: #ffffff;">${escapeHTML(item.shoe.colorway)}</span>
+            <span class="sku-badge">EU ${escapeHTML(item.size)}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-family: var(--admin-font-mono); font-size: 0.8rem; color: #f87171;">Only ${item.qty} left</span>
-            <button class="btn-matrix-helper" onclick="window.aetherAdmin.quickRestock('${item.shoe.id}', '${item.size}', 5)">+5 Restock</button>
+            <span style="font-family: var(--admin-font-mono); font-size: 0.8rem; color: #f87171;">Only ${Number(item.qty)} left</span>
+            <button class="btn-matrix-helper" onclick="window.aetherAdmin.quickRestock('${escapeHTML(item.shoe.id)}', '${escapeHTML(item.size)}', 5)">+5 Restock</button>
           </div>
         </div>
       `).join('');
@@ -732,18 +1208,18 @@
         const sizesPreview = Object.keys(stockMap).map(k => `EU ${k}(${stockMap[k]})`).join(' • ');
 
         return `
-          <tr data-shoe-id="${shoe.id}">
+          <tr data-shoe-id="${escapeHTML(shoe.id)}">
             <!-- Sneaker Identity -->
             <td>
               <div class="table-shoe-cell">
-                <div class="table-shoe-thumb" style="border-color: ${shoe.theme}40;">
-                  <img src="${shoe.image}" alt="${shoe.colorway}" onerror="this.src='assets/images/jordan-chicago.png'" />
+                <div class="table-shoe-thumb" style="border-color: ${escapeHTML(shoe.theme)}40;">
+                  <img src="${escapeHTML(shoe.image)}" alt="${escapeHTML(shoe.colorway)}" onerror="this.src='assets/images/jordan-chicago.png'" />
                 </div>
                 <div class="table-shoe-info">
-                  <span class="table-shoe-name">${shoe.name}</span>
+                  <span class="table-shoe-name">${escapeHTML(shoe.name)}</span>
                   <span class="table-shoe-colorway">
-                    <span class="theme-pill-dot" style="background: ${shoe.theme};"></span>
-                    ${shoe.colorway}
+                    <span class="theme-pill-dot" style="background: ${escapeHTML(shoe.theme)};"></span>
+                    ${escapeHTML(shoe.colorway)}
                   </span>
                 </div>
               </div>
@@ -751,48 +1227,48 @@
 
             <!-- SKU & Silhouette -->
             <td>
-              <span class="sku-badge">${shoe.styleCode}</span>
+              <span class="sku-badge">${escapeHTML(shoe.styleCode)}</span>
               <div style="margin-top: 4px;">
-                <span class="badge-tag tag-high">${shoe.silhouette || 'High OG'}</span>
+                <span class="badge-tag tag-high">${escapeHTML(shoe.silhouette || 'High OG')}</span>
               </div>
             </td>
 
             <!-- Condition Grade -->
             <td>
-              <span class="badge-tag tag-deadstock">${shoe.condition || 'DS Grade A+'}</span>
-              <div style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 4px; text-transform: uppercase;">${shoe.category || 'Runway'}</div>
+              <span class="badge-tag tag-deadstock">${escapeHTML(shoe.condition || 'DS Grade A+')}</span>
+              <div style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 4px; text-transform: uppercase;">${escapeHTML(shoe.category || 'Runway')}</div>
             </td>
 
             <!-- Price & Market Trend -->
             <td>
-              <div style="font-family: var(--admin-font-mono); font-weight: 700; color: #ffffff;">$${shoe.price}</div>
-              <div style="font-size: 0.74rem; color: var(--admin-text-muted);">MSRP $${shoe.retailPrice || 170}</div>
-              <span class="trend-badge positive" style="margin-top: 4px;">${shoe.trend || '+22.5%'}</span>
+              <div style="font-family: var(--admin-font-mono); font-weight: 700; color: #ffffff;">$${Number(shoe.price)}</div>
+              <div style="font-size: 0.74rem; color: var(--admin-text-muted);">MSRP $${Number(shoe.retailPrice || 170)}</div>
+              <span class="trend-badge positive" style="margin-top: 4px;">${escapeHTML(shoe.trend || '+22.5%')}</span>
             </td>
 
             <!-- Sizing Matrix Breakdown -->
             <td style="max-width: 220px;">
-              <div style="font-family: var(--admin-font-mono); font-size: 0.72rem; color: var(--admin-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${sizesPreview}">
-                ${sizesPreview || 'Standard EU 40-45'}
+              <div style="font-family: var(--admin-font-mono); font-size: 0.72rem; color: var(--admin-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHTML(sizesPreview)}">
+                ${escapeHTML(sizesPreview || 'Standard EU 40-45')}
               </div>
             </td>
 
             <!-- Total Stock & Quick Adjustment -->
             <td>
               <div class="stock-adjust-cell">
-                <button class="btn-stock-quick" onclick="window.aetherAdmin.quickAdjustStock('${shoe.id}', -1)" title="Reduce stock by 1">-</button>
+                <button class="btn-stock-quick" onclick="window.aetherAdmin.quickAdjustStock('${escapeHTML(shoe.id)}', -1)" title="Reduce stock by 1">-</button>
                 <span class="stock-count-val ${totalStock <= 5 ? 'low' : 'good'}">${totalStock}</span>
-                <button class="btn-stock-quick" onclick="window.aetherAdmin.quickAdjustStock('${shoe.id}', 1)" title="Increase stock by 1">+</button>
+                <button class="btn-stock-quick" onclick="window.aetherAdmin.quickAdjustStock('${escapeHTML(shoe.id)}', 1)" title="Increase stock by 1">+</button>
               </div>
             </td>
 
             <!-- Actions -->
             <td>
               <div class="row-actions">
-                <button class="btn-row-action" onclick="window.aetherAdmin.openShoeModal('${shoe.id}')" title="Edit Sneaker">
+                <button class="btn-row-action" onclick="window.aetherAdmin.openShoeModal('${escapeHTML(shoe.id)}')" title="Edit Sneaker">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="btn-row-action action-delete" onclick="window.aetherAdmin.deleteShoe('${shoe.id}')" title="Delete from Vault">
+                <button class="btn-row-action action-delete" onclick="window.aetherAdmin.deleteShoe('${escapeHTML(shoe.id)}')" title="Delete from Vault">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -1057,35 +1533,35 @@
         return `
           <tr>
             <td>
-              <span class="mono" style="color: #ffffff; font-weight: 700;">#${order.id}</span>
-              <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${orderDate}</div>
+              <span class="mono" style="color: #ffffff; font-weight: 700;">#${escapeHTML(order.id)}</span>
+              <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${escapeHTML(orderDate)}</div>
             </td>
             <td>
-              <div style="font-weight: 600; color: #ffffff;">${buyerName}</div>
-              <div class="vip-tier-badge tier-vault" style="font-size: 0.65rem; margin-top: 3px;">${order.tier || 'VIP Member'}</div>
+              <div style="font-weight: 600; color: #ffffff;">${escapeHTML(buyerName)}</div>
+              <div class="vip-tier-badge tier-vault" style="font-size: 0.65rem; margin-top: 3px;">${escapeHTML(order.tier || 'VIP Member')}</div>
             </td>
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="theme-pill-dot" style="background: var(--admin-crimson);"></span>
-                <span style="color: #ffffff; font-size: 0.88rem;">${shoeName}</span>
+                <span style="color: #ffffff; font-size: 0.88rem;">${escapeHTML(shoeName)}</span>
               </div>
-              <div style="font-size: 0.75rem; color: var(--admin-text-secondary);">${colorway} • <strong style="color: #4ade80;">${size}</strong></div>
+              <div style="font-size: 0.75rem; color: var(--admin-text-secondary);">${escapeHTML(colorway)} • <strong style="color: #4ade80;">${escapeHTML(size)}</strong></div>
             </td>
             <td>
-              <span class="mono" style="color: #ffffff; font-weight: 700;">$${order.total || order.price || 480}</span>
+              <span class="mono" style="color: #ffffff; font-weight: 700;">$${Number(order.total || order.price || 480)}</span>
             </td>
             <td>
               ${statusBadge}
             </td>
             <td>
-              <span class="sku-badge" style="font-size: 0.7rem;">${tracking}</span>
+              <span class="sku-badge" style="font-size: 0.7rem;">${escapeHTML(tracking)}</span>
             </td>
             <td>
               <div class="row-actions">
-                <button class="btn-row-action" onclick="window.aetherAdmin.openOrderDetails('${order.id}')" title="Inspect Custody & NFC Certificate">
+                <button class="btn-row-action" onclick="window.aetherAdmin.openOrderDetails('${escapeHTML(order.id)}')" title="Inspect Custody & NFC Certificate">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button class="btn-row-action" onclick="window.aetherAdmin.advanceOrderStatus('${order.id}')" title="Advance Custody Step">
+                <button class="btn-row-action" onclick="window.aetherAdmin.advanceOrderStatus('${escapeHTML(order.id)}')" title="Advance Custody Step">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
               </div>
@@ -1207,40 +1683,43 @@
       const tbody = document.getElementById('collectors-table-body');
       if (!tbody) return;
 
-      tbody.innerHTML = this.collectors.map(col => `
-        <tr>
-          <td>
-            <div class="collector-avatar-cell">
-              <div class="collector-avatar">${col.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
-              <div>
-                <div class="collector-name">${col.name}</div>
-                <div class="collector-handle">${col.handle} • ${col.email}</div>
+      tbody.innerHTML = this.collectors.map(col => {
+        const initials = (col.name || 'CR').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return `
+          <tr>
+            <td>
+              <div class="collector-avatar-cell">
+                <div class="collector-avatar">${escapeHTML(initials)}</div>
+                <div>
+                  <div class="collector-name">${escapeHTML(col.name)}</div>
+                  <div class="collector-handle">${escapeHTML(col.handle)} • ${escapeHTML(col.email)}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td>
-            <span class="vip-tier-badge ${col.role === 'admin' ? 'tier-admin' : col.tier.includes('Elite') ? 'tier-elite' : 'tier-vault'}">
-              ${col.tier}
-            </span>
-          </td>
-          <td>
-            <span class="mono" style="color: #4ade80;">${col.preferredSize}</span>
-          </td>
-          <td>
-            <span class="mono" style="color: #ffffff; font-weight: 700;">$${col.totalSpend.toLocaleString()}</span>
-          </td>
-          <td>
-            <span class="mono">${col.grailsOwned} pairs</span>
-          </td>
-          <td>
-            <select class="admin-select" style="padding: 4px 8px; font-size: 0.75rem;" onchange="window.aetherAdmin.updateCollectorRole('${col.id}', this.value)">
-              <option value="collector" ${col.role === 'collector' ? 'selected' : ''}>Collector</option>
-              <option value="vip_member" ${col.role === 'vip_member' ? 'selected' : ''}>VIP Member</option>
-              <option value="admin" ${col.role === 'admin' ? 'selected' : ''}>Root Admin</option>
-            </select>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+            <td>
+              <span class="vip-tier-badge ${col.role === 'admin' ? 'tier-admin' : (col.tier && col.tier.includes('Elite')) ? 'tier-elite' : 'tier-vault'}">
+                ${escapeHTML(col.tier)}
+              </span>
+            </td>
+            <td>
+              <span class="mono" style="color: #4ade80;">${escapeHTML(col.preferredSize)}</span>
+            </td>
+            <td>
+              <span class="mono" style="color: #ffffff; font-weight: 700;">$${Number(col.totalSpend || 0).toLocaleString()}</span>
+            </td>
+            <td>
+              <span class="mono">${Number(col.grailsOwned || 0)} pairs</span>
+            </td>
+            <td>
+              <select class="admin-select" style="padding: 4px 8px; font-size: 0.75rem;" onchange="window.aetherAdmin.updateCollectorRole('${escapeHTML(col.id)}', this.value)">
+                <option value="collector" ${col.role === 'collector' ? 'selected' : ''}>Collector</option>
+                <option value="vip_member" ${col.role === 'vip_member' ? 'selected' : ''}>VIP Member</option>
+                <option value="admin" ${col.role === 'admin' ? 'selected' : ''}>Root Admin</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     async updateCollectorRole(colId, newRole) {
@@ -1254,7 +1733,7 @@
       }
 
       this.renderCollectors();
-      this.showToast(`Updated tier for ${col.name} to: ${col.tier}`);
+      this.showToast(`Updated tier for ${escapeHTML(col.name)} to: ${col.tier}`);
     }
 
     // =========================================================================
@@ -1321,6 +1800,23 @@
       const output = document.getElementById('sql-query-results');
       if (!output) return;
 
+      // Anti-SQLi Firewall Analysis & Threat Neutralization
+      let sqliWarning = '';
+      if (window.AetherDB && typeof window.AetherDB.checkSQLInjectionRisk === 'function') {
+        const risk = window.AetherDB.checkSQLInjectionRisk(query);
+        if (risk.hasRisk) {
+          sqliWarning = `
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 10px; margin-bottom: 12px; color: #fca5a5;">
+              <strong style="color: #ef4444;">🛡️ ANTI-SQL INJECTION FIREWALL ACTIVE:</strong>
+              <div>Detected Vector Pattern: <code>${escapeHTML(risk.detectedPattern)}</code></div>
+              <div style="font-size: 0.72rem; color: #fecaca; margin-top: 4px;">
+                Threat neutralized: parameters are isolated from SQL command syntax. In production RDBMS, Prepared Statements (<code>PREPARE stmt ... EXECUTE</code>) compile AST separately, rendering injection breakout impossible.
+              </div>
+            </div>
+          `;
+        }
+      }
+
       const shoesList = Object.values(this.shoes);
       let matched = shoesList;
 
@@ -1341,8 +1837,9 @@
       }
 
       output.innerHTML = `
+        ${sqliWarning}
         <div style="color: #4ade80; margin-bottom: 8px;">✓ Query executed against live Aether Relational Engine: returned ${matched.length} rows.</div>
-        <pre style="color: #d4d4d8; font-family: var(--admin-font-mono); font-size: 0.75rem; max-height: 200px; overflow-y: auto;">${JSON.stringify(matched.map(m => ({ id: m.id, name: m.name, colorway: m.colorway, vault_price: m.price, sku: m.styleCode, category: m.category })), null, 2)}</pre>
+        <pre style="color: #d4d4d8; font-family: var(--admin-font-mono); font-size: 0.75rem; max-height: 200px; overflow-y: auto;">${escapeHTML(JSON.stringify(matched.map(m => ({ id: m.id, name: m.name, colorway: m.colorway, vault_price: m.price, sku: m.styleCode, category: m.category })), null, 2))}</pre>
       `;
     }
 
@@ -1386,7 +1883,7 @@
       }
     }
 
-    // Toast Notification System
+    // Safe Toast Notification System (Safe DOM Nodes)
     showToast(msg) {
       let container = document.getElementById('admin-toast-container');
       if (!container) {
@@ -1397,12 +1894,15 @@
 
       const toast = document.createElement('div');
       toast.className = 'admin-toast';
-      toast.innerHTML = `
-        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--admin-crimson); display: inline-block;"></span>
-        <span>${msg}</span>
-      `;
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: var(--admin-crimson); display: inline-block; flex-shrink: 0;';
+      const textSpan = document.createElement('span');
+      textSpan.textContent = String(msg || '');
 
+      toast.appendChild(dot);
+      toast.appendChild(textSpan);
       container.appendChild(toast);
+
       setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(10px)';

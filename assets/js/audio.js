@@ -109,6 +109,78 @@ class SoundEngine {
   playSwitch() {
     this.playBeep(420, 0.06, 'triangle', 0.06);
   }
+
+  playLaserVerify() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // High-tech rising laser chirp followed by harmonic chime
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.16);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+
+      // Shimmering harmonic chime
+      [880, 1108.73, 1318.51, 1760].forEach((freq, idx) => {
+        setTimeout(() => {
+          this.playBeep(freq, 0.28, 'sine', 0.06);
+        }, 80 + idx * 55);
+      });
+    } catch(e) {}
+  }
+
+  playSecurityAlarm() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // Jarring harsh double buzz for invalid passkey or brute-force lockout
+      const now = this.ctx.currentTime;
+      [0, 0.14].forEach(offset => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now + offset);
+        gain.gain.setValueAtTime(0.12, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.1);
+      });
+    } catch(e) {}
+  }
+
+  playVaultUnlock() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // Deep mechanical vault unbolt thump + metallic release click
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.22);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+
+      setTimeout(() => {
+        this.playBeep(1200, 0.05, 'triangle', 0.09);
+      }, 120);
+    } catch(e) {}
+  }
 }
 
 window.soundEngine = new SoundEngine();

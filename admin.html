@@ -90,6 +90,11 @@
           <span class="admin-profile-role">Root Superadmin</span>
         </div>
       </div>
+
+      <button type="button" class="btn-topbar-action text-danger btn-lock-session" title="Lock Administrative Console">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Lock</span>
+      </button>
     </div>
   </header>
 
@@ -640,6 +645,30 @@
             <div id="sql-query-results" style="margin-top: 14px; background: #08080c; border: 1px solid var(--admin-border-glass); border-radius: var(--admin-radius-sm); padding: 14px; min-height: 80px;">
               <span style="color: var(--admin-text-muted); font-size: 0.8rem; font-family: var(--admin-font-mono);">Click "Run SQL" to execute filter query against live vault store.</span>
             </div>
+
+            <!-- Anti-SQL Injection & Prepared Statements Architecture Guide -->
+            <div style="margin-top: 16px; padding: 14px; background: rgba(220, 38, 38, 0.05); border: 1px solid rgba(220, 38, 38, 0.2); border-radius: var(--admin-radius-sm);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="color: #ef4444; font-size: 1rem;">🛡️</span>
+                  <strong style="color: #ffffff; font-size: 0.85rem; font-family: var(--admin-font-mono);">ANTI-SQL INJECTION & PREPARED STATEMENTS ENGINE</strong>
+                </div>
+                <span class="badge-tag" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">ACTIVE DEFENSE</span>
+              </div>
+              <p style="font-size: 0.76rem; color: var(--admin-text-secondary); line-height: 1.5; margin-bottom: 10px;">
+                Relational engines prevent SQL injection by compiling the query AST separately from user parameters. In ANSI SQL / PostgreSQL, prepared statements guarantee literal evaluation:
+              </p>
+              <pre style="background: #08080c; border: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 12px; border-radius: 6px; font-size: 0.72rem; color: #a1a1aa; font-family: var(--admin-font-mono); margin-bottom: 10px; overflow-x: auto;"><code>-- Prepared Statement Defense Pattern
+PREPARE select_grail (varchar, decimal) AS 
+  SELECT * FROM shoes WHERE colorway = $1 AND vault_price &lt;= $2;
+EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
+              <div style="font-size: 0.72rem; color: var(--admin-text-muted); margin-bottom: 6px;">Test Attack Payloads (Demonstrating AST Neutralization):</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" class="btn-matrix-helper" onclick="document.getElementById('sql-query-input').value = '\' OR \'1\'=\'1'; document.getElementById('btn-run-sql').click();">Test: ' OR '1'='1 (Tautology)</button>
+                <button type="button" class="btn-matrix-helper" onclick="document.getElementById('sql-query-input').value = 'price > 0; DROP TABLE users; --'; document.getElementById('btn-run-sql').click();">Test: Stacked DROP TABLE</button>
+                <button type="button" class="btn-matrix-helper" onclick="document.getElementById('sql-query-input').value = 'colorway = \'Chicago\' UNION SELECT id, email, password_hash, role FROM users --'; document.getElementById('btn-run-sql').click();">Test: UNION Injection</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -954,29 +983,106 @@
     </div>
   </div>
 
-  <!-- MODAL 3: ADMIN AUTHENTICATION GATE OVERLAY (`#admin-auth-overlay`) -->
+  <!-- MODAL 3: HARDENED ADMIN AUTHENTICATION GATE OVERLAY (`#admin-auth-overlay`) -->
   <div id="admin-auth-overlay" class="modal-overlay">
-    <div class="auth-gate-card">
-      <div class="auth-gate-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      </div>
-      <h2 class="auth-gate-title">ATELIER VAULT OS // RESTRICTED ACCESS</h2>
-      <p class="auth-gate-sub">High-Security Administrative Console. Authenticated master personnel only.</p>
+    <!-- Green Laser Scanning Sweep Line -->
+    <div class="auth-laser-beam" id="auth-laser-beam"></div>
 
+    <div class="auth-gate-card" id="auth-gate-card">
+      <!-- Top Security Enclave Status Pill -->
+      <div class="auth-security-badge" id="auth-security-badge">
+        <span class="auth-badge-dot"></span>
+        <span class="auth-badge-text" id="auth-badge-text">RESTRICTED TERMINAL // ENCLAVE v2.6</span>
+      </div>
+
+      <!-- Security Shield Core (Stealth Triple-Tap Trigger for Enrollment) -->
+      <div class="auth-gate-icon" id="auth-gate-icon" role="button" tabindex="0" title="Atelier Vault Security Core (Triple-click for Device Pairing)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+
+      <h2 class="auth-gate-title" id="auth-gate-title">ATELIER VAULT OS // RESTRICTED ACCESS</h2>
+      <p class="auth-gate-sub" id="auth-gate-sub">High-Security Administrative Console. Cryptographic passkey required.</p>
+
+      <!-- OWNER TRUSTED HARDWARE NODE (Only rendered if verified token exists) -->
+      <div id="auth-owner-block" class="auth-owner-block" style="display: none;">
+        <div class="auth-owner-card">
+          <div class="auth-owner-header">
+            <span class="owner-icon-glow">⚡</span>
+            <div class="owner-header-text">
+              <div class="owner-node-title">AUTHORIZED HARDWARE NODE</div>
+              <div class="owner-node-sub">Root Superadmin Terminal • Cryptoseal Active</div>
+            </div>
+          </div>
+
+          <button type="button" id="btn-owner-one-click" class="btn-owner-unlock">
+            <span class="btn-owner-shimmer"></span>
+            <span class="btn-owner-text">⚡ Welcome Back Architect (One-Click Unlock)</span>
+          </button>
+
+          <div class="auth-owner-options">
+            <button type="button" id="btn-switch-to-passkey" class="btn-text-link">Use Passphrase Instead</button>
+            <span class="dot-sep">•</span>
+            <button type="button" id="btn-unlink-device" class="btn-text-link text-danger">Unlink This Device</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STANDARD / STRANGER PASSKEY FORM -->
       <form id="admin-auth-form" class="auth-gate-form">
-        <div class="form-group" style="text-align: left;">
-          <label class="form-label" for="admin-pass-input">Security Passphrase</label>
-          <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter key (e.g. admin or aether)" value="admin" />
+        <!-- Error & Brute-Force Rate Limiting Lockout Banner -->
+        <div id="auth-alert-banner" class="auth-alert-banner" style="display: none;">
+          <div class="alert-icon-wrap" id="auth-alert-icon">⚠️</div>
+          <div class="alert-content">
+            <div class="alert-title" id="auth-alert-title">ACCESS RESTRICTED</div>
+            <div class="alert-desc" id="auth-alert-desc">Enter your administrative credentials.</div>
+            <div class="alert-timer-wrap" id="auth-timer-wrap" style="display: none;">
+              <span class="alert-timer-label">TERMINAL LOCKOUT REMAINING:</span>
+              <span class="alert-timer-val" id="auth-lockout-timer">10:00</span>
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn-primary" style="justify-content: center; width: 100%;">
+        <div class="form-group" style="text-align: left;" id="auth-input-group">
+          <label class="form-label" for="admin-pass-input">Security Passphrase</label>
+          <div class="auth-input-wrap">
+            <input type="password" id="admin-pass-input" class="form-input" placeholder="Enter cryptographic passkey" autocomplete="off" />
+            <button type="button" id="btn-toggle-admin-pass" class="btn-eye-toggle" aria-label="Toggle password visibility">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-auth-submit" class="btn-primary" style="justify-content: center; width: 100%;">
           <span>Authenticate & Unlock Vault</span>
         </button>
 
-        <button type="button" id="btn-unlock-demo" class="btn-unlock-demo">
-          ⚡ 1-Click Fast Unlock (Root Architect Demo Mode)
-        </button>
+        <div class="auth-security-notice" id="auth-security-notice">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="auth-attempts-msg">Rate-limited defense: 3 incorrect passkeys trigger a 10-minute automated lockout.</span>
+        </div>
       </form>
+
+      <!-- HIDDEN OWNER ENROLLMENT MODAL (Triggered via triple-click or secret key) -->
+      <div id="auth-enroll-dialog" class="auth-enroll-dialog" style="display: none;">
+        <div class="enroll-inner">
+          <div class="enroll-header">
+            <span class="enroll-badge">HARDWARE PAIRING</span>
+            <button type="button" id="btn-enroll-close" class="btn-close-enroll">✕</button>
+          </div>
+          <div class="enroll-title">AUTHORIZE THIS DEVICE FOR 1-CLICK ACCESS</div>
+          <p class="enroll-desc">Provide Master Architectural Key to generate an HMAC-signed hardware token for this browser:</p>
+          <input type="password" id="enroll-key-input" class="form-input" placeholder="vault_admin_master_..." autocomplete="off" />
+          <div class="enroll-actions">
+            <button type="button" id="btn-enroll-cancel" class="btn-secondary" style="padding: 6px 14px; font-size: 0.78rem;">Cancel</button>
+            <button type="button" id="btn-enroll-submit" class="btn-primary" style="padding: 6px 14px; font-size: 0.78rem;">Pair & Authorize Device</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

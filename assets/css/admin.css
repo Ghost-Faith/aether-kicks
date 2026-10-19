@@ -2006,19 +2006,20 @@ body.admin-body {
 }
 
 .auth-gate-card {
-  background: #0d0d14;
+  background: #09090f;
   border: 1px solid rgba(220, 38, 38, 0.35);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 50px rgba(220, 38, 38, 0.15);
   border-radius: var(--admin-radius-lg);
   width: 100%;
-  max-width: 440px;
-  padding: 36px 32px;
+  max-width: 480px;
+  padding: 34px 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   position: relative;
   overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.2s ease;
 }
 
 .auth-gate-card::before {
@@ -2028,38 +2029,271 @@ body.admin-body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--admin-purple), var(--admin-crimson));
+  background: linear-gradient(90deg, #9333ea, #dc2626);
+  transition: background 0.4s ease;
+}
+
+/* Dynamic State: Verified Owner (Green Laser Verifier) */
+.auth-gate-card.laser-verified {
+  border-color: #22c55e !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 60px rgba(34, 197, 94, 0.45) !important;
+}
+
+.auth-gate-card.laser-verified::before {
+  background: linear-gradient(90deg, #10b981, #22c55e, #4ade80) !important;
+}
+
+/* Dynamic State: Lockout Alert */
+.auth-gate-card.lockout-state {
+  border-color: #ef4444 !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 70px rgba(239, 68, 68, 0.5) !important;
+  animation: lockoutPulse 1.2s infinite alternate;
+}
+
+.auth-gate-card.lockout-state::before {
+  background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #991b1b 10px, #991b1b 20px) !important;
+}
+
+@keyframes lockoutPulse {
+  0% { box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 30px rgba(239, 68, 68, 0.3); }
+  100% { box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95), 0 0 75px rgba(239, 68, 68, 0.65); }
+}
+
+/* Laser Scanning Line Animation */
+.auth-laser-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #22c55e, #4ade80, #22c55e, transparent);
+  box-shadow: 0 0 15px #4ade80, 0 0 30px #22c55e;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.auth-laser-beam.scanning {
+  opacity: 1;
+  animation: laserScanDown 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes laserScanDown {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Security Status Enclave Badge */
+.auth-security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: var(--admin-radius-full);
+  font-family: var(--admin-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  margin-bottom: 18px;
+  transition: all 0.3s ease;
+}
+
+.auth-security-badge.badge-authorized {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+
+.auth-security-badge.badge-lockout {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.auth-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: radarPing 1.8s infinite;
+}
+
+.auth-security-badge.badge-authorized .auth-badge-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+@keyframes radarPing {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
 }
 
 .auth-gate-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
   border: 1px solid rgba(220, 38, 38, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--admin-crimson);
-  margin-bottom: 20px;
-  box-shadow: 0 0 24px rgba(220, 38, 38, 0.3);
+  margin-bottom: 16px;
+  box-shadow: 0 0 24px rgba(220, 38, 38, 0.25);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-gate-icon:hover {
+  transform: scale(1.05);
+  border-color: var(--admin-crimson);
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
+}
+
+.laser-verified .auth-gate-icon {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border-color: #22c55e;
+  color: #4ade80;
+  box-shadow: 0 0 28px rgba(34, 197, 94, 0.35);
 }
 
 .auth-gate-title {
   font-family: var(--admin-font-display);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.01em;
 }
 
 .auth-gate-sub {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--admin-text-secondary);
   margin-top: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
+  line-height: 1.4;
 }
 
+/* ==========================================================================
+   OWNER AUTHORIZED TERMINAL SECTION (1-CLICK UNLOCK)
+   ========================================================================== */
+.auth-owner-block {
+  width: 100%;
+  margin-bottom: 16px;
+  animation: fadeInView 0.35s ease;
+}
+
+.auth-owner-card {
+  background: rgba(18, 22, 20, 0.8);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: var(--admin-radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(34, 197, 94, 0.05);
+}
+
+.auth-owner-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-icon-glow {
+  font-size: 1.4rem;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+}
+
+.owner-node-title {
+  font-family: var(--admin-font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #4ade80;
+  letter-spacing: 0.05em;
+}
+
+.owner-node-sub {
+  font-size: 0.72rem;
+  color: var(--admin-text-secondary);
+  margin-top: 2px;
+}
+
+.btn-owner-unlock {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 13px 20px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.22) 0%, rgba(16, 185, 129, 0.32) 100%);
+  border: 1px solid #22c55e;
+  border-radius: var(--admin-radius-sm);
+  color: #ffffff;
+  font-family: var(--admin-font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 25px rgba(34, 197, 94, 0.3);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-owner-unlock:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.38) 0%, rgba(16, 185, 129, 0.48) 100%);
+  border-color: #4ade80;
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-owner-unlock:active {
+  transform: translateY(1px);
+}
+
+.auth-owner-options {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.74rem;
+  font-family: var(--admin-font-mono);
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+.btn-text-link {
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.btn-text-link:hover {
+  color: #ffffff;
+}
+
+.btn-text-link.text-danger:hover {
+  color: #f87171;
+}
+
+/* ==========================================================================
+   STANDARD PASSKEY FORM & BRUTE-FORCE RATE LIMITER
+   ========================================================================== */
 .auth-gate-form {
   width: 100%;
   display: flex;
@@ -2067,23 +2301,187 @@ body.admin-body {
   gap: 14px;
 }
 
-.btn-unlock-demo {
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  color: #f4f4f5;
-  padding: 10px;
-  border-radius: var(--admin-radius-sm);
-  font-family: var(--admin-font-mono);
-  font-size: 0.78rem;
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-wrap .form-input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.btn-eye-toggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.btn-eye-toggle:hover {
+  color: #ffffff;
+}
+
+/* Alert Banner: Error & Lockout Display */
+.auth-alert-banner {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: var(--admin-radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  animation: fadeInView 0.2s ease;
+}
+
+.alert-icon-wrap {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.alert-title {
+  font-family: var(--admin-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f87171;
+  letter-spacing: 0.04em;
+}
+
+.alert-desc {
+  font-size: 0.74rem;
+  color: var(--admin-text-secondary);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.alert-timer-wrap {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(220, 38, 38, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alert-timer-label {
+  font-family: var(--admin-font-mono);
+  font-size: 0.68rem;
+  color: #fca5a5;
+}
+
+.alert-timer-val {
+  font-family: var(--admin-font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ef4444;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.auth-security-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--admin-font-mono);
+  font-size: 0.7rem;
+  color: var(--admin-text-muted);
+  text-align: left;
+  line-height: 1.3;
+  margin-top: 4px;
+}
+
+/* Shake Animation on Wrong Password */
+.auth-shake {
+  animation: shakeKeyframe 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shakeKeyframe {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(3px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+  40%, 60% { transform: translate3d(5px, 0, 0); }
+}
+
+/* Hidden Owner Enrollment Modal */
+.auth-enroll-dialog {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 9, 15, 0.96);
+  backdrop-filter: blur(20px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 26px;
+  border-radius: var(--admin-radius-lg);
+  animation: fadeInView 0.25s ease;
+}
+
+.enroll-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.enroll-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enroll-badge {
+  font-family: var(--admin-font-mono);
+  font-size: 0.68rem;
+  color: #a855f7;
+  padding: 2px 8px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 4px;
+}
+
+.btn-close-enroll {
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.enroll-title {
+  font-family: var(--admin-font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.enroll-desc {
+  font-size: 0.76rem;
+  color: var(--admin-text-secondary);
+  line-height: 1.35;
+}
+
+.enroll-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
   margin-top: 8px;
 }
 
-.btn-unlock-demo:hover {
-  border-color: var(--admin-crimson);
-  background: rgba(220, 38, 38, 0.25);
-  color: #ffffff;
+/* Background Layout Data Masking When Locked */
+body.vault-locked .admin-layout {
+  filter: blur(14px) brightness(0.4) grayscale(0.85);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.4s ease;
 }
 
 /* Toast Notifications in Admin */
