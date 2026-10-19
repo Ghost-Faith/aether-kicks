@@ -1172,3 +1172,137 @@ function jumpToRunwayShoe(sectionId) {
 window.setCatalogLayout = setCatalogLayout;
 window.jumpToRunwayShoe = jumpToRunwayShoe;
 
+/**
+ * Dynamic Square Grid Catalog Synchronization
+ * Ensures any sneaker created, edited, or deleted in Admin (via window.AetherDB or SNEAKERS_DB)
+ * is dynamically reflected in the .square-cards-grid on index.html!
+ */
+window.syncSquareGridCatalog = async function() {
+  const grid = document.querySelector('.square-cards-grid');
+  if (!grid) return;
+
+  let shoes = [];
+  if (window.AetherDB && typeof window.AetherDB.getShoes === 'function') {
+    try {
+      shoes = await window.AetherDB.getShoes();
+    } catch(e) {}
+  }
+
+  if (!shoes || shoes.length === 0) {
+    if (window.SNEAKERS_DB) {
+      shoes = Object.values(window.SNEAKERS_DB);
+    }
+  }
+
+  if (!shoes || shoes.length === 0) return;
+
+  // Build lookup of current active shoes
+  const shoesMap = new Map();
+  shoes.forEach(s => shoesMap.set(s.id, s));
+
+  // Track existing shoe IDs rendered, update prices, and remove decommissioned items
+  const existingCards = grid.querySelectorAll('.square-sneaker-card');
+  const renderedIds = new Set();
+  existingCards.forEach(c => {
+    let shoeId = null;
+    const wishBtn = c.querySelector('.btn-card-wishlist');
+    if (wishBtn && wishBtn.dataset.wishlistId) {
+      shoeId = wishBtn.dataset.wishlistId;
+    } else {
+      const buyBtn = c.querySelector('.btn-card-buy');
+      if (buyBtn) {
+        const onclickStr = buyBtn.getAttribute('onclick') || '';
+        const match = onclickStr.match(/openBuyModal\(['"]([^'"]+)['"]\)/);
+        if (match) shoeId = match[1];
+      }
+    }
+
+    if (shoeId) {
+      if (shoesMap.has(shoeId)) {
+        renderedIds.add(shoeId);
+        // Reactive price update
+        const currentData = shoesMap.get(shoeId);
+        const priceEl = c.querySelector('.square-card-price');
+        const priceVal = currentData.vault_price !== undefined ? currentData.vault_price : (currentData.price || 400);
+        if (priceEl) priceEl.textContent = `$${priceVal}`;
+      } else if (c.classList.contains('dynamic-grail-card')) {
+        // Remove card if it was decommissioned from database
+        c.remove();
+      }
+    }
+  });
+
+  // For any shoe in database not in DOM, create card
+  shoes.forEach(shoe => {
+    const id = shoe.id;
+    const price = shoe.vault_price !== undefined ? shoe.vault_price : (shoe.price || 400);
+    const name = shoe.name || 'Air Jordan 1 Retro';
+    const colorway = (shoe.colorway || id).toUpperCase();
+    const year = shoe.year || '2026';
+    const theme = shoe.theme_color || shoe.theme || '#dc2626';
+    const glow = shoe.glow_color || shoe.glow || 'rgba(220, 38, 38, 0.4)';
+    const img = shoe.image_url || shoe.image || 'assets/images/jordan-chicago.png';
+
+    if (!renderedIds.has(id)) {
+      const card = document.createElement('article');
+      card.className = 'square-sneaker-card dynamic-grail-card';
+      card.setAttribute('style', `--card-color: ${theme}; --card-glow: ${glow};`);
+      card.innerHTML = `
+        <div class="square-card-top">
+          <span class="square-card-badge">VAULT GRAIL • DEADSTOCK</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="square-card-year">${year}</span>
+            <button type="button" class="btn-card-wishlist" data-wishlist-id="${id}" title="Guardar na Wishlist" data-i18n-title="save_wishlist">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="square-card-image-box" onclick="window.cartManager.openBuyModal('${id}')" style="cursor: pointer;" title="Comprar Par">
+          <img src="${img}" alt="${name} ${colorway}" class="square-card-img" loading="lazy" onerror="this.src='assets/images/jordan-chicago.png'">
+        </div>
+        <div class="square-card-info">
+          <h3 class="square-card-title">${name}</h3>
+          <div class="square-card-colorway">${colorway}</div>
+        </div>
+        <div class="square-card-footer">
+          <div class="square-card-price-row">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); display: block;" data-i18n="ask_price">ASK PRICE</span>
+              <span class="square-card-price">$${price}</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #22c55e; font-family: var(--font-mono);" data-i18n="in_stock">IN STOCK</span>
+          </div>
+          <div class="square-card-actions">
+            <button class="btn-card-buy" onclick="window.cartManager.openBuyModal('${id}')" data-i18n="instant_buy">Instant Buy</button>
+            <button class="btn-card-inspect" onclick="window.cartManager.openBuyModal('${id}')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              <span>Instant Buy</span>
+            </button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+      renderedIds.add(id);
+    }
+  });
+
+  if (window.wishlistManager && typeof window.wishlistManager.syncHeartButtons === 'function') {
+    window.wishlistManager.syncHeartButtons();
+  }
+};
+
+// Auto-run synchronization on boot and reactive database updates
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+  }, 120);
+});
+
+window.addEventListener('aether:db:updated', () => {
+  if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+});
+
+window.addEventListener('sneakers:db:synced', () => {
+  if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+});
+

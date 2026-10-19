@@ -413,9 +413,80 @@ class CartManager {
 
     if (window.soundEngine) window.soundEngine.playSwoosh();
 
+    const activeItems = (this.items && this.items.length > 0) ? this.items.slice() : [];
+    const subtotal = this.getSubtotal();
+    const total = this.getTotal();
+    const discount = subtotal * (this.discountPercent || 0);
+
+    let buyerName = 'Marcus Collector';
+    let buyerEmail = 'collector@aetherkicks.com';
+    let shippingAddr = '23 Championship Blvd, Suite 1985, Chicago, IL 60601';
+
+    try {
+      const storedProfile = localStorage.getItem('aether_profile') || localStorage.getItem('aether_user');
+      if (storedProfile) {
+        const p = JSON.parse(storedProfile);
+        if (p.name) buyerName = p.name;
+        if (p.email) buyerEmail = p.email;
+        if (p.address) shippingAddr = `${p.address}, ${p.postal || p.postal_code || ''} ${p.city || 'Lisboa'}, ${p.country || 'Portugal'}`;
+      }
+    } catch (e) {}
+
+    const orderNum = 'AK-' + Math.floor(100000 + Math.random() * 900000);
+    const trackingCode = 'AETH-PT-' + Math.floor(100000 + Math.random() * 900000);
+    const nfcToken = '0x' + Math.random().toString(16).substr(2, 8).toUpperCase() + Math.random().toString(16).substr(2, 8).toUpperCase();
+
+    const orderRecord = {
+      id: orderNum,
+      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      created_at: new Date().toISOString(),
+      customer_name: buyerName,
+      customer_email: buyerEmail,
+      collector: buyerName,
+      email: buyerEmail,
+      tier: 'VIP Vault Member',
+      shipping_address: shippingAddr,
+      destination: shippingAddr,
+      payment_method: 'Apple Pay / Vault Express',
+      promo_code: this.promoCodeApplied || null,
+      subtotal: subtotal,
+      discount: discount,
+      total: total,
+      price: total,
+      status: 'pending_verification',
+      tracking_number: trackingCode,
+      tracking: trackingCode,
+      nfc_certificate_id: nfcToken,
+      nfcHash: nfcToken,
+      items: activeItems.map(it => ({
+        shoe_id: it.id,
+        shoe_name: it.name,
+        shoeName: it.name,
+        colorway: it.colorway,
+        size_eu: it.size ? String(it.size).replace(/[^0-9.]/g, '') : '42',
+        size_us: '8.5',
+        size: it.size,
+        unit_price: it.price,
+        price: it.price,
+        quantity: it.quantity,
+        image: it.image
+      }))
+    };
+
+    // Save order into localStorage
+    try {
+      const rawOrders = localStorage.getItem('aether_orders');
+      const ordersList = rawOrders ? JSON.parse(rawOrders) : [];
+      ordersList.unshift(orderRecord);
+      localStorage.setItem('aether_orders', JSON.stringify(ordersList));
+    } catch (e) {}
+
+    // Save order into AetherDB relational engine
+    if (window.AetherDB && typeof window.AetherDB.addOrder === 'function') {
+      window.AetherDB.addOrder(orderRecord).catch(err => console.warn('[Cart] AetherDB order add warning:', err));
+    }
+
     setTimeout(() => {
-      // Order placed!
-      const orderNum = 'AK-' + Math.floor(100000 + Math.random() * 900000);
       this.items = [];
       this.saveCart();
 
@@ -431,7 +502,7 @@ class CartManager {
             <p class="order-note">100% Verified Deadstock. Your pair has been locked in vault custody and is queued for authenticated 2-Day Air Express dispatch.</p>
             <div class="tamper-seal-badge">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>NFC Cryptographic Anti-Counterfeit Seal Active</span>
+              <span>NFC Cryptographic Anti-Counterfeit Seal Active: <strong>${trackingCode}</strong></span>
             </div>
             <button class="btn-primary" onclick="window.cartManager.closeCheckoutModal(); window.location.reload();">
               Back to Showroom
