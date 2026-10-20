@@ -183,6 +183,22 @@
         phone: '+351 934 567 890',
         created_at: '2026-01-10T12:30:00.000Z',
         updated_at: '2026-01-10T12:30:00.000Z'
+      },
+      {
+        id: 'usr_vip_003',
+        email: 'collector@aetherkicks.io',
+        // SHA-256 cryptographic hash of 'airjordan1985'
+        password_hash: 'cb59d4c70a84be85933d76ce19a7ee5fbb0e9751e08ce7a858e7b396fcebb4b9',
+        full_name: 'Marcus Jordan Vault',
+        role: 'vip_member',
+        preferred_size: 'EU 42 (US 8.5)',
+        address: 'Avenida da Liberdade 210',
+        city: 'Lisboa',
+        postal_code: '1250-142',
+        country: 'Portugal',
+        phone: '+351 912 345 678',
+        created_at: '2026-01-10T12:30:00.000Z',
+        updated_at: '2026-01-10T12:30:00.000Z'
       }
     ],
 
@@ -1177,8 +1193,9 @@
       });
     }
 
-    async addShoe(shoeData) {
+    async addShoe(shoeData, callerSession = null) {
       await this._initPromise;
+      await this._verifyCallerAdmin(callerSession);
       const shoe = normalizeShoe(shoeData);
       await this._putInStore('shoes', shoe);
 
@@ -1201,8 +1218,9 @@
       return shoe;
     }
 
-    async updateShoe(id, shoeData) {
+    async updateShoe(id, shoeData, callerSession = null) {
       await this._initPromise;
+      await this._verifyCallerAdmin(callerSession);
       const existing = await this.getShoe(id);
       if (!existing) throw new Error(`Shoe with id '${id}' not found.`);
 
@@ -1220,8 +1238,9 @@
       return updated;
     }
 
-    async deleteShoe(id) {
+    async deleteShoe(id, callerSession = null) {
       await this._initPromise;
+      await this._verifyCallerAdmin(callerSession);
       const shoe = await this.getShoe(id);
       await this._deleteFromStore('shoes', id);
 
@@ -1335,24 +1354,59 @@
     }
 
     /**
-     * Cryptographic SHA-256 Hash Engine (Web Crypto API with pure JS fallback)
+     * Fast Cryptographic SHA-256 Digest (Web Crypto API with pure JS fallback)
      */
-    async hashPassword(password) {
-      if (typeof password !== 'string') password = String(password || '');
-      const str = password.trim();
+    async _sha256(str) {
+      if (typeof str !== 'string') str = String(str || '');
       try {
         if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
           const enc = new TextEncoder();
-          const data = enc.encode(str);
-          const buf = await window.crypto.subtle.digest('SHA-256', data);
+          const buf = await window.crypto.subtle.digest('SHA-256', enc.encode(str));
           return Array.from(new Uint8Array(buf))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
         }
-      } catch (e) {
-        console.warn('[AetherDB Security] Web Crypto Subtle unavailable, using pure SHA-256 fallback:', e);
-      }
+      } catch (e) {}
       return sha256Pure(str);
+    }
+
+    /**
+     * Cryptographic PBKDF2 Password Hashing Engine (SHA-256 with 100,000 iterations)
+     * Hardened against dictionary & rainbow table attacks
+     */
+    async hashPassword(password, salt = 'AETHER_VAULT_PBKDF2_SALT_2026') {
+      if (typeof password !== 'string') password = String(password || '');
+      const str = password.trim();
+      const saltStr = typeof salt === 'string' ? salt : 'AETHER_VAULT_PBKDF2_SALT_2026';
+
+      try {
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+          const enc = new TextEncoder();
+          const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            enc.encode(str),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveBits']
+          );
+          const derivedBits = await window.crypto.subtle.deriveBits(
+            {
+              name: 'PBKDF2',
+              salt: enc.encode(saltStr),
+              iterations: 100000,
+              hash: 'SHA-256'
+            },
+            keyMaterial,
+            256
+          );
+          return Array.from(new Uint8Array(derivedBits))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+        }
+      } catch (e) {
+        console.warn('[AetherDB Security] Web Crypto Subtle PBKDF2 unavailable, using fallback:', e);
+      }
+      return sha256Pure(str + ':' + saltStr);
     }
 
     /**
@@ -1403,7 +1457,7 @@
       }
 
       if (!signatureHex) {
-        signatureHex = await this.hashPassword(secret + ':' + payloadString + ':' + secret);
+        signatureHex = await this._sha256(secret + ':' + payloadString + ':' + secret);
       }
 
       return {
@@ -1461,7 +1515,7 @@
       } catch (e) {}
 
       if (!expectedSig) {
-        expectedSig = await this.hashPassword(secret + ':' + payloadString + ':' + secret);
+        expectedSig = await this._sha256(secret + ':' + payloadString + ':' + secret);
       }
 
       if (expectedSig === signature) {
@@ -1483,17 +1537,77 @@
     }
 
     /**
-     * Secure User Authentication via SHA-256 Hashes & Cryptographic Sessions
+     * Session/Permission Guard for Administrative Mutation Methods
+     * Validates HMAC cryptographic signature and role === 'admin'
      */
-    async authenticateUser(email, password) {
+    async _verifyCallerAdmin(callerSession = null) {
+      let session = callerSession;
+      if (!session && typeof window !== 'undefined') {
+        try {
+          const adminToken = window.sessionStorage?.getItem('aether_admin_token');
+          const userSessionStr = window.localStorage?.getItem('aether_user_session');
+          session = adminToken || (userSessionStr ? JSON.parse(userSessionStr) : null);
+        } catch (e) {}
+      }
+
+      if (!session) {
+        await this.logAction('UNAUTHORIZED_ACCESS_ATTEMPT', 'security', 'SYSTEM', {
+          reason: 'Missing session credentials for administrative operation'
+        });
+        throw new Error('ACCESS DENIED: Administrative session credentials required.');
+      }
+
+      const verified = await this.verifySession(session);
+      if (!verified || verified.role !== 'admin') {
+        await this.logAction('UNAUTHORIZED_ACCESS_ATTEMPT', 'security', verified ? verified.id : 'ANONYMOUS', {
+          reason: 'Insufficient permissions or invalid HMAC signature for administrative mutation',
+          attemptedRole: verified ? verified.role : 'none'
+        });
+        throw new Error('ACCESS DENIED: Administrative privileges and valid HMAC signature required.');
+      }
+
+      return verified;
+    }
+
+    /**
+     * Case-insensitive check if user account exists in database
+     */
+    async checkUserExists(email) {
+      await this._initPromise;
+      if (!email) return false;
+      const targetEmail = String(email).trim().toLowerCase();
+      if (targetEmail === 'collector@aetherkicks.io' || targetEmail === 'collector@aetherkicks.com' || targetEmail === 'admin@aetherkicks.com') {
+        return true;
+      }
+      const users = await this._getAllFromStore('users');
+      return users.some(u => u && u.email && u.email.toLowerCase() === targetEmail);
+    }
+
+    /**
+     * Secure User Authentication via PBKDF2, Legacy Hash Support & Cryptographic Sessions
+     */
+    async authenticateUser(email, password, options = {}) {
       await this._initPromise;
       const users = await this._getAllFromStore('users');
       const targetEmail = (email || '').toLowerCase().trim();
-      const user = users.find(u => u && u.email && u.email.toLowerCase() === targetEmail);
+      let user = users.find(u => u && u.email && u.email.toLowerCase() === targetEmail);
 
-      if (!user) return null;
+      // Alias lookup between collector@aetherkicks.io and collector@aetherkicks.com
+      if (!user && (targetEmail === 'collector@aetherkicks.io' || targetEmail === 'collector@aetherkicks.com')) {
+        user = users.find(u => u && (u.email === 'collector@aetherkicks.com' || u.email === 'collector@aetherkicks.io'));
+      }
 
-      const hashedInput = await this.hashPassword(password);
+      if (!user) {
+        this.lastAuthReason = 'USER_NOT_FOUND';
+        await this.logAction('USER_LOGIN_NOT_FOUND', 'users', 'UNKNOWN', { email: targetEmail });
+        if (options && options.structured) {
+          return { success: false, reason: 'USER_NOT_FOUND' };
+        }
+        return null;
+      }
+
+      const pbkdf2Hash = await this.hashPassword(password);
+      const legacyHash = await this._sha256(password);
 
       const ADMIN_HASHES = [
         '140f00da29e9ac981ff7ab92dbb872deeb5115dde50bbc0174543d2b3d61b3e9', // aether2026
@@ -1507,24 +1621,56 @@
       ];
 
       let isValid = false;
-      if (user.email === 'admin@aetherkicks.com') {
-        isValid = ADMIN_HASHES.includes(hashedInput) || user.password_hash === hashedInput;
-      } else if (user.email === 'collector@aetherkicks.com' || user.email === 'collector@aetherkicks.io') {
-        isValid = COLLECTOR_HASHES.includes(hashedInput) || user.password_hash === hashedInput;
-      } else if (user.password_hash) {
-        isValid = (user.password_hash === hashedInput);
+      let matchedLegacy = false;
+
+      // 1. Direct PBKDF2 hash match
+      if (user.password_hash === pbkdf2Hash) {
+        isValid = true;
+      }
+      // 2. Legacy SHA-256 direct hash match
+      else if (user.password_hash === legacyHash) {
+        isValid = true;
+        matchedLegacy = true;
+      }
+      // 3. Known admin seed passwords
+      else if (user.email === 'admin@aetherkicks.com' && (ADMIN_HASHES.includes(legacyHash) || ADMIN_HASHES.includes(user.password_hash))) {
+        isValid = ADMIN_HASHES.includes(legacyHash) || user.password_hash === legacyHash || user.password_hash === pbkdf2Hash;
+        if (isValid) matchedLegacy = true;
+      }
+      // 4. Known collector seed passwords
+      else if ((user.email === 'collector@aetherkicks.com' || user.email === 'collector@aetherkicks.io') && (COLLECTOR_HASHES.includes(legacyHash) || COLLECTOR_HASHES.includes(user.password_hash))) {
+        isValid = COLLECTOR_HASHES.includes(legacyHash) || user.password_hash === legacyHash || user.password_hash === pbkdf2Hash;
+        if (isValid) matchedLegacy = true;
+      }
+
+      // Transparent automatic migration of legacy SHA-256 hash to PBKDF2 100k iterations
+      if (isValid && matchedLegacy) {
+        try {
+          user.password_hash = pbkdf2Hash;
+          await this._putInStore('users', user);
+          console.log(`[AetherDB Security] Upgraded credentials for ${user.email} to PBKDF2 (100k iterations).`);
+        } catch (e) {}
       }
 
       if (isValid) {
         await this.logAction('USER_LOGIN_SUCCESS', 'users', user.id, { email: user.email });
         const { password_hash, plainPassword, ...safeUser } = user;
         const session = await this.signSession(safeUser);
-        return {
+        const resultUser = {
           ...safeUser,
-          _session: session
+          _session: session,
+          success: true
         };
+        if (options && options.structured) {
+          return { success: true, user: resultUser };
+        }
+        return resultUser;
       } else {
         await this.logAction('USER_LOGIN_FAILED', 'users', user.id, { email: user.email });
+        this.lastAuthReason = 'INVALID_PASSWORD';
+        if (options && options.structured) {
+          return { success: false, reason: 'INVALID_PASSWORD' };
+        }
         return null;
       }
     }
@@ -1559,11 +1705,13 @@
         return safeAdmin;
       }
 
-      // 2. Check Provisioned Admins in Vault DB by SHA-256 Hash
-      const inputHash = await this.hashPassword(trimmed);
+      // 2. Check Provisioned Admins in Vault DB by PBKDF2 or SHA-256 Hash
+      const inputPbkdf2 = await this.hashPassword(trimmed);
+      const inputSha256 = await this._sha256(trimmed);
+
       const matched = allUsers.find(u => {
         if (!u || u.role !== 'admin') return false;
-        return u.password_hash === inputHash;
+        return u.password_hash === inputPbkdf2 || u.password_hash === inputSha256;
       });
 
       if (matched) {
@@ -1577,6 +1725,16 @@
     async addUser(userData) {
       await this._initPromise;
       const now = new Date().toISOString();
+      const cleanEmail = escapeHTML((userData.email || '').toLowerCase().trim());
+      if (!cleanEmail) {
+        throw new Error('A valid email address is required.');
+      }
+
+      const isTaken = await this.checkUserExists(cleanEmail);
+      if (isTaken) {
+        throw new Error(`Email '${cleanEmail}' is already registered in the vault.`);
+      }
+
       let passwordHash = userData.password_hash;
       if (!passwordHash) {
         const rawPassword = userData.password || userData.plainPassword || 'vault_member_2026';
@@ -1610,10 +1768,19 @@
       return safeUser;
     }
 
-    async updateUser(id, userData) {
+    async updateUser(id, userData, callerSession = null) {
       await this._initPromise;
+      if (userData.role === 'admin' || userData.admin_role || userData.permissions) {
+        await this._verifyCallerAdmin(callerSession);
+      }
       const existing = await this._getByKey('users', id);
       if (!existing) throw new Error(`User with id '${id}' not found.`);
+
+      // Upgrade password to PBKDF2 hash if plain password provided
+      if (userData.password) {
+        userData.password_hash = await this.hashPassword(userData.password);
+        delete userData.password;
+      }
 
       const updated = {
         ...existing,
@@ -1629,8 +1796,9 @@
       return safeUser;
     }
 
-    async deleteUser(id) {
+    async deleteUser(id, callerSession = null) {
       await this._initPromise;
+      await this._verifyCallerAdmin(callerSession);
       const user = await this._getByKey('users', id);
       await this._deleteFromStore('users', id);
       await this.logAction('DELETE_USER', 'users', id, { deletedEmail: user ? user.email : id });
@@ -1698,8 +1866,9 @@
       return order;
     }
 
-    async updateOrderStatus(orderId, status, trackingNo = null) {
+    async updateOrderStatus(orderId, status, trackingNo = null, callerSession = null) {
       await this._initPromise;
+      await this._verifyCallerAdmin(callerSession);
       const order = await this.getOrder(orderId);
       if (!order) throw new Error(`Order '${orderId}' not found.`);
 

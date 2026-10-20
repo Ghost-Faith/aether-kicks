@@ -844,7 +844,7 @@ class CartManager {
   }
 }
 
-// Global Toast System (DOM-safe against XSS)
+// Global Toast System (DOM-safe against XSS, Luxury Atelier Aesthetics)
 function showToast(message, type = 'info') {
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -855,13 +855,38 @@ function showToast(message, type = 'info') {
 
   const toast = document.createElement('div');
   toast.className = 'toast';
-  
+
+  const msgStr = String(message || '');
+  let dotBg = 'var(--theme-primary)';
+  let borderColor = 'var(--theme-primary)';
+  let glowColor = 'var(--theme-glow-soft)';
+
+  if (type === 'error' || msgStr.includes('❌')) {
+    dotBg = '#ef4444';
+    borderColor = 'rgba(239, 68, 68, 0.65)';
+    glowColor = 'rgba(239, 68, 68, 0.4)';
+    toast.classList.add('toast-error');
+  } else if (type === 'warning' || msgStr.includes('⚠️') || msgStr.includes('⏳')) {
+    dotBg = '#f59e0b';
+    borderColor = 'rgba(245, 158, 11, 0.65)';
+    glowColor = 'rgba(245, 158, 11, 0.4)';
+    toast.classList.add('toast-warning');
+  } else if (type === 'success' || msgStr.includes('✨') || msgStr.includes('⚡')) {
+    dotBg = '#10b981';
+    borderColor = 'rgba(16, 185, 129, 0.65)';
+    glowColor = 'rgba(16, 185, 129, 0.4)';
+    toast.classList.add('toast-success');
+  }
+
+  toast.style.borderColor = borderColor;
+  toast.style.boxShadow = `0 12px 32px rgba(0, 0, 0, 0.75), 0 0 20px ${glowColor}`;
+
   const dot = document.createElement('span');
   dot.className = 'toast-dot';
-  dot.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: var(--theme-primary); display: inline-block; flex-shrink: 0;';
+  dot.style.cssText = `width: 8px; height: 8px; border-radius: 50%; background: ${dotBg}; display: inline-block; flex-shrink: 0; box-shadow: 0 0 10px ${dotBg};`;
 
   const textSpan = document.createElement('span');
-  textSpan.textContent = String(message || '');
+  textSpan.textContent = msgStr;
 
   toast.appendChild(dot);
   toast.appendChild(textSpan);
@@ -869,8 +894,8 @@ function showToast(message, type = 'info') {
 
   setTimeout(() => {
     toast.classList.add('toast-exit');
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
+    setTimeout(() => toast.remove(), 350);
+  }, 4000);
 }
 
 // Celebration Confetti

@@ -418,49 +418,69 @@
       };
 
       // -----------------------------------------------------------------------
-      // Step 1: Inactivity & Session Signature Validation
+      // Step 1: Inactivity & Cryptographic Session Signature Validation
+      // STRICT HARDENING (Item 5): NEVER trust raw sessionStorage boolean.
+      // MUST cryptographically verify HMAC signature of stored session or token.
+      // If signature is invalid, missing, or role !== 'admin', strictly wipe & lock!
       // -----------------------------------------------------------------------
-      const isAlreadyAuth = sessionStorage.getItem('aether_admin_authenticated') === 'true';
-      if (isAlreadyAuth) {
-        const lastActivity = parseInt(sessionStorage.getItem('aether_admin_last_activity') || '0', 10);
-        const now = Date.now();
+      const storedToken = sessionStorage.getItem('aether_admin_token');
+      const rawUserSession = localStorage.getItem('aether_user_session');
+      const rawAdminUser = sessionStorage.getItem('aether_admin_user');
+      const hasAuthFlag = sessionStorage.getItem('aether_admin_authenticated') === 'true';
 
-        // 30-minute inactivity check
-        if (lastActivity > 0 && (now - lastActivity) > INACTIVITY_LIMIT_MS) {
+      let sessionCandidate = storedToken;
+      if (!sessionCandidate && rawUserSession) {
+        try {
+          sessionCandidate = JSON.parse(rawUserSession);
+        } catch (e) {}
+      }
+      if (!sessionCandidate && rawAdminUser) {
+        try {
+          sessionCandidate = JSON.parse(rawAdminUser);
+        } catch (e) {}
+      }
+
+      if (hasAuthFlag || sessionCandidate) {
+        // Attempt cryptographic HMAC verification
+        let verifiedAdmin = null;
+        if (sessionCandidate && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
+          try {
+            verifiedAdmin = await window.AetherDB.verifySession(sessionCandidate);
+          } catch (e) {
+            verifiedAdmin = null;
+          }
+        }
+
+        // If verification failed or user is not admin, wipe and keep locked!
+        if (!verifiedAdmin || verifiedAdmin.role !== 'admin') {
           sessionStorage.removeItem('aether_admin_authenticated');
           sessionStorage.removeItem('aether_admin_token');
           sessionStorage.removeItem('aether_admin_user');
+          sessionStorage.removeItem('aether_admin_last_activity');
           localStorage.removeItem('aether_user_session');
-          this.showToast('🔒 Session Timed Out: Locked after 30 minutes of inactivity.');
-        } else {
-          // Cryptographic HMAC Verification
-          let isSessionTampered = false;
-          const storedSession = localStorage.getItem('aether_user_session');
 
-          if (storedSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
-            try {
-              const verified = await window.AetherDB.verifySession(JSON.parse(storedSession));
-              if (!verified || verified.role !== 'admin') {
-                isSessionTampered = true;
-              }
-            } catch (e) {
-              isSessionTampered = true;
+          if (hasAuthFlag) {
+            this.showToast('🚨 Unauthorized Session Tampering Detected! Cryptographic signature verification failed.');
+            if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
+              window.soundEngine.playSecurityAlarm();
             }
           }
+        } else {
+          // Cryptographic signature verified! Check 30-min inactivity timeout
+          const lastActivity = parseInt(sessionStorage.getItem('aether_admin_last_activity') || '0', 10);
+          const now = Date.now();
 
-          if (isSessionTampered) {
+          if (lastActivity > 0 && (now - lastActivity) > INACTIVITY_LIMIT_MS) {
             sessionStorage.removeItem('aether_admin_authenticated');
             sessionStorage.removeItem('aether_admin_token');
             sessionStorage.removeItem('aether_admin_user');
+            sessionStorage.removeItem('aether_admin_last_activity');
             localStorage.removeItem('aether_user_session');
-            this.showToast('🚨 Unauthorized Session Tampering Detected! Cryptographic signature mismatch.');
+            this.showToast('🔒 Session Timed Out: Locked after 30 minutes of inactivity.');
           } else {
+            sessionStorage.setItem('aether_admin_authenticated', 'true');
             sessionStorage.setItem('aether_admin_last_activity', now.toString());
-            let adminPayload = null;
-            try {
-              adminPayload = JSON.parse(sessionStorage.getItem('aether_admin_user') || 'null');
-            } catch (e) {}
-            await this.unlockAndHydrateVault(adminPayload);
+            await this.unlockAndHydrateVault(verifiedAdmin);
             return;
           }
         }
@@ -663,6 +683,23 @@
       }, 15000);
     }
 
+    /**
+     * Retrieves active cryptographically signed admin session token
+     */
+    getAdminSessionToken() {
+      return sessionStorage.getItem('aether_admin_token') || localStorage.getItem('aether_user_session') || null;
+    }
+
+    /**
+     * Administrative Deletion of Collector User
+     */
+    async deleteUser(userId) {
+      if (window.AetherDB && typeof window.AetherDB.deleteUser === 'function') {
+        return await window.AetherDB.deleteUser(userId, this.getAdminSessionToken());
+      }
+      return false;
+    }
+
     // =========================================================================
     // ADMINISTRATOR TEAM & RBAC CREDENTIAL MANAGEMENT
     // =========================================================================
@@ -842,7 +879,7 @@
           role: 'collector',
           admin_role: null,
           permissions: []
-        });
+        }, this.getAdminSessionToken());
 
         this.showToast(`🔒 Administrative Access Revoked for ${admin.name}. Account reverted to Collector.`);
         if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
@@ -1660,7 +1697,7 @@
       if (confirm(`Are you sure you want to decommission "${shoe.name} - ${shoe.colorway}" from the Atelier Vault Database?`)) {
         try {
           if (window.AetherDB && typeof window.AetherDB.deleteShoe === 'function') {
-            await window.AetherDB.deleteShoe(shoeId);
+            await window.AetherDB.deleteShoe(shoeId, this.getAdminSessionToken());
           }
           delete this.shoes[shoeId];
           if (window.SNEAKERS_DB && window.SNEAKERS_DB[shoeId]) {
@@ -1894,9 +1931,9 @@
 
       if (window.AetherDB) {
         if (hiddenId) {
-          await window.AetherDB.updateShoe(shoeId, shoePayload);
+          await window.AetherDB.updateShoe(shoeId, shoePayload, this.getAdminSessionToken());
         } else {
-          await window.AetherDB.addShoe(shoePayload);
+          await window.AetherDB.addShoe(shoePayload, this.getAdminSessionToken());
         }
 
         // Update inventory records in AetherDB
@@ -2028,7 +2065,7 @@
 
         // Save into AetherDB
         if (window.AetherDB && typeof window.AetherDB.updateOrderStatus === 'function') {
-          await window.AetherDB.updateOrderStatus(orderId, nextStatus, tracking);
+          await window.AetherDB.updateOrderStatus(orderId, nextStatus, tracking, this.getAdminSessionToken());
         }
 
         this.renderOrders();
@@ -2237,7 +2274,7 @@
           role: newRole,
           admin_role: col.admin_role || null,
           permissions: col.permissions || []
-        });
+        }, this.getAdminSessionToken());
       }
 
       this.renderCollectors();

@@ -63,7 +63,7 @@
           <p class="auth-card-subtitle" data-i18n="login_subtitle">Sign in to unlock verified collector drops, private bidding, and guaranteed authentic grails.</p>
         </div>
 
-        <form id="login-form" class="auth-form">
+        <form id="login-form" class="auth-form" novalidate>
           <!-- Email / Username -->
           <div class="input-group">
             <label class="input-label" for="login-email" data-i18n="login_email_label">Sneakerhead Email or Tag</label>
@@ -71,7 +71,7 @@
               <span class="input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </span>
-              <input type="email" id="login-email" class="form-input" placeholder="michael@bulls23.com" value="collector@aetherkicks.io" required autocomplete="email">
+              <input type="email" id="login-email" class="form-input" placeholder="collector@aetherkicks.com" required autocomplete="email">
             </div>
           </div>
 
@@ -85,7 +85,7 @@
               <span class="input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
-              <input type="password" id="login-password" class="form-input" placeholder="••••••••••••" value="airjordan1985" required autocomplete="current-password">
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••••••" required autocomplete="current-password">
               <button type="button" class="btn-toggle-password" style="position: absolute; right: 14px; color: var(--text-muted); cursor: pointer;" title="Toggle Password">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
@@ -113,8 +113,11 @@
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
               <button type="button" id="btn-one-click-collector" class="btn-one-click-login" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 9px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;">
-                <span>👑 VIP Collector</span>
+                <span>👑 VIP Collector (1-Click Instant Login)</span>
               </button>
+            </div>
+            <div style="font-size: 0.70rem; color: #a1a1aa; margin-top: 8px; font-family: var(--font-mono); line-height: 1.4;">
+              Manual Sign In: <code style="color: #f4f4f5; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px;">collector@aetherkicks.com</code> • Passkey: <code style="color: #f4f4f5; background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px;">grailpass</code>
             </div>
           </div>
 

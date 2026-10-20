@@ -257,7 +257,10 @@ function initFormInteractions() {
       localStorage.setItem('aether_user_session', JSON.stringify(session));
 
       if (window.soundEngine) window.soundEngine.playSuccess();
-      showToast('⚡ 1-Click Access: Welcome Matheus Silva VIP! Redirecting...');
+      const isPT = (localStorage.getItem('aether_lang') || 'pt') === 'pt';
+      if (typeof window.showToast === 'function') {
+        window.showToast(isPT ? '⚡ Acesso 1-Clique: Bem-vindo Matheus Silva VIP! A redirecionar...' : '⚡ 1-Click Access: Welcome Matheus Silva VIP! Redirecting...', 'success');
+      }
 
       setTimeout(() => {
         window.location.href = 'index.html';
@@ -265,132 +268,483 @@ function initFormInteractions() {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // AUTH TOAST & RATE LIMITING INFRASTRUCTURE
+  // ---------------------------------------------------------------------------
+  const getLang = () => localStorage.getItem('aether_lang') || 'pt';
 
+  const triggerToast = (msg, type = 'info') => {
+    if (typeof window.showToast === 'function') {
+      window.showToast(msg, type);
+    } else if (typeof showToast === 'function') {
+      showToast(msg, type);
+    } else {
+      console.log(`[Toast ${type}]`, msg);
+    }
+  };
+
+  const RATE_LIMIT_KEY = 'aether_login_fails';
+  const MAX_FAILS = 5;
+  const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+  const LOCKOUT_MS = 60 * 1000;    // 60 seconds lockout
+
+  function getLoginFailState() {
+    try {
+      const raw = sessionStorage.getItem(RATE_LIMIT_KEY);
+      if (!raw) return { count: 0, firstFailTime: 0, lockUntil: 0 };
+      const parsed = JSON.parse(raw);
+      return {
+        count: parseInt(parsed.count || 0, 10),
+        firstFailTime: parseInt(parsed.firstFailTime || 0, 10),
+        lockUntil: parseInt(parsed.lockUntil || 0, 10)
+      };
+    } catch (e) {
+      return { count: 0, firstFailTime: 0, lockUntil: 0 };
+    }
+  }
+
+  function checkLoginRateLimit() {
+    const state = getLoginFailState();
+    const now = Date.now();
+    if (state.lockUntil && state.lockUntil > now) {
+      const remainingSec = Math.ceil((state.lockUntil - now) / 1000);
+      return { locked: true, remaining: remainingSec };
+    }
+    return { locked: false, remaining: 0 };
+  }
+
+  function recordLoginFail() {
+    const state = getLoginFailState();
+    const now = Date.now();
+    let count = state.count;
+    let firstFailTime = state.firstFailTime;
+
+    if (!firstFailTime || (now - firstFailTime) > WINDOW_MS) {
+      count = 1;
+      firstFailTime = now;
+    } else {
+      count += 1;
+    }
+
+    let lockUntil = 0;
+    if (count >= MAX_FAILS) {
+      lockUntil = now + LOCKOUT_MS;
+    }
+
+    sessionStorage.setItem(RATE_LIMIT_KEY, JSON.stringify({
+      count,
+      firstFailTime,
+      lockUntil
+    }));
+
+    return {
+      locked: count >= MAX_FAILS,
+      count,
+      remaining: count >= MAX_FAILS ? 60 : 0
+    };
+  }
+
+  function clearLoginFails() {
+    sessionStorage.removeItem(RATE_LIMIT_KEY);
+  }
+
+  const REG_THROTTLE_KEY = 'aether_last_reg_submit';
+  const REG_THROTTLE_MS = 3000; // 3 seconds burst protection
+
+  function isRegistrationThrottled() {
+    try {
+      const last = parseInt(sessionStorage.getItem(REG_THROTTLE_KEY) || '0', 10);
+      const now = Date.now();
+      if (last > 0 && (now - last) < REG_THROTTLE_MS) {
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function recordRegistrationSubmit() {
+    sessionStorage.setItem(REG_THROTTLE_KEY, Date.now().toString());
+  }
 
   // ---------------------------------------------------------------------------
-  // Standard Login Form Submission (Hardened with SHA-256 & HMAC Sessions)
+  // Standard Login Form Submission (Hardened with PBKDF2 & HMAC Sessions)
   // ---------------------------------------------------------------------------
   const loginForm = document.getElementById('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = (document.getElementById('login-email')?.value || '').trim();
-      const pass = (document.getElementById('login-password')?.value || '').trim();
+      const isPT = getLang() === 'pt';
       const btn = loginForm.querySelector('.btn-auth-submit');
-      
-      btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-inline"></span> Verifying Cryptographic Credentials...`;
-      if (window.soundEngine) window.soundEngine.playSwoosh();
 
-      let authenticatedUser = null;
-      if (window.AetherDB && typeof window.AetherDB.authenticateUser === 'function') {
-        authenticatedUser = await window.AetherDB.authenticateUser(email, pass);
-      }
+      try {
+        const email = (document.getElementById('login-email')?.value || '').trim();
+        const pass = (document.getElementById('login-password')?.value || '').trim();
 
-      if (authenticatedUser) {
-        const session = authenticatedUser._session || (window.AetherDB ? await window.AetherDB.signSession(authenticatedUser) : null);
-        localStorage.setItem('aether_user', JSON.stringify({
-          email: authenticatedUser.email,
-          name: authenticatedUser.full_name || authenticatedUser.name,
-          tier: authenticatedUser.role === 'admin' ? 'Root Architect' : 'VIP GRAIL COLLECTOR',
-          role: authenticatedUser.role
-        }));
+        // 1. Check Rate Limiting Lockout
+        const rateLimit = checkLoginRateLimit();
+        if (rateLimit.locked) {
+          if (window.soundEngine && typeof window.soundEngine.playSecurityAlarm === 'function') {
+            window.soundEngine.playSecurityAlarm();
+          }
+          triggerToast(
+            isPT
+              ? `⏳ Demasiadas tentativas falhadas. Por favor aguarde ${rateLimit.remaining} segundos.`
+              : `⏳ Too many failed attempts. Please wait ${rateLimit.remaining} seconds.`,
+            'warning'
+          );
+          return;
+        }
 
-        if (session) {
-          localStorage.setItem('aether_user_session', JSON.stringify(session));
-          if (authenticatedUser.role === 'admin') {
-            sessionStorage.setItem('aether_admin_authenticated', 'true');
-            sessionStorage.setItem('aether_admin_token', session.token);
+        // 2. Validate Empty Input Fields
+        if (!email) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor introduza o seu endereço de email.'
+              : '⚠️ Please enter your email.',
+            'warning'
+          );
+          document.getElementById('login-email')?.focus();
+          return;
+        }
+
+        if (!pass) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor introduza a sua palavra-passe.'
+              : '⚠️ Please enter your password.',
+            'warning'
+          );
+          document.getElementById('login-password')?.focus();
+          return;
+        }
+
+        // 3. Authenticate with AetherDB
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner-inline"></span> ${isPT ? 'A verificar credenciais no Atelier...' : 'Verifying Cryptographic Credentials...'}`;
+        }
+        if (window.soundEngine) window.soundEngine.playSwoosh();
+
+        let authenticatedUser = null;
+        let authResult = null;
+        if (window.AetherDB && typeof window.AetherDB.authenticateUser === 'function') {
+          authResult = await window.AetherDB.authenticateUser(email, pass, { structured: true });
+          if (authResult && authResult.success) {
+            authenticatedUser = authResult.user;
           }
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const rawRedirect = urlParams.get('redirect');
-        const isSafeRedirect = rawRedirect && /^(\/?[a-zA-Z0-9_\-]+\.html(?:[?#][^\s]*)?)$/.test(rawRedirect.trim()) && !rawRedirect.startsWith('//');
-        const safeRedirect = isSafeRedirect ? rawRedirect.trim() : null;
+        if (authenticatedUser) {
+          clearLoginFails();
 
-        if (window.soundEngine) window.soundEngine.playSuccess();
-        showToast(`Welcome back, ${authenticatedUser.full_name || email.split('@')[0]}! Redirecting...`);
-        
-        setTimeout(() => {
-          if (authenticatedUser.role === 'admin') {
-            window.location.href = 'admin.html';
-          } else if (safeRedirect) {
-            window.location.href = safeRedirect;
+          const session = authenticatedUser._session || (window.AetherDB ? await window.AetherDB.signSession(authenticatedUser) : null);
+          localStorage.setItem('aether_user', JSON.stringify({
+            id: authenticatedUser.id,
+            email: authenticatedUser.email,
+            name: authenticatedUser.full_name || authenticatedUser.name,
+            tier: authenticatedUser.role === 'admin' ? 'Root Architect' : 'VIP GRAIL COLLECTOR',
+            role: authenticatedUser.role
+          }));
+
+          if (session) {
+            localStorage.setItem('aether_user_session', JSON.stringify(session));
+            if (authenticatedUser.role === 'admin') {
+              sessionStorage.setItem('aether_admin_authenticated', 'true');
+              sessionStorage.setItem('aether_admin_token', session.token);
+              sessionStorage.setItem('aether_admin_user', JSON.stringify(authenticatedUser));
+              sessionStorage.setItem('aether_admin_last_activity', Date.now().toString());
+            }
+          }
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const rawRedirect = urlParams.get('redirect');
+          const isSafeRedirect = rawRedirect && /^(\/?[a-zA-Z0-9_\-]+\.html(?:[?#][^\s]*)?)$/.test(rawRedirect.trim()) && !rawRedirect.startsWith('//');
+          const safeRedirect = isSafeRedirect ? rawRedirect.trim() : null;
+
+          if (window.soundEngine) window.soundEngine.playSuccess();
+          const userName = authenticatedUser.full_name || authenticatedUser.name || email.split('@')[0];
+          triggerToast(
+            isPT
+              ? `✨ Bem-vindo de volta, ${userName}! A aceder ao cofre...`
+              : `✨ Welcome back, ${userName}! Accessing vault...`,
+            'success'
+          );
+
+          setTimeout(() => {
+            if (authenticatedUser.role === 'admin') {
+              window.location.href = 'admin.html';
+            } else if (safeRedirect) {
+              window.location.href = safeRedirect;
+            } else {
+              window.location.href = 'index.html';
+            }
+          }, 900);
+        } else {
+          // Record failed attempt for rate limiting
+          const failStatus = recordLoginFail();
+
+          if (window.soundEngine && typeof window.soundEngine.playSecurityAlarm === 'function') {
+            window.soundEngine.playSecurityAlarm();
+          } else if (window.soundEngine) {
+            window.soundEngine.playClick();
+          }
+
+          if (failStatus.locked) {
+            triggerToast(
+              isPT
+                ? `⏳ Demasiadas tentativas falhadas. Por favor aguarde ${failStatus.remaining} segundos.`
+                : `⏳ Too many failed attempts. Please wait ${failStatus.remaining} seconds.`,
+              'warning'
+            );
           } else {
-            window.location.href = 'index.html';
+            // Check if email exists in AetherDB to distinguish account not found vs wrong password
+            let userExists = false;
+            if (window.AetherDB && typeof window.AetherDB.checkUserExists === 'function') {
+              userExists = await window.AetherDB.checkUserExists(email);
+            } else if (authResult && authResult.reason === 'USER_NOT_FOUND') {
+              userExists = false;
+            }
+
+            if (!userExists) {
+              // Prominent Luxury Toast: Account does not exist
+              triggerToast(
+                isPT
+                  ? '❌ Esta conta não existe no Atelier. Verifique o email ou crie uma nova conta.'
+                  : '❌ Account does not exist. Check your email or create an account.',
+                'error'
+              );
+              const emailInput = document.getElementById('login-email');
+              if (emailInput) emailInput.focus();
+            } else {
+              // Prominent Luxury Toast: Password incorrect
+              triggerToast(
+                isPT
+                  ? '❌ Palavra-passe incorreta. Por favor tente novamente.'
+                  : '❌ Incorrect password. Please try again.',
+                'error'
+              );
+              const passInput = document.getElementById('login-password');
+              if (passInput) {
+                passInput.value = '';
+                passInput.focus();
+              }
+            }
           }
-        }, 900);
-      } else {
-        // Strict Security: Reject invalid credentials, zero fallback bypass
-        if (window.soundEngine && typeof window.soundEngine.playSecurityAlarm === 'function') {
-          window.soundEngine.playSecurityAlarm();
-        } else if (window.soundEngine) {
-          window.soundEngine.playClick();
+
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = isPT ? 'Entrar no Cofre / Sign In' : 'Sign In to Vault';
+          }
         }
-        showToast('❌ Email ou palavra-passe incorretos. Por favor verifique as suas credenciais.');
-        btn.disabled = false;
-        btn.innerHTML = 'Entrar no Cofre / Sign In';
-        const passInput = document.getElementById('login-password');
-        if (passInput) passInput.focus();
+      } catch (err) {
+        console.error('[AetherAuth] Sign In error:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = isPT ? 'Entrar no Cofre / Sign In' : 'Sign In to Vault';
+        }
+        triggerToast(
+          isPT
+            ? '❌ Erro ao validar credenciais. Por favor tente novamente.'
+            : '❌ Error validating credentials. Please try again.',
+          'error'
+        );
       }
     });
   }
 
   // ---------------------------------------------------------------------------
-  // Register Form Submission (Hardened with SHA-256 Hashing)
+  // Register Form Submission (Hardened with PBKDF2 Hashing & Verification)
   // ---------------------------------------------------------------------------
   const regForm = document.getElementById('register-form');
   if (regForm) {
     regForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = (document.getElementById('reg-name')?.value || '').trim();
-      const email = (document.getElementById('reg-email')?.value || '').trim();
-      const pass = (document.getElementById('reg-password')?.value || '').trim();
-      const passConf = (document.getElementById('reg-confirm-password')?.value || '').trim();
-      const preferredSize = hiddenSizeInput ? hiddenSizeInput.value : 'EU 42 / US 8.5';
-
-      if (pass !== passConf) {
-        showToast('Passwords do not match. Please verify.');
-        return;
-      }
-
+      const isPT = getLang() === 'pt';
       const btn = regForm.querySelector('.btn-auth-submit');
-      btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-inline"></span> Hashing Passkey & Creating Vault...`;
-      if (window.soundEngine) window.soundEngine.playSwoosh();
 
-      let registeredUser = null;
-      if (window.AetherDB && typeof window.AetherDB.addUser === 'function') {
-        registeredUser = await window.AetherDB.addUser({
+      try {
+        // 1. Throttle / Burst Protection
+        if (isRegistrationThrottled()) {
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor aguarde um momento antes de tentar novamente.'
+              : '⚠️ Please wait a moment before trying again.',
+            'warning'
+          );
+          return;
+        }
+
+        const name = (document.getElementById('reg-name')?.value || '').trim();
+        const tag = (document.getElementById('reg-tag')?.value || '').trim() || `@${(name || 'collector').toLowerCase().replace(/\s+/g, '_')}`;
+        const email = (document.getElementById('reg-email')?.value || '').trim();
+        const pass = (document.getElementById('reg-password')?.value || '').trim();
+        const passConf = (document.getElementById('reg-confirm-password')?.value || '').trim();
+        const preferredSize = hiddenSizeInput ? hiddenSizeInput.value : 'EU 42 / US 8.5';
+
+        // 2. Validate Name
+        if (!name) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor introduza o seu nome completo.'
+              : '⚠️ Please enter your full name.',
+            'warning'
+          );
+          document.getElementById('reg-name')?.focus();
+          return;
+        }
+
+        // 3. Validate Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor introduza um endereço de email válido.'
+              : '⚠️ Please enter a valid email address.',
+            'warning'
+          );
+          document.getElementById('reg-email')?.focus();
+          return;
+        }
+
+        // 4. Check if Email ALREADY exists in AetherDB
+        let emailExists = false;
+        if (window.AetherDB && typeof window.AetherDB.checkUserExists === 'function') {
+          emailExists = await window.AetherDB.checkUserExists(email);
+        }
+        if (emailExists) {
+          if (window.soundEngine && typeof window.soundEngine.playSecurityAlarm === 'function') {
+            window.soundEngine.playSecurityAlarm();
+          } else if (window.soundEngine) {
+            window.soundEngine.playClick();
+          }
+          triggerToast(
+            isPT
+              ? '⚠️ Este email já se encontra registado no Atelier. Por favor inicie sessão.'
+              : '⚠️ This email is already registered. Please sign in.',
+            'warning'
+          );
+          document.getElementById('reg-email')?.focus();
+          return;
+        }
+
+        // 5. Validate Password
+        if (!pass) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor introduza uma palavra-passe.'
+              : '⚠️ Please enter a password.',
+            'warning'
+          );
+          document.getElementById('reg-password')?.focus();
+          return;
+        }
+
+        if (pass.length < 6) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ A palavra-passe deve ter pelo menos 6 caracteres.'
+              : '⚠️ The password must be at least 6 characters.',
+            'warning'
+          );
+          document.getElementById('reg-password')?.focus();
+          return;
+        }
+
+        // 6. Validate Password Confirmation
+        if (!passConf) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ Por favor confirme a sua palavra-passe.'
+              : '⚠️ Please confirm your password.',
+            'warning'
+          );
+          document.getElementById('reg-confirm-password')?.focus();
+          return;
+        }
+
+        if (pass !== passConf) {
+          if (window.soundEngine) window.soundEngine.playClick();
+          triggerToast(
+            isPT
+              ? '⚠️ As palavras-passe não coincidem. Por favor confirme a palavra-passe.'
+              : '⚠️ Passwords do not match. Please verify.',
+            'warning'
+          );
+          document.getElementById('reg-confirm-password')?.focus();
+          return;
+        }
+
+        // All validations passed - record throttle timestamp
+        recordRegistrationSubmit();
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span class="spinner-inline"></span> ${isPT ? 'A criar credenciais PBKDF2 e cofre...' : 'Hashing PBKDF2 Passkey & Creating Vault...'}`;
+        }
+        if (window.soundEngine) window.soundEngine.playSwoosh();
+
+        let registeredUser = null;
+        if (window.AetherDB && typeof window.AetherDB.addUser === 'function') {
+          registeredUser = await window.AetherDB.addUser({
+            email: email,
+            password: pass,
+            name: name,
+            full_name: name,
+            tag: tag,
+            role: 'collector',
+            preferred_size: preferredSize
+          });
+        }
+
+        const userProfile = {
+          id: (registeredUser && registeredUser.id) || `usr_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
           email: email,
-          password: pass,
           name: name,
           full_name: name,
+          tag: tag,
+          tier: 'NEW SNEAKERHEAD MEMBER',
           role: 'collector',
-          preferred_size: preferredSize
-        });
+          preferredSize: preferredSize,
+          preferredUnit: currentRegUnit
+        };
+
+        const session = window.AetherDB ? await window.AetherDB.signSession(userProfile) : null;
+        localStorage.setItem('aether_user', JSON.stringify(userProfile));
+        if (session) localStorage.setItem('aether_user_session', JSON.stringify(session));
+
+        if (window.soundEngine) window.soundEngine.playSuccess();
+        if (typeof launchConfetti === 'function') launchConfetti();
+
+        triggerToast(
+          isPT
+            ? '✨ Conta de Colecionador criada com sucesso! A preparar o cofre...'
+            : '✨ Collector account created successfully! Preparing vault...',
+          'success'
+        );
+
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1100);
+      } catch (err) {
+        console.error('[AetherAuth] Registration error:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = isPT ? 'Criar Cofre de Colecionador' : 'Create Collector Vault';
+        }
+        triggerToast(
+          isPT
+            ? `❌ Erro no registo: ${err.message || 'Falha ao criar conta.'}`
+            : `❌ Registration error: ${err.message || 'Failed to create account.'}`,
+          'error'
+        );
       }
-
-      const userProfile = {
-        email: email,
-        name: name,
-        tier: 'NEW SNEAKERHEAD MEMBER',
-        role: 'collector',
-        preferredSize: preferredSize,
-        preferredUnit: currentRegUnit
-      };
-
-      const session = window.AetherDB ? await window.AetherDB.signSession(userProfile) : null;
-      localStorage.setItem('aether_user', JSON.stringify(userProfile));
-      if (session) localStorage.setItem('aether_user_session', JSON.stringify(session));
-
-      if (window.soundEngine) window.soundEngine.playSuccess();
-      showToast(`Welcome to Aether Kicks, ${name}! Size ${preferredSize} locked in.`);
-      
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 1000);
     });
   }
 }
