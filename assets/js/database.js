@@ -1359,6 +1359,16 @@
      * Cryptographic HMAC Session Signature
      */
     async signSession(sessionData, secret = 'AETHER_VAULT_HMAC_MASTER_KEY_2026') {
+      // Cryptographically secure 128-bit random entropy via native Web Crypto API
+      let secureEntropy = '';
+      if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        const randBytes = new Uint8Array(16);
+        window.crypto.getRandomValues(randBytes);
+        secureEntropy = Array.from(randBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+      } else {
+        secureEntropy = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+      }
+
       const payload = {
         id: sessionData.id,
         email: sessionData.email,
@@ -1366,7 +1376,8 @@
         role: sessionData.role,
         tier: sessionData.tier || (sessionData.role === 'admin' ? 'Root Architect' : 'VIP Member'),
         issuedAt: sessionData.issuedAt || Date.now(),
-        entropy: Math.random().toString(36).substring(2, 10)
+        exp: sessionData.exp || (Date.now() + 7 * 24 * 60 * 60 * 1000), // 7-day session lifetime
+        entropy: secureEntropy
       };
 
       const payloadString = JSON.stringify(payload);
@@ -1454,6 +1465,13 @@
       }
 
       if (expectedSig === signature) {
+        if (payload.exp && typeof payload.exp === 'number' && Date.now() > payload.exp) {
+          await this.logAction('SECURITY_SESSION_EXPIRED', 'users', payload.id || 'ANONYMOUS', {
+            expiredAt: payload.exp,
+            checkedAt: Date.now()
+          });
+          return null;
+        }
         return payload;
       } else {
         await this.logAction('SECURITY_SESSION_TAMPERING', 'users', payload.id || 'ANONYMOUS', {
@@ -1587,8 +1605,8 @@
 
       await this._putInStore('users', newUser);
       await this.logAction('CREATE_USER', 'users', newUser.id, { email: newUser.email, role: newUser.role });
-      this._notify('users', 'created', newUser);
       const { password_hash, ...safeUser } = newUser;
+      this._notify('users', 'created', safeUser);
       return safeUser;
     }
 
@@ -1606,8 +1624,8 @@
 
       await this._putInStore('users', updated);
       await this.logAction('UPDATE_USER', 'users', id, { updatedFields: Object.keys(userData) });
-      this._notify('users', 'updated', updated);
-      const { password_hash, ...safeUser } = updated;
+      const { password_hash: _, ...safeUser } = updated;
+      this._notify('users', 'updated', safeUser);
       return safeUser;
     }
 
@@ -1848,12 +1866,18 @@
           }
 
           const validItems = [];
-          for (const item of items) {
-            if (item && typeof item === 'object') {
-              if (!item.id) {
-                item.id = `${store}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+          for (const rawItem of items) {
+            if (rawItem && typeof rawItem === 'object') {
+              // Prototype pollution protection: sanitize keys
+              const cleanItem = {};
+              for (const [k, v] of Object.entries(rawItem)) {
+                if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+                cleanItem[k] = v;
               }
-              validItems.push(item);
+              if (!cleanItem.id) {
+                cleanItem.id = `${store}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+              }
+              validItems.push(cleanItem);
             }
           }
 

@@ -787,11 +787,11 @@
         } catch (e) {}
       }
 
-      // Filter orders by authenticated user email if present
-      let userOrders = allOrders || [];
+      // Filter orders by authenticated user email strictly (protects against IDOR / guest data leaks)
+      let userOrders = [];
       if (userEmail) {
         const targetEmail = String(userEmail).toLowerCase().trim();
-        userOrders = userOrders.filter(o => 
+        userOrders = (allOrders || []).filter(o => 
           (o.customer_email && String(o.customer_email).toLowerCase().trim() === targetEmail) ||
           (o.email && String(o.email).toLowerCase().trim() === targetEmail)
         );
@@ -869,13 +869,21 @@
             </div>
             <div style="text-align: right;">
               <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #fff;">€${price}</div>
-              <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; margin-top: 4px;" onclick="showToast('Certificado NFC #${safeId} validado na blockchain privada do Atelier!')">
+              <button type="button" class="btn-secondary btn-order-nfc-cert" style="padding: 6px 12px; font-size: 0.75rem; margin-top: 4px;" data-nfc-id="${safeId}">
                 Ver Certificado NFC
               </button>
             </div>
           </div>
         `;
       }).join('');
+
+      container.querySelectorAll('.btn-order-nfc-cert').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const nfcId = btn.getAttribute('data-nfc-id') || 'VAULT';
+          showToast(`Certificado NFC #${nfcId} validado na blockchain privada do Atelier!`);
+        });
+      });
     }
 
     async function loadSavedUserProfile() {

@@ -305,7 +305,9 @@ function initFormInteractions() {
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const redirectTarget = urlParams.get('redirect');
+        const rawRedirect = urlParams.get('redirect');
+        const isSafeRedirect = rawRedirect && /^(\/?[a-zA-Z0-9_\-]+\.html(?:[?#][^\s]*)?)$/.test(rawRedirect.trim()) && !rawRedirect.startsWith('//');
+        const safeRedirect = isSafeRedirect ? rawRedirect.trim() : null;
 
         if (window.soundEngine) window.soundEngine.playSuccess();
         showToast(`Welcome back, ${authenticatedUser.full_name || email.split('@')[0]}! Redirecting...`);
@@ -313,8 +315,8 @@ function initFormInteractions() {
         setTimeout(() => {
           if (authenticatedUser.role === 'admin') {
             window.location.href = 'admin.html';
-          } else if (redirectTarget && !redirectTarget.startsWith('http')) {
-            window.location.href = redirectTarget;
+          } else if (safeRedirect) {
+            window.location.href = safeRedirect;
           } else {
             window.location.href = 'index.html';
           }

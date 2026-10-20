@@ -153,18 +153,31 @@ class WishlistManager {
     grid.style.display = 'grid';
     if (emptyState) emptyState.style.display = 'none';
 
+    const esc = window.escapeHTML || (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
     grid.innerHTML = this.items.map(shoeId => {
       const shoe = db[shoeId];
       if (!shoe) return '';
 
+      const safeId = esc(shoe.id);
+      const safeName = esc(shoe.name);
+      const safeColorway = esc(shoe.colorway);
+      const safeStyleCode = esc(shoe.styleCode || '555088-000');
+      const safeStory = esc(shoe.story || 'Autêntico grail verificado com chip NFC em câmara de conservação deadstock.');
+      const safePrice = Number(shoe.price) || 400;
+      const safeYear = esc(shoe.year || 'OG LINEAGE');
+      const safeTheme = esc(shoe.theme || '#dc2626');
+      const safeGlow = esc(shoe.glow || 'rgba(220, 38, 38, 0.45)');
+      const safeImage = esc(shoe.image || 'assets/images/jordan-chicago.png');
+
       return `
-        <article class="wishlist-card" style="--card-theme: ${shoe.theme}; --card-glow: ${shoe.glow};">
+        <article class="wishlist-card" style="--card-theme: ${safeTheme}; --card-glow: ${safeGlow};">
           <div class="wishlist-card-thumb">
-            <img src="${shoe.image}" alt="${shoe.name} ${shoe.colorway}" loading="lazy">
-            <span class="badge-pill wishlist-card-badge" style="background: rgba(255,255,255,0.06); border-color: ${shoe.theme}; color: ${shoe.theme};">
-              ${shoe.year || 'OG LINEAGE'}
+            <img src="${safeImage}" alt="${safeName} ${safeColorway}" loading="lazy">
+            <span class="badge-pill wishlist-card-badge" style="background: rgba(255,255,255,0.06); border-color: ${safeTheme}; color: ${safeTheme};">
+              ${safeYear}
             </span>
-            <button class="wishlist-btn-remove" onclick="window.wishlistManager.remove('${shoe.id}')" title="Remover da Wishlist" data-i18n-title="wishlist_remove_title">
+            <button class="wishlist-btn-remove" data-remove-id="${safeId}" title="Remover da Wishlist" data-i18n-title="wishlist_remove_title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -173,20 +186,20 @@ class WishlistManager {
           </div>
 
           <div class="wishlist-card-body">
-            <span class="wishlist-style-code">${shoe.styleCode}</span>
-            <h3 class="wishlist-card-name">${shoe.name}</h3>
-            <p class="wishlist-card-colorway" style="color: ${shoe.theme};">${shoe.colorway}</p>
-            <p class="wishlist-card-story">${shoe.story || 'Autêntico grail verificado com chip NFC em câmara de conservação deadstock.'}</p>
+            <span class="wishlist-style-code">${safeStyleCode}</span>
+            <h3 class="wishlist-card-name">${safeName}</h3>
+            <p class="wishlist-card-colorway" style="color: ${safeTheme};">${safeColorway}</p>
+            <p class="wishlist-card-story">${safeStory}</p>
           </div>
 
           <div class="wishlist-card-footer">
             <div class="wishlist-card-pricing">
               <span class="wishlist-price-label" data-i18n="badge_deadstock">DEADSTOCK VAULT</span>
-              <span class="wishlist-price-val">$${shoe.price}</span>
+              <span class="wishlist-price-val">$${safePrice}</span>
             </div>
 
             <div class="wishlist-card-actions">
-              <button class="btn-primary wishlist-btn-buy" style="background: linear-gradient(135deg, ${shoe.theme}, #09090b); box-shadow: 0 4px 16px ${shoe.glow};" onclick="window.wishlistManager.moveToBag('${shoe.id}')">
+              <button class="btn-primary wishlist-btn-buy" style="background: linear-gradient(135deg, ${safeTheme}, #09090b); box-shadow: 0 4px 16px ${safeGlow};" data-buy-id="${safeId}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 <span data-i18n="buy_now">Buy Now</span>
               </button>
@@ -199,6 +212,23 @@ class WishlistManager {
         </article>
       `;
     }).join('');
+
+    // Attach safe event listeners
+    grid.querySelectorAll('[data-remove-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = btn.getAttribute('data-remove-id');
+        if (id) this.remove(id);
+      });
+    });
+
+    grid.querySelectorAll('[data-buy-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = btn.getAttribute('data-buy-id');
+        if (id) this.moveToBag(id);
+      });
+    });
 
     if (window.i18n && typeof window.i18n.translateElement === 'function') {
       window.i18n.translateElement(grid);

@@ -1994,7 +1994,7 @@
         case 'delivered':
           return `<span class="badge-tag" style="background: rgba(22, 163, 74, 0.2); color: #86efac;">6. DELIVERED</span>`;
         default:
-          return `<span class="badge-tag">${status}</span>`;
+          return `<span class="badge-tag">${escapeHTML(status)}</span>`;
       }
     }
 
