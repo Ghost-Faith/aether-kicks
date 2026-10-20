@@ -265,43 +265,7 @@ function initFormInteractions() {
     });
   }
 
-  const btnOneClickAdmin = document.getElementById('btn-one-click-admin');
-  if (btnOneClickAdmin) {
-    btnOneClickAdmin.addEventListener('click', async (e) => {
-      e.preventDefault();
-      btnOneClickAdmin.disabled = true;
-      btnOneClickAdmin.innerHTML = '<span>⚡ Unlocking Admin Enclave...</span>';
-      if (window.soundEngine) window.soundEngine.playSwoosh();
 
-      const adminUser = {
-        id: 'usr_admin_001',
-        email: 'admin@aetherkicks.com',
-        name: 'Atelier Vault Master',
-        full_name: 'Atelier Vault Master',
-        role: 'admin',
-        tier: 'Root Architect'
-      };
-
-      let session = null;
-      if (window.AetherDB && typeof window.AetherDB.signSession === 'function') {
-        session = await window.AetherDB.signSession(adminUser);
-      } else {
-        session = { payload: adminUser, signature: 'demo_sig', token: 'AK_SESSION' };
-      }
-
-      sessionStorage.setItem('aether_admin_authenticated', 'true');
-      sessionStorage.setItem('aether_admin_token', session.token);
-      localStorage.setItem('aether_user_session', JSON.stringify(session));
-      localStorage.setItem('aether_user', JSON.stringify(adminUser));
-
-      if (window.soundEngine) window.soundEngine.playSuccess();
-      showToast('⚡ 1-Click Root Admin Access Granted! Redirecting to Atelier Vault OS...');
-
-      setTimeout(() => {
-        window.location.href = 'admin.html';
-      }, 700);
-    });
-  }
 
   // ---------------------------------------------------------------------------
   // Standard Login Form Submission (Hardened with SHA-256 & HMAC Sessions)

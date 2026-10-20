@@ -110,37 +110,110 @@ function closeRaffleModal() {
 // Market Price History Interactive Chart
 function initAnalyticsChart() {
   const points = [
-    { month: 'Oct 25', price: 420 },
-    { month: 'Dec 25', price: 445 },
-    { month: 'Feb 26', price: 430 },
-    { month: 'Apr 26', price: 470 },
-    { month: 'Jun 26', price: 460 },
-    { month: 'Aug 26', price: 495 },
-    { month: 'Oct 26', price: 540 }
+    { text: "Jan 2020 • Baseline Valuation: $220 • Mint Condition", year: "2020", price: 220, change: "Baseline" },
+    { text: "Nov 2021 • Sotheby's Auction Milestone: $310 (+40.9%)", year: "2021", price: 310, change: "+40.9%" },
+    { text: "Aug 2022 • Deadstock Archive Resale: $290 (-6.4%)", year: "2022", price: 290, change: "-6.4%" },
+    { text: "May 2023 • European Collector Liquidity: $380 (+31.0%)", year: "2023", price: 380, change: "+31.0%" },
+    { text: "Jan 2024 • Paris Fashion Week Hype: $360 (-5.2%)", year: "2024", price: 360, change: "-5.2%" },
+    { text: "Sep 2025 • NFC Cryptoseal Genesis: $460 (+27.7%)", year: "2025", price: 460, change: "+27.7%" },
+    { text: "Live 2026 • Certified Vault Median: $540 (+17.4% ALL-TIME HIGH)", year: "2026", price: 540, change: "+17.4% ATH" }
   ];
 
   const tooltip = document.getElementById('chart-tooltip');
   const dots = document.querySelectorAll('.chart-dot');
 
-  dots.forEach(dot => {
-    dot.addEventListener('mouseenter', (e) => {
-      const idx = dot.dataset.index;
-      const pt = points[idx];
-      if (tooltip && pt) {
-        tooltip.innerHTML = `<strong>${pt.month}</strong>: $${pt.price} USD`;
-        tooltip.style.opacity = '1';
-        const containerRect = tooltip.parentElement ? tooltip.parentElement.getBoundingClientRect() : { left: 0, top: 0 };
-        const rect = dot.getBoundingClientRect();
-        tooltip.style.left = `${(rect.left - containerRect.left) + rect.width / 2 - 40}px`;
-        tooltip.style.top = `${(rect.top - containerRect.top) - 36}px`;
-      }
-      if (window.soundEngine) window.soundEngine.playClick();
-    });
+  function showTooltip(dot, idx) {
+    const pt = points[idx];
+    if (!tooltip || !pt) return;
 
-    dot.addEventListener('mouseleave', () => {
-      if (tooltip) tooltip.style.opacity = '0';
+    tooltip.innerHTML = `
+      <div style="font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 7px;">
+        <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--theme-primary, #dc2626); box-shadow: 0 0 8px var(--theme-primary, #dc2626);"></span>
+        <span>${pt.text}</span>
+      </div>
+    `;
+    tooltip.classList.add('active');
+    tooltip.style.opacity = '1';
+
+    // Calculate position relative to container
+    const container = tooltip.parentElement;
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      const dotRect = dot.getBoundingClientRect();
+      const dotCenterX = (dotRect.left - containerRect.left) + dotRect.width / 2;
+      const dotCenterY = (dotRect.top - containerRect.top);
+
+      tooltip.style.left = `${dotCenterX}px`;
+      tooltip.style.top = `${dotCenterY - 14}px`;
+      tooltip.style.transform = 'translate(-50%, -100%)';
+    }
+
+    // Highlight active dot with pulsing glow
+    dots.forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+
+    if (window.soundEngine && typeof window.soundEngine.playClick === 'function') {
+      window.soundEngine.playClick();
+    }
+  }
+
+  function hideTooltip(dot) {
+    if (tooltip) {
+      tooltip.classList.remove('active');
+      tooltip.style.opacity = '0';
+    }
+    if (dot) dot.classList.remove('active');
+  }
+
+  dots.forEach((dot, index) => {
+    const idx = parseInt(dot.dataset.index !== undefined ? dot.dataset.index : index, 10);
+
+    dot.addEventListener('mouseenter', () => showTooltip(dot, idx));
+    dot.addEventListener('mouseleave', () => hideTooltip(dot));
+    dot.addEventListener('focus', () => showTooltip(dot, idx));
+    dot.addEventListener('blur', () => hideTooltip(dot));
+
+    // Touch support for mobile devices
+    dot.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      showTooltip(dot, idx);
+    }, { passive: true });
+
+    dot.addEventListener('pointerdown', () => {
+      showTooltip(dot, idx);
+    });
+  });
+
+  // Tap anywhere outside chart to dismiss tooltip on mobile
+  document.addEventListener('touchstart', (e) => {
+    if (!e.target.closest('.chart-svg-container')) {
+      if (tooltip) {
+        tooltip.classList.remove('active');
+        tooltip.style.opacity = '0';
+      }
+      dots.forEach(d => d.classList.remove('active'));
+    }
+  }, { passive: true });
+
+  // Timeframe filter pills interactivity
+  const filterPills = document.querySelectorAll('.analytics-filter-pills .btn-hud-pill');
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      if (window.soundEngine) window.soundEngine.playClick();
+
+      const timeframe = pill.textContent.trim().toLowerCase();
+      const statVal = document.querySelector('.analytics-stats-row .stat-box:nth-child(2) .stat-val');
+      if (statVal) {
+        if (timeframe.includes('30')) statVal.textContent = '+6.4% ↗';
+        else if (timeframe.includes('90')) statVal.textContent = '+14.2% ↗';
+        else if (timeframe.includes('1')) statVal.textContent = '+28.5% ↗';
+        else statVal.textContent = '+145.4% ↗';
+      }
     });
   });
 }
 
+window.initAnalyticsChart = initAnalyticsChart;
 window.closeRaffleModal = closeRaffleModal;

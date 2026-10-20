@@ -1794,13 +1794,13 @@
       </div>
 
       <div class="analytics-date-row" style="display: flex; justify-content: space-between; margin-top: 10px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
-        <span>OCT 2025 ($420)</span>
-        <span>DEC 2025</span>
-        <span>FEB 2026</span>
-        <span>APR 2026</span>
-        <span>JUN 2026</span>
-        <span>AUG 2026</span>
-        <span style="color: var(--theme-primary); font-weight: 700;">OCT 2026 ($540 ATH)</span>
+        <span>2020 ($220)</span>
+        <span>2021 ($310)</span>
+        <span>2022 ($290)</span>
+        <span>2023 ($380)</span>
+        <span>2024 ($360)</span>
+        <span>2025 ($460)</span>
+        <span style="color: var(--theme-primary); font-weight: 700;">LIVE 2026 ($540 ATH)</span>
       </div>
     </div>
   </section>
@@ -1905,7 +1905,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span data-i18n="nav_wishlist">Wishlist</span>
         </button>
-        <button class="btn-primary" onclick="if(window.cartManager) { if(typeof window.cartManager.addCurrentModalItem === 'function') { window.cartManager.addCurrentModalItem(); } else if(window.cartManager.activeShoeForModal) { window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize || 'EU 42 (US 8.5)', 'deadstock'); window.cartManager.closeBuyModal(); } }">
+        <button class="btn-primary" id="modal-btn-add-bag" onclick="if(window.cartManager) { if(typeof window.cartManager.addCurrentModalItem === 'function') { window.cartManager.addCurrentModalItem(); } else if(window.cartManager.activeShoeForModal) { window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize || 'EU 42 (US 8.5)', 'deadstock'); window.cartManager.closeBuyModal(); } }">
           <span data-i18n="add_to_bag">Add Pair to Bag</span>
         </button>
       </div>
@@ -2195,7 +2195,6 @@
           <li><a href="wishlist.html" style="color: var(--theme-primary); font-weight: 700;" data-i18n="menu_07">A Minha Wishlist ❤️</a></li>
           <li><a href="login.html" data-i18n="nav_signin">Sign In (Chicago)</a></li>
           <li><a href="register.html" data-i18n="nav_join_vault">Join Vault (Court Purple)</a></li>
-          <li><a href="admin.html" style="color: #f87171; font-weight: 700;">Admin Vault OS ⚡</a></li>
           <li><a href="javascript:void(0)" onclick="showToast('Use promo code GRAIL20 in your bag for 20% off.')">Active Promo: GRAIL20</a></li>
         </ul>
       </div>

@@ -7644,4 +7644,159 @@ html[data-perf-mode="off"] .runway-section .shoe-runway-halo {
     font-size: 0.65rem !important;
   }
 }
+
+/* ==========================================================================
+   LIVE DATABASE STOCK CORRELATION BADGES & OUT-OF-STOCK PILLS
+   ========================================================================== */
+.card-vault-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px 11px;
+  border-radius: 999px;
+  margin: 6px 0 10px;
+  width: fit-content;
+  transition: all 0.3s ease;
+}
+
+.card-vault-stock strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.card-vault-stock.stock-low {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}
+
+.card-vault-stock.stock-low strong {
+  color: #fef08a;
+}
+
+.card-vault-stock.stock-out {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+.pulse-stock-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 7px #22c55e;
+  animation: pulseStock 2s infinite ease-in-out;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.pulse-stock-dot.dot-red,
+.card-vault-stock.stock-low .pulse-stock-dot,
+.card-vault-stock.stock-out .pulse-stock-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulseStockAlert 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseStock {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.5; }
+}
+
+@keyframes pulseStockAlert {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+}
+
+/* Modal and Stage Size Pills: Out of stock states */
+.size-pill.out-of-stock,
+.size-pill-btn.out-of-stock,
+.btn-stage-size.out-of-stock {
+  text-decoration: line-through;
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+  color: #71717a !important;
+}
+
+.size-pill.out-of-stock:hover,
+.size-pill-btn.out-of-stock:hover,
+.btn-stage-size.out-of-stock:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+.stock-tag-mini {
+  font-size: 0.65rem;
+  font-family: var(--font-mono, monospace);
+  color: #22c55e;
+  display: block;
+  margin-top: 2px;
+}
+
+.stock-tag-mini.low {
+  color: #f59e0b;
+}
+
+.stock-tag-mini.out {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   DROPDOWN MENUS THEMING (SELECT / OPTIONS) ACROSS STOREFRONT
+   ========================================================================== */
+select,
+.form-select,
+.about-form-select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-color: #0e0e15 !important;
+  color: #f4f4f5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  padding: 10px 36px 10px 14px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 14px 14px !important;
+  font-family: inherit;
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+select:hover,
+.form-select:hover,
+.about-form-select:hover {
+  border-color: rgba(220, 38, 38, 0.5) !important;
+}
+
+select:focus,
+.form-select:focus,
+.about-form-select:focus {
+  border-color: var(--theme-primary, #dc2626) !important;
+  outline: none !important;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.2) !important;
+}
+
+select option,
+.form-select option,
+.about-form-select option {
+  background-color: #12121a !important;
+  color: #ffffff !important;
+  padding: 8px !important;
+}
 

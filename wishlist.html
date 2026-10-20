@@ -349,7 +349,7 @@
         <div id="modal-shoe-retail" style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">Est. Retail $180</div>
         <div id="modal-shoe-price" style="font-size: 1.8rem; font-weight: 900; font-family: var(--font-display); color: #fff;">$480</div>
       </div>
-      <button class="btn-primary" onclick="window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize, 'deadstock'); window.cartManager.closeBuyModal();" data-i18n="add_pair_bag">
+      <button class="btn-primary" id="modal-btn-add-bag" onclick="if(window.cartManager) { if(typeof window.cartManager.addCurrentModalItem === 'function') { window.cartManager.addCurrentModalItem(); } else if(window.cartManager.activeShoeForModal) { window.cartManager.addItem(window.cartManager.activeShoeForModal.id, window.cartManager.selectedSize, 'deadstock'); window.cartManager.closeBuyModal(); } }" data-i18n="add_pair_bag">
         Add Pair to Bag
       </button>
     </div>

@@ -49,7 +49,8 @@
       <!-- Environment Badge -->
       <div class="admin-env-badge" title="Realtime Synchronized Store">
         <span class="pulse-dot"></span>
-        <span>LIVE DATABASE (IndexedDB + Relational Store)</span>
+        <span class="env-text-full">LIVE DATABASE (IndexedDB + Relational Store)</span>
+        <span class="env-text-short">LIVE STORE</span>
         <span id="db-live-indicator" style="opacity: 0.8; margin-left: 4px;">6 Grails • 5 Orders</span>
       </div>
     </div>
@@ -57,7 +58,7 @@
     <!-- Topbar Actions -->
     <div class="admin-topbar-right">
       <!-- Global Quick Search -->
-      <div class="search-box-wrap" style="min-width: 200px;">
+      <div class="search-box-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="admin-global-search" class="admin-input-search" placeholder="Search archive (Ctrl+K)..." />
       </div>
@@ -69,17 +70,17 @@
 
       <button type="button" id="btn-quick-export-sql" class="btn-topbar-action" title="Export SQL Script DDL & Seeds">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Export SQL</span>
+        <span class="btn-action-label">Export SQL</span>
       </button>
 
       <button type="button" id="btn-quick-export-json" class="btn-topbar-action" title="Download Complete Vault JSON Dump">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
-        <span>Export JSON</span>
+        <span class="btn-action-label">Export JSON</span>
       </button>
 
       <button type="button" id="btn-quick-seed-reset" class="btn-topbar-action text-danger" title="Reset to Factory Seeds">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        <span>Seed / Reset</span>
+        <span class="btn-action-label">Seed / Reset</span>
       </button>
 
       <!-- Admin Profile Pill -->
@@ -93,7 +94,7 @@
 
       <button type="button" class="btn-topbar-action text-danger btn-lock-session" title="Lock Administrative Console">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>Lock</span>
+        <span class="btn-action-label">Lock</span>
       </button>
     </div>
   </header>
@@ -311,6 +312,7 @@
             </div>
             <div class="chart-container" id="overview-chart-container">
               <!-- SVG Curve Rendered Dynamically -->
+              <div id="chart-admin-tooltip" class="chart-admin-tooltip"></div>
             </div>
           </div>
 
@@ -466,33 +468,77 @@
       </section>
 
       <!-- ================================================================= -->
-      <!-- TAB 4: COLLECTORS (CRM) -->
+      <!-- TAB 4: COLLECTORS & ADMIN TEAM (CRM) -->
       <!-- ================================================================= -->
       <section id="view-collectors" class="admin-tab-view">
         <div class="view-header">
           <div class="view-header-title">
-            <h1 class="syne-title">COLLECTORS (CRM) // CLIENTELE DOSSIER</h1>
-            <p>High-net-worth sneaker collector relationship management, VIP tiers, and size preferences.</p>
+            <h1 class="syne-title">ADMIN ENCLAVE & COLLECTORS CRM // ACCESS DOSSIER</h1>
+            <p>Manage administrative team credentials, role permissions, and high-net-worth VIP clientele.</p>
+          </div>
+          <div class="view-header-actions">
+            <button type="button" class="btn-primary" id="btn-open-add-admin-modal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              <span>+ Add Administrator / Team Member</span>
+            </button>
           </div>
         </div>
 
-        <!-- Collectors Table -->
-        <div class="table-responsive-container">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Collector Identity</th>
-                <th>VIP Status Tier</th>
-                <th>Preferred Sizing</th>
-                <th>Lifetime Spend</th>
-                <th>Grails in Vault</th>
-                <th>Role Modifier</th>
-              </tr>
-            </thead>
-            <tbody id="collectors-table-body">
-              <!-- Dynamically Populated Collectors -->
-            </tbody>
-          </table>
+        <!-- Section 1: Administrative Vault Team & Credentials -->
+        <div class="glass-panel" style="margin-bottom: 28px; padding: 22px;">
+          <div class="panel-header" style="margin-bottom: 16px;">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Administrative Vault Team & Credentials</span>
+            </div>
+            <span class="sku-badge" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.3);">RBAC ENCLAVE ACTIVE</span>
+          </div>
+
+          <div class="table-responsive-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Administrator Identity</th>
+                  <th>Administrative Role</th>
+                  <th>Granted RBAC Permissions</th>
+                  <th>Passkey Verification</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-team-table-body">
+                <!-- Dynamically Populated Administrators -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 2: Collector Clientele Dossier -->
+        <div class="glass-panel" style="padding: 22px;">
+          <div class="panel-header" style="margin-bottom: 16px;">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Collector Clientele Dossier (VIP & Public Members)</span>
+            </div>
+            <span class="sku-badge">VIP CRM</span>
+          </div>
+
+          <div class="table-responsive-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Collector Identity</th>
+                  <th>VIP Status Tier</th>
+                  <th>Preferred Sizing</th>
+                  <th>Lifetime Spend</th>
+                  <th>Grails in Vault</th>
+                  <th>Role Modifier</th>
+                </tr>
+              </thead>
+              <tbody id="collectors-table-body">
+                <!-- Dynamically Populated Collectors -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -805,15 +851,19 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
           <div class="form-group">
             <label class="form-label">Accent Theme Color</label>
             <div class="color-picker-row">
-              <input type="color" id="shoe-theme-color" value="#dc2626" style="width: 44px; height: 38px; border-radius: 6px; border: none; cursor: pointer; background: transparent;" onchange="window.aetherAdmin.updateShoeModalPreview()" />
+              <div class="custom-color-picker-wrap">
+                <input type="color" id="shoe-theme-color" class="admin-color-picker-input" value="#dc2626" onchange="window.aetherAdmin.updateShoeModalPreview()" />
+                <input type="text" id="shoe-theme-hex" class="admin-color-hex-input form-input" placeholder="#dc2626" maxlength="7" value="#dc2626" oninput="window.aetherAdmin.onCustomHexInput(this.value)" />
+                <span class="color-preview-badge" id="shoe-color-badge" style="background: #dc2626;"></span>
+              </div>
               <div class="color-presets-list">
-                <span class="color-preset-dot" style="background: #dc2626;" onclick="document.getElementById('shoe-theme-color').value='#dc2626'; window.aetherAdmin.updateShoeModalPreview();" title="Chicago Red"></span>
-                <span class="color-preset-dot" style="background: #9333ea;" onclick="document.getElementById('shoe-theme-color').value='#9333ea'; window.aetherAdmin.updateShoeModalPreview();" title="Court Purple"></span>
-                <span class="color-preset-dot" style="background: #0284c7;" onclick="document.getElementById('shoe-theme-color').value='#0284c7'; window.aetherAdmin.updateShoeModalPreview();" title="University Blue"></span>
-                <span class="color-preset-dot" style="background: #16a34a;" onclick="document.getElementById('shoe-theme-color').value='#16a34a'; window.aetherAdmin.updateShoeModalPreview();" title="Pine Green"></span>
-                <span class="color-preset-dot" style="background: #ea580c;" onclick="document.getElementById('shoe-theme-color').value='#ea580c'; window.aetherAdmin.updateShoeModalPreview();" title="Shattered Orange"></span>
-                <span class="color-preset-dot" style="background: #71717a;" onclick="document.getElementById('shoe-theme-color').value='#71717a'; window.aetherAdmin.updateShoeModalPreview();" title="Stealth Shadow"></span>
-                <span class="color-preset-dot" style="background: #eab308;" onclick="document.getElementById('shoe-theme-color').value='#eab308'; window.aetherAdmin.updateShoeModalPreview();" title="Gold Foil"></span>
+                <span class="color-preset-dot" style="background: #dc2626;" onclick="window.aetherAdmin.setColorTheme('#dc2626')" title="Chicago Red (#dc2626)"></span>
+                <span class="color-preset-dot" style="background: #9333ea;" onclick="window.aetherAdmin.setColorTheme('#9333ea')" title="Court Purple (#9333ea)"></span>
+                <span class="color-preset-dot" style="background: #0284c7;" onclick="window.aetherAdmin.setColorTheme('#0284c7')" title="University Blue (#0284c7)"></span>
+                <span class="color-preset-dot" style="background: #16a34a;" onclick="window.aetherAdmin.setColorTheme('#16a34a')" title="Pine Green (#16a34a)"></span>
+                <span class="color-preset-dot" style="background: #ea580c;" onclick="window.aetherAdmin.setColorTheme('#ea580c')" title="Shattered Orange (#ea580c)"></span>
+                <span class="color-preset-dot" style="background: #71717a;" onclick="window.aetherAdmin.setColorTheme('#71717a')" title="Stealth Shadow (#71717a)"></span>
+                <span class="color-preset-dot" style="background: #eab308;" onclick="window.aetherAdmin.setColorTheme('#eab308')" title="Gold Foil (#eab308)"></span>
               </div>
             </div>
           </div>
@@ -876,6 +926,22 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
   <!-- MODAL 2: ORDER DETAILS & 14-POINT AUTHENTICATION (`#modal-order-details`) -->
   <div id="modal-order-details" class="modal-overlay">
     <div class="modal-card">
+      <!-- Museum-Grade Archival Header for Print & Official Record -->
+      <div class="print-certificate-header">
+        <div class="cert-seal-badge">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+          <div class="cert-seal-label">OFFICIAL SEAL</div>
+        </div>
+        <div class="cert-title-block">
+          <div class="cert-org">AETHER KICKS LUXURY ARCHIVES // ATELIER VAULT</div>
+          <h1 class="cert-headline">AETHER KICKS // CRYPTOGRAPHIC CUSTODY DOSSIER &amp; CERTIFICATE OF AUTHENTICITY</h1>
+          <div class="cert-subhead">Permanent Forensic Verification Record // Immutable Custody Ledger Node #AK-ATELIER</div>
+        </div>
+      </div>
+
       <div class="modal-header">
         <div class="modal-title-wrap">
           <h2 class="syne-title">CUSTODY DOSSIER // <span id="order-detail-id">#AK-948210</span></h2>
@@ -959,7 +1025,7 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
         </div>
 
         <!-- NFC Cryptographic Seal Details -->
-        <div style="background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: var(--admin-radius-sm); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div class="nfc-seal-box" style="background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: var(--admin-radius-sm); padding: 14px; display: flex; align-items: center; justify-content: space-between;">
           <div>
             <div style="font-family: var(--admin-font-mono); font-size: 0.72rem; color: #d8b4fe;">NFC HARDWARE TOKEN HASH:</div>
             <div id="order-detail-nfc" class="mono" style="font-size: 0.8rem; color: #ffffff; word-break: break-all;">0x8F2B7C1A0948210D94E216B</div>
@@ -967,6 +1033,44 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
           <div style="text-align: right;">
             <div style="font-family: var(--admin-font-mono); font-size: 0.72rem; color: #d8b4fe;">TRACKING CODE:</div>
             <div id="order-detail-tracking" class="mono" style="font-weight: 700; color: #4ade80;">DHL-VAULT-991204</div>
+          </div>
+        </div>
+
+        <!-- Forensic Inspector Verification & Signature Block -->
+        <div class="cert-footer-verification">
+          <div class="cert-qr-block">
+            <div class="cert-mock-qr">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="2" y="2" width="8" height="8" rx="1"/>
+                <rect x="4" y="4" width="4" height="4" fill="currentColor"/>
+                <rect x="14" y="2" width="8" height="8" rx="1"/>
+                <rect x="16" y="4" width="4" height="4" fill="currentColor"/>
+                <rect x="2" y="14" width="8" height="8" rx="1"/>
+                <rect x="4" y="16" width="4" height="4" fill="currentColor"/>
+                <path d="M14 14h3v3h-3z" fill="currentColor"/>
+                <path d="M19 14v4h3v-4z" fill="currentColor"/>
+                <path d="M14 19h4v3h-4z" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="cert-qr-text">
+              <span class="cert-label">NFC CRYPTOGRAPHIC ROOT:</span>
+              <code id="cert-print-nfc" class="cert-hash">0x8F2B7C1A0948210D94E216B</code>
+              <span class="cert-sub">Verified against physical NFC encrypted tag via Aether Vault Node.</span>
+            </div>
+          </div>
+
+          <div class="cert-inspector-block">
+            <div class="cert-sig-area">
+              <div class="cert-sig-name">Raul Alcantara</div>
+              <div class="cert-sig-line"></div>
+              <div class="cert-sig-meta">
+                <span>CHIEF FORENSIC INSPECTOR // ID #884-VAULT</span>
+                <span id="cert-print-date">TIMESTAMP: 2026-10-20 00:50:00 UTC</span>
+              </div>
+            </div>
+            <div class="cert-tamper-badge">
+              <span>★ 100% AUTHENTICATED ★</span>
+            </div>
           </div>
         </div>
       </div>
@@ -983,6 +1087,199 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
     </div>
   </div>
 
+  <!-- MODAL 4: PROVISION ADMINISTRATOR / TEAM MEMBER (`#modal-add-admin`) -->
+  <div id="modal-add-admin" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h2 class="syne-title">PROVISION ADMINISTRATOR // VAULT ENCLAVE</h2>
+          <p>Issue cryptographic security credentials and RBAC granular permissions.</p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.aetherAdmin.closeModal('modal-add-admin')">✕</button>
+      </div>
+
+      <form id="form-add-admin">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="admin-new-name">Operator Full Name</label>
+              <input type="text" id="admin-new-name" class="form-input" required placeholder="e.g. Elena Rostova" autocomplete="off" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="admin-new-email">Administrative Email</label>
+              <input type="email" id="admin-new-email" class="form-input" required placeholder="e.g. e.rostova@aetherkicks.com" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="admin-new-role">Administrative Role Tier</label>
+              <select id="admin-new-role" class="form-select">
+                <option value="Root Superadmin">Root Superadmin</option>
+                <option value="Vault Manager" selected>Vault Manager</option>
+                <option value="Forensic Authenticator">Forensic Authenticator</option>
+                <option value="Inventory Custodian">Inventory Custodian</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="admin-new-passkey">Secret Administrative Passkey</label>
+              <div class="auth-input-wrap">
+                <input type="password" id="admin-new-passkey" class="form-input" required placeholder="Secret master passkey" autocomplete="new-password" />
+                <button type="button" id="btn-toggle-new-passkey" class="btn-eye-toggle" aria-label="Toggle password visibility">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permission Checkboxes -->
+          <div class="form-group" style="margin-top: 8px;">
+            <label class="form-label" style="margin-bottom: 10px;">Granted RBAC Enclave Permissions</label>
+            <div class="permissions-checkbox-grid">
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-inventory" name="permissions" value="Manage Inventory" checked />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Manage Inventory</span>
+                  <span class="perm-desc">Create, edit, pricing matrices, and stock intake</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-orders" name="permissions" value="Process Orders" checked />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Process Orders</span>
+                  <span class="perm-desc">Update custody stages, 14-pt inspection, dispatches</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-team" name="permissions" value="Manage Team" checked />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Manage Team</span>
+                  <span class="perm-desc">Provision/revoke administrator credentials</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-sql" name="permissions" value="Execute SQL Console" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Execute SQL Console</span>
+                  <span class="perm-desc">Query sandbox, AST verification, and schema access</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-dumps" name="permissions" value="Export Vault Dumps" checked />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Export Vault Dumps</span>
+                  <span class="perm-desc">Backup JSON state and SQL DDL dumps</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.aetherAdmin.closeModal('modal-add-admin')">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Provision Administrator Credentials</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: EDIT ADMINISTRATOR ROLE (`#modal-edit-admin`) -->
+  <div id="modal-edit-admin" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h2 class="syne-title">EDIT ADMINISTRATOR // RBAC PRIVILEGES</h2>
+          <p>Adjust role assignment and granted capabilities for <span id="admin-edit-name-display" style="color: #ffffff; font-weight: 700;"></span></p>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.aetherAdmin.closeModal('modal-edit-admin')">✕</button>
+      </div>
+
+      <form id="form-edit-admin">
+        <input type="hidden" id="admin-edit-id" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-role">Administrative Role Tier</label>
+            <select id="admin-edit-role" class="form-select">
+              <option value="Root Superadmin">Root Superadmin</option>
+              <option value="Vault Manager">Vault Manager</option>
+              <option value="Forensic Authenticator">Forensic Authenticator</option>
+              <option value="Inventory Custodian">Inventory Custodian</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 12px;">
+            <label class="form-label" style="margin-bottom: 8px;">Active RBAC Permissions</label>
+            <div class="permissions-checkbox-grid">
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-edit-inventory" name="edit_permissions" value="Manage Inventory" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Manage Inventory</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-edit-orders" name="edit_permissions" value="Process Orders" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Process Orders</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-edit-team" name="edit_permissions" value="Manage Team" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Manage Team</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-edit-sql" name="edit_permissions" value="Execute SQL Console" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Execute SQL Console</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-item">
+                <input type="checkbox" id="perm-edit-dumps" name="edit_permissions" value="Export Vault Dumps" />
+                <span class="perm-checkbox-box"></span>
+                <div class="perm-checkbox-text">
+                  <span class="perm-title">Export Vault Dumps</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="window.aetherAdmin.closeModal('modal-edit-admin')">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <span>Update Administrative Privileges</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL 3: HARDENED ADMIN AUTHENTICATION GATE OVERLAY (`#admin-auth-overlay`) -->
   <div id="admin-auth-overlay" class="modal-overlay">
     <!-- Green Laser Scanning Sweep Line -->
@@ -995,8 +1292,8 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
         <span class="auth-badge-text" id="auth-badge-text">RESTRICTED TERMINAL // ENCLAVE v2.6</span>
       </div>
 
-      <!-- Security Shield Core (Stealth Triple-Tap Trigger for Enrollment) -->
-      <div class="auth-gate-icon" id="auth-gate-icon" role="button" tabindex="0" title="Atelier Vault Security Core (Triple-click for Device Pairing)">
+      <!-- Security Shield Core -->
+      <div class="auth-gate-icon" id="auth-gate-icon" role="button" tabindex="0" title="Atelier Vault Enclave Security Core">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -1005,31 +1302,7 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
       <h2 class="auth-gate-title" id="auth-gate-title">ATELIER VAULT OS // RESTRICTED ACCESS</h2>
       <p class="auth-gate-sub" id="auth-gate-sub">High-Security Administrative Console. Cryptographic passkey required.</p>
 
-      <!-- OWNER TRUSTED HARDWARE NODE (Only rendered if verified token exists) -->
-      <div id="auth-owner-block" class="auth-owner-block" style="display: none;">
-        <div class="auth-owner-card">
-          <div class="auth-owner-header">
-            <span class="owner-icon-glow">⚡</span>
-            <div class="owner-header-text">
-              <div class="owner-node-title">AUTHORIZED HARDWARE NODE</div>
-              <div class="owner-node-sub">Root Superadmin Terminal • Cryptoseal Active</div>
-            </div>
-          </div>
-
-          <button type="button" id="btn-owner-one-click" class="btn-owner-unlock">
-            <span class="btn-owner-shimmer"></span>
-            <span class="btn-owner-text">⚡ Welcome Back Architect (One-Click Unlock)</span>
-          </button>
-
-          <div class="auth-owner-options">
-            <button type="button" id="btn-switch-to-passkey" class="btn-text-link">Use Passphrase Instead</button>
-            <span class="dot-sep">•</span>
-            <button type="button" id="btn-unlink-device" class="btn-text-link text-danger">Unlink This Device</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- STANDARD / STRANGER PASSKEY FORM -->
+      <!-- STANDARD / STRANGER PASSKEY FORM (NO ONE-CLICK BYPASS) -->
       <form id="admin-auth-form" class="auth-gate-form">
         <!-- Error & Brute-Force Rate Limiting Lockout Banner -->
         <div id="auth-alert-banner" class="auth-alert-banner" style="display: none;">
@@ -1066,23 +1339,6 @@ EXECUTE select_grail('Chicago (Varsity Red)', 500.00);</code></pre>
           <span id="auth-attempts-msg">Rate-limited defense: 3 incorrect passkeys trigger a 10-minute automated lockout.</span>
         </div>
       </form>
-
-      <!-- HIDDEN OWNER ENROLLMENT MODAL (Triggered via triple-click or secret key) -->
-      <div id="auth-enroll-dialog" class="auth-enroll-dialog" style="display: none;">
-        <div class="enroll-inner">
-          <div class="enroll-header">
-            <span class="enroll-badge">HARDWARE PAIRING</span>
-            <button type="button" id="btn-enroll-close" class="btn-close-enroll">✕</button>
-          </div>
-          <div class="enroll-title">AUTHORIZE THIS DEVICE FOR 1-CLICK ACCESS</div>
-          <p class="enroll-desc">Provide Master Architectural Key to generate an HMAC-signed hardware token for this browser:</p>
-          <input type="password" id="enroll-key-input" class="form-input" placeholder="vault_admin_master_..." autocomplete="off" />
-          <div class="enroll-actions">
-            <button type="button" id="btn-enroll-cancel" class="btn-secondary" style="padding: 6px 14px; font-size: 0.78rem;">Cancel</button>
-            <button type="button" id="btn-enroll-submit" class="btn-primary" style="padding: 6px 14px; font-size: 0.78rem;">Pair & Authorize Device</button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 

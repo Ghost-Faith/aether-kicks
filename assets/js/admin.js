@@ -67,6 +67,9 @@
       this.activeShoeEditId = null;
       this.activeOrderInspectId = null;
       this.dropCountdownTimer = null;
+      this.chartRange = '30D';
+      this.inactivityInterval = null;
+      this.authenticatedAdmin = null;
 
       this.init();
     }
@@ -74,6 +77,7 @@
     async init() {
       this.setupTabs();
       this.setupEventListeners();
+      this.setupAdminTeam();
       this.initHypeCountdown();
 
       // Initialize Hardened Admin Security Gate
@@ -91,11 +95,37 @@
     /**
      * Authenticate session, reveal admin console, and hydrate live database records
      */
-    async unlockAndHydrateVault() {
+    async unlockAndHydrateVault(adminData) {
       document.body.classList.remove('vault-locked');
       document.body.classList.add('vault-authenticated');
       const overlay = document.getElementById('admin-auth-overlay');
       if (overlay) overlay.classList.remove('active');
+
+      if (!adminData) {
+        try {
+          const userJson = sessionStorage.getItem('aether_admin_user');
+          if (userJson) adminData = JSON.parse(userJson);
+        } catch (e) {}
+      }
+
+      this.authenticatedAdmin = adminData || {
+        name: 'Lead Architect',
+        role: 'admin',
+        admin_role: 'Root Superadmin'
+      };
+
+      // Update Topbar Profile Pill
+      const nameEl = document.querySelector('.admin-profile-name');
+      const roleEl = document.querySelector('.admin-profile-role');
+      const avatarEl = document.querySelector('.admin-avatar');
+      if (nameEl) nameEl.textContent = this.authenticatedAdmin.name || this.authenticatedAdmin.full_name || 'Lead Architect';
+      if (roleEl) roleEl.textContent = this.authenticatedAdmin.admin_role || 'Root Superadmin';
+      if (avatarEl) {
+        const initials = (this.authenticatedAdmin.name || this.authenticatedAdmin.full_name || 'RA').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        avatarEl.textContent = initials;
+      }
+
+      this.setupInactivityEngine();
 
       await this.ensureDatabaseReady();
       await this.loadFromDatabase();
@@ -178,14 +208,16 @@
           };
         });
 
-        // Build collectors from users table + profile fallback
+        // Build collectors & admins from users table + profile fallback
         this.collectors = (usersArr || []).map(u => ({
           id: u.id,
           name: u.full_name || u.name || 'Anonymous Collector',
           email: u.email,
           handle: '@' + (u.full_name || u.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '_'),
-          tier: u.role === 'admin' ? 'Root Architect' : (u.role === 'vip_member' ? 'VIP Vault Member' : 'Grail Collector'),
+          tier: u.role === 'admin' ? (u.admin_role || 'Root Superadmin') : (u.role === 'vip_member' ? 'VIP Vault Member' : 'Grail Collector'),
           role: u.role || 'collector',
+          admin_role: u.admin_role || (u.role === 'admin' ? 'Root Superadmin' : null),
+          permissions: Array.isArray(u.permissions) ? u.permissions : (u.role === 'admin' ? ['Manage Inventory', 'Process Orders', 'Manage Team', 'Execute SQL Console', 'Export Vault Dumps'] : []),
           preferredSize: u.preferred_size || 'EU 42 (US 8.5)',
           totalSpend: u.total_spend || (u.role === 'vip_member' ? 3420 : 850),
           grailsOwned: u.grails_owned || (u.role === 'vip_member' ? 4 : 1),
@@ -224,7 +256,7 @@
     }
 
     // =========================================================================
-    // HARDENED AUTHENTICATION & ACCESS GATE CONTROLLER
+    // HARDENED AUTHENTICATION & ACCESS GATE CONTROLLER (SECRET PASSKEY ONLY)
     // =========================================================================
     async setupAuthCheck() {
       const overlay = document.getElementById('admin-auth-overlay');
@@ -232,9 +264,6 @@
       const laserBeam = document.getElementById('auth-laser-beam');
       const badge = document.getElementById('auth-security-badge');
       const badgeText = document.getElementById('auth-badge-text');
-      const gateTitle = document.getElementById('auth-gate-title');
-      const gateSub = document.getElementById('auth-gate-sub');
-      const ownerBlock = document.getElementById('auth-owner-block');
       const authForm = document.getElementById('admin-auth-form');
       const passInput = document.getElementById('admin-pass-input');
       const submitBtn = document.getElementById('btn-auth-submit');
@@ -250,69 +279,16 @@
       // Master Security Constants
       const MASTER_KEYS = [
         'vault_admin_master_2026',
-        'aether_architect_2026',
-        'aether2026'
+        'aether2026',
+        'aether_architect_2026'
       ];
-      const AUTH_TOKEN_KEY = 'aether_vault_auth_token';
       const AUTH_FAILED_KEY = 'aether_auth_failed_attempts';
       const AUTH_LOCKOUT_KEY = 'aether_auth_lockout_until';
       const MAX_ATTEMPTS = 3;
       const LOCKOUT_MS = 10 * 60 * 1000; // 10 minutes
-      const HMAC_SALT = 'aether_architect_vault_auth_k9x21_v2026';
+      const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
 
       let lockoutTimerInterval = null;
-
-      // -----------------------------------------------------------------------
-      // Cryptographic Hashing & Hardware Token Signatures
-      // -----------------------------------------------------------------------
-      const computeSignature = async (text) => {
-        try {
-          if (window.crypto && window.crypto.subtle) {
-            const enc = new TextEncoder().encode(text);
-            const buf = await window.crypto.subtle.digest('SHA-256', enc);
-            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-          }
-        } catch (e) {}
-        // High-distribution fallback hash if crypto.subtle is restricted
-        let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
-        for (let i = 0; i < text.length; i++) {
-          const ch = text.charCodeAt(i);
-          h1 = Math.imul(h1 ^ ch, 2654435761);
-          h2 = Math.imul(h2 ^ ch, 1597334677);
-        }
-        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-        h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-        return 'sig_' + (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16);
-      };
-
-      const generateAuthorizedToken = async () => {
-        const deviceId = 'node_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
-        const issuedAt = Date.now();
-        const expiresAt = issuedAt + (30 * 24 * 60 * 60 * 1000); // 30 Days Valid
-        const signature = await computeSignature(`${deviceId}:${issuedAt}:${expiresAt}:${HMAC_SALT}`);
-        return {
-          version: 1,
-          deviceId,
-          role: 'admin',
-          node: 'ARCHITECT_AUTHORIZED_NODE',
-          issuedAt,
-          expiresAt,
-          signature
-        };
-      };
-
-      const verifyDeviceToken = async (rawToken) => {
-        if (!rawToken) return false;
-        try {
-          const parsed = typeof rawToken === 'string' ? JSON.parse(atob(rawToken)) : rawToken;
-          if (!parsed || parsed.version !== 1 || !parsed.signature) return false;
-          if (Date.now() > parsed.expiresAt) return false;
-          const expectedSig = await computeSignature(`${parsed.deviceId}:${parsed.issuedAt}:${parsed.expiresAt}:${HMAC_SALT}`);
-          return parsed.signature === expectedSig;
-        } catch (e) {
-          return false;
-        }
-      };
 
       // -----------------------------------------------------------------------
       // Laser Scan & Visual Feedback Animation
@@ -320,7 +296,7 @@
       const triggerLaserVerification = () => {
         if (laserBeam) {
           laserBeam.classList.remove('scanning');
-          void laserBeam.offsetWidth; // Trigger reflow
+          void laserBeam.offsetWidth;
           laserBeam.classList.add('scanning');
           setTimeout(() => laserBeam.classList.remove('scanning'), 1600);
         }
@@ -342,7 +318,10 @@
             localStorage.setItem(AUTH_FAILED_KEY, '0');
             // Restore form state
             card.classList.remove('lockout-state');
-            if (passInput) passInput.disabled = false;
+            if (passInput) {
+              passInput.disabled = false;
+              passInput.placeholder = 'Enter cryptographic passkey';
+            }
             if (submitBtn) submitBtn.disabled = false;
             if (alertBanner) alertBanner.style.display = 'none';
             if (timerWrap) timerWrap.style.display = 'none';
@@ -351,10 +330,10 @@
               if (badgeText) badgeText.textContent = 'RESTRICTED TERMINAL // ENCLAVE v2.6';
             }
             if (attemptsNotice) {
-              attemptsNotice.textContent = 'Rate-limited defense: 3 incorrect passkeys trigger a 10-minute automated lockout.';
+              attemptsNotice.innerHTML = safeHTML`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <span>Rate-limited defense: 3 incorrect passkeys trigger a 10-minute automated lockout.</span>`;
             }
             if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
-            this.showToast('ℹ️ Terminal Lockout Expired: Authentication inputs re-enabled.');
+            this.showToast('ℹ️ Terminal Lockout Expired: Administrative console inputs re-enabled.');
             return;
           }
 
@@ -373,9 +352,11 @@
         const now = Date.now();
 
         if (lockoutUntil > now) {
-          // Terminal is actively locked out!
           card.classList.add('lockout-state');
-          if (passInput) passInput.disabled = true;
+          if (passInput) {
+            passInput.disabled = true;
+            passInput.placeholder = 'TERMINAL LOCKED (10 MIN DEFENSE)';
+          }
           if (submitBtn) submitBtn.disabled = true;
           if (badge) {
             badge.className = 'auth-security-badge badge-lockout';
@@ -384,14 +365,13 @@
           if (alertBanner) {
             alertBanner.style.display = 'flex';
             if (alertTitle) alertTitle.textContent = 'SECURITY LOCKOUT ENGAGED';
-            if (alertDesc) alertDesc.textContent = 'Brute-force dictionary threshold exceeded (3/3). Terminal inputs locked down.';
+            if (alertDesc) alertDesc.textContent = 'Failed attempts threshold reached (3/3). Terminal inputs locked down.';
           }
           if (timerWrap) timerWrap.style.display = 'flex';
           updateLockoutCountdown(lockoutUntil);
           return true;
         }
 
-        // Clean up expired lockout if present
         if (lockoutUntil > 0 && lockoutUntil <= now) {
           localStorage.removeItem(AUTH_LOCKOUT_KEY);
           localStorage.setItem(AUTH_FAILED_KEY, '0');
@@ -412,7 +392,6 @@
           }
           this.showToast('🚨 CRITICAL LOCKOUT: 3 failed attempts. Terminal locked for 10 minutes.');
         } else {
-          // Card shake & warning
           card.classList.remove('auth-shake');
           void card.offsetWidth;
           card.classList.add('auth-shake');
@@ -420,13 +399,13 @@
 
           if (alertBanner) {
             alertBanner.style.display = 'flex';
-            if (alertTitle) alertTitle.textContent = 'ACCESS DENIED: INVALID KEY';
+            if (alertTitle) alertTitle.textContent = 'ACCESS DENIED: INVALID PASSKEY';
             if (alertDesc) {
               alertDesc.textContent = `Attempt ${attempts} of ${MAX_ATTEMPTS} before automated 10-minute terminal lockout.`;
             }
           }
           if (attemptsNotice) {
-            attemptsNotice.innerHTML = `<span style="color: #f87171; font-weight: 700;">Warning: ${attempts}/${MAX_ATTEMPTS} attempts used. Next failure triggers lockout.</span>`;
+            attemptsNotice.innerHTML = `<span style="color: #f87171; font-weight: 700;">Warning: ${attempts}/${MAX_ATTEMPTS} attempts used. Next failure triggers 10-min lockout.</span>`;
           }
           if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
             window.soundEngine.playSecurityAlarm();
@@ -435,184 +414,63 @@
       };
 
       // -----------------------------------------------------------------------
-      // Successful Master Authentication Handler
-      // -----------------------------------------------------------------------
-      const grantMasterAccess = async (sourceMessage, shouldEnrollDevice = false) => {
-        localStorage.setItem(AUTH_FAILED_KEY, '0');
-        localStorage.removeItem(AUTH_LOCKOUT_KEY);
-
-        const adminPayload = {
-          id: 'usr_admin_001',
-          email: 'admin@aetherkicks.com',
-          name: 'Atelier Vault Master',
-          role: 'admin',
-          tier: 'Root Architect'
-        };
-
-        let signedSession = null;
-        if (window.AetherDB && typeof window.AetherDB.signSession === 'function') {
-          signedSession = await window.AetherDB.signSession(adminPayload);
-        } else {
-          signedSession = { payload: adminPayload, signature: 'vault_admin_sig', token: 'AK_SESSION' };
-        }
-
-        sessionStorage.setItem('aether_admin_authenticated', 'true');
-        sessionStorage.setItem('aether_admin_token', signedSession.token);
-        localStorage.setItem('aether_user_session', JSON.stringify(signedSession));
-
-        if (shouldEnrollDevice) {
-          const token = await generateAuthorizedToken();
-          localStorage.setItem(AUTH_TOKEN_KEY, btoa(JSON.stringify(token)));
-        }
-
-        triggerLaserVerification();
-
-        if (window.soundEngine) {
-          if (window.soundEngine.playLaserVerify) window.soundEngine.playLaserVerify();
-          if (window.soundEngine.playVaultUnlock) {
-            setTimeout(() => window.soundEngine.playVaultUnlock(), 300);
-          }
-        }
-
-        this.showToast(sourceMessage || '⚡ Atelier Vault OS Access Granted: Root Superadmin Mode.');
-
-        // Close overlay and hydrate all data
-        setTimeout(async () => {
-          await this.unlockAndHydrateVault();
-        }, 500);
-      };
-
-      // -----------------------------------------------------------------------
-      // Step 1: Check Secret URL Parameter for Instant 0-Click/1-Click Enrollment
-      // Example: admin.html?key=vault_admin_master_2026
-      // -----------------------------------------------------------------------
-      const searchParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '');
-      const urlSecretKey = (
-        searchParams.get('key') ||
-        searchParams.get('admin_key') ||
-        searchParams.get('token') ||
-        hashParams.get('key') ||
-        ''
-      ).trim();
-
-      if (urlSecretKey && MASTER_KEYS.includes(urlSecretKey)) {
-        // Strip the secret key from the browser address bar immediately so it's not leaked
-        try {
-          window.history.replaceState(null, document.title, window.location.pathname);
-        } catch (e) {}
-
-        await grantMasterAccess('⚡ Secret Key Verified: Hardware Node Authorized for 1-Click Access.', true);
-        return;
-      }
-
-      // -----------------------------------------------------------------------
-      // Step 2: Check Active Session Authentication (HMAC Cryptographic Verification)
+      // Step 1: Inactivity & Session Signature Validation
       // -----------------------------------------------------------------------
       const isAlreadyAuth = sessionStorage.getItem('aether_admin_authenticated') === 'true';
       if (isAlreadyAuth) {
-        let isSessionTampered = false;
-        const storedSession = localStorage.getItem('aether_user_session');
+        const lastActivity = parseInt(sessionStorage.getItem('aether_admin_last_activity') || '0', 10);
+        const now = Date.now();
 
-        if (storedSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
-          try {
-            const verified = await window.AetherDB.verifySession(JSON.parse(storedSession));
-            if (!verified || verified.role !== 'admin') {
-              isSessionTampered = true;
-            }
-          } catch (e) {
-            isSessionTampered = true;
-          }
-        }
-
-        if (isSessionTampered) {
+        // 30-minute inactivity check
+        if (lastActivity > 0 && (now - lastActivity) > INACTIVITY_LIMIT_MS) {
           sessionStorage.removeItem('aether_admin_authenticated');
           sessionStorage.removeItem('aether_admin_token');
+          sessionStorage.removeItem('aether_admin_user');
           localStorage.removeItem('aether_user_session');
-          this.showToast('🚨 Unauthorized Session Tampering Detected! Cryptographic signature verification failed.');
+          this.showToast('🔒 Session Timed Out: Locked after 30 minutes of inactivity.');
         } else {
-          await this.unlockAndHydrateVault();
-          return;
+          // Cryptographic HMAC Verification
+          let isSessionTampered = false;
+          const storedSession = localStorage.getItem('aether_user_session');
+
+          if (storedSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
+            try {
+              const verified = await window.AetherDB.verifySession(JSON.parse(storedSession));
+              if (!verified || verified.role !== 'admin') {
+                isSessionTampered = true;
+              }
+            } catch (e) {
+              isSessionTampered = true;
+            }
+          }
+
+          if (isSessionTampered) {
+            sessionStorage.removeItem('aether_admin_authenticated');
+            sessionStorage.removeItem('aether_admin_token');
+            sessionStorage.removeItem('aether_admin_user');
+            localStorage.removeItem('aether_user_session');
+            this.showToast('🚨 Unauthorized Session Tampering Detected! Cryptographic signature mismatch.');
+          } else {
+            sessionStorage.setItem('aether_admin_last_activity', now.toString());
+            let adminPayload = null;
+            try {
+              adminPayload = JSON.parse(sessionStorage.getItem('aether_admin_user') || 'null');
+            } catch (e) {}
+            await this.unlockAndHydrateVault(adminPayload);
+            return;
+          }
         }
       }
 
-      // If not authenticated, ensure layout is locked and overlay active
+      // Terminal is locked: Display hardened authentication gate
       document.body.classList.add('vault-locked');
       overlay.classList.add('active');
 
-      // -----------------------------------------------------------------------
-      // Step 3: Check for Lockout Status
-      // -----------------------------------------------------------------------
-      const isCurrentlyLockedOut = checkLockoutStatus();
+      // Check for Active Rate-Limiting Lockout
+      checkLockoutStatus();
 
       // -----------------------------------------------------------------------
-      // Step 4: Check if Current Device is a Verified Trusted Node (1-Click Mode)
-      // -----------------------------------------------------------------------
-      const rawStoredToken = localStorage.getItem(AUTH_TOKEN_KEY);
-      const isTrustedOwnerDevice = await verifyDeviceToken(rawStoredToken);
-
-      if (isTrustedOwnerDevice && !isCurrentlyLockedOut) {
-        // Render 1-Click Owner Experience!
-        if (ownerBlock) ownerBlock.style.display = 'block';
-        if (authForm) authForm.style.display = 'none'; // Collapse standard form
-
-        if (badge) {
-          badge.className = 'auth-security-badge badge-authorized';
-          if (badgeText) badgeText.textContent = 'AUTHORIZED HARDWARE NODE // TRUSTED ARCHITECT';
-        }
-        card.classList.add('laser-verified');
-        if (gateTitle) gateTitle.textContent = 'WELCOME BACK ARCHITECT';
-        if (gateSub) gateSub.textContent = 'Recognized Root Administrator Terminal • Tap below for instant biometric unlock.';
-
-        // Bind Owner 1-Click Unlock Button
-        const btnOwnerOneClick = document.getElementById('btn-owner-one-click');
-        if (btnOwnerOneClick) {
-          btnOwnerOneClick.onclick = async (e) => {
-            e.preventDefault();
-            btnOwnerOneClick.disabled = true;
-            btnOwnerOneClick.innerHTML = '<span>⚡ Verifying Biometric Cryptoseal...</span>';
-            await grantMasterAccess('⚡ Welcome Back Architect: Atelier Vault OS Unlocked.');
-          };
-        }
-
-        // Switch to manual passkey input if desired
-        const btnSwitchPasskey = document.getElementById('btn-switch-to-passkey');
-        if (btnSwitchPasskey) {
-          btnSwitchPasskey.onclick = (e) => {
-            e.preventDefault();
-            if (authForm) authForm.style.display = 'flex';
-            if (passInput) passInput.focus();
-          };
-        }
-
-        // Unlink device option
-        const btnUnlink = document.getElementById('btn-unlink-device');
-        if (btnUnlink) {
-          btnUnlink.onclick = (e) => {
-            e.preventDefault();
-            if (confirm('Unlink this device from instant 1-click access? You will need your master key to pair again.')) {
-              localStorage.removeItem(AUTH_TOKEN_KEY);
-              if (ownerBlock) ownerBlock.style.display = 'none';
-              if (authForm) authForm.style.display = 'flex';
-              if (badge) {
-                badge.className = 'auth-security-badge';
-                if (badgeText) badgeText.textContent = 'RESTRICTED TERMINAL // ENCLAVE v2.6';
-              }
-              card.classList.remove('laser-verified');
-              if (gateTitle) gateTitle.textContent = 'ATELIER VAULT OS // RESTRICTED ACCESS';
-              if (gateSub) gateSub.textContent = 'High-Security Administrative Console. Cryptographic passkey required.';
-              this.showToast('Hardware Node Unlinked: Cryptographic token removed.');
-            }
-          };
-        }
-      } else {
-        // Standard Stranger View: 1-Click button is completely absent
-        if (ownerBlock) ownerBlock.style.display = 'none';
-        if (authForm) authForm.style.display = 'flex';
-      }
-
-      // -----------------------------------------------------------------------
-      // Step 5: Password Form Handling & Rate Limiting Verification
+      // Step 2: Secret Cryptographic Passkey Form Submission
       // -----------------------------------------------------------------------
       if (authForm) {
         authForm.onsubmit = async (e) => {
@@ -628,24 +486,85 @@
           const enteredPass = (passInput?.value || '').trim();
           if (!enteredPass) return;
 
-          let authenticated = false;
-          let shouldEnrollNewDevice = false;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span>Verifying Cryptographic Passkey...</span>';
 
-          // Check if entered key is the master owner key
-          if (MASTER_KEYS.includes(enteredPass)) {
-            authenticated = true;
-            shouldEnrollNewDevice = true; // Auto-pair this device for future 1-click access!
+          await this.ensureDatabaseReady();
+
+          let verifiedAdmin = null;
+
+          // Verify Passkey via AetherDB Engine (Checks master keys + stored hashed admin passkeys)
+          if (window.AetherDB && typeof window.AetherDB.verifyAdminPasskey === 'function') {
+            try {
+              verifiedAdmin = await window.AetherDB.verifyAdminPasskey(enteredPass);
+            } catch (err) {
+              console.error('[Admin Auth] Error verifying passkey with AetherDB:', err);
+            }
           }
 
-          // Check against AetherDB database credentials
-          if (!authenticated && window.AetherDB && typeof window.AetherDB.authenticateUser === 'function') {
-            const res = await window.AetherDB.authenticateUser('admin@aetherkicks.com', enteredPass);
-            if (res && res.role === 'admin') authenticated = true;
+          // Fallback check against MASTER_KEYS
+          if (!verifiedAdmin && MASTER_KEYS.includes(enteredPass)) {
+            verifiedAdmin = {
+              id: 'usr_admin_001',
+              email: 'admin@aetherkicks.com',
+              name: 'Atelier Vault Master',
+              full_name: 'Atelier Vault Master',
+              role: 'admin',
+              admin_role: 'Root Superadmin',
+              permissions: ['Manage Inventory', 'Process Orders', 'Manage Team', 'Execute SQL Console', 'Export Vault Dumps']
+            };
           }
 
-          if (authenticated) {
-            await grantMasterAccess('✅ Passphrase Verified. Welcome to Atelier Vault OS.', shouldEnrollNewDevice);
+          if (verifiedAdmin) {
+            localStorage.setItem(AUTH_FAILED_KEY, '0');
+            localStorage.removeItem(AUTH_LOCKOUT_KEY);
+
+            const adminPayload = {
+              id: verifiedAdmin.id || 'usr_admin_001',
+              email: verifiedAdmin.email || 'admin@aetherkicks.com',
+              name: verifiedAdmin.full_name || verifiedAdmin.name || 'Admin Operator',
+              full_name: verifiedAdmin.full_name || verifiedAdmin.name || 'Admin Operator',
+              role: 'admin',
+              admin_role: verifiedAdmin.admin_role || 'Vault Manager',
+              permissions: Array.isArray(verifiedAdmin.permissions) && verifiedAdmin.permissions.length > 0
+                ? verifiedAdmin.permissions
+                : ['Manage Inventory', 'Process Orders', 'Manage Team', 'Execute SQL Console', 'Export Vault Dumps']
+            };
+
+            let signedSession = null;
+            if (window.AetherDB && typeof window.AetherDB.signSession === 'function') {
+              signedSession = await window.AetherDB.signSession(adminPayload);
+            } else {
+              signedSession = { payload: adminPayload, signature: 'vault_admin_sig', token: 'AK_SESSION' };
+            }
+
+            sessionStorage.setItem('aether_admin_authenticated', 'true');
+            sessionStorage.setItem('aether_admin_token', signedSession.token);
+            sessionStorage.setItem('aether_admin_user', JSON.stringify(adminPayload));
+            sessionStorage.setItem('aether_admin_last_activity', Date.now().toString());
+            localStorage.setItem('aether_user_session', JSON.stringify(signedSession));
+
+            triggerLaserVerification();
+
+            if (window.soundEngine) {
+              if (window.soundEngine.playLaserVerify) window.soundEngine.playLaserVerify();
+              if (window.soundEngine.playVaultUnlock) {
+                setTimeout(() => window.soundEngine.playVaultUnlock(), 300);
+              }
+            }
+
+            this.showToast(`⚡ Access Granted: ${adminPayload.admin_role} Console Online.`);
+
+            setTimeout(async () => {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>Authenticate & Unlock Vault</span>';
+              if (passInput) passInput.value = '';
+              await this.unlockAndHydrateVault(adminPayload);
+            }, 600);
+
           } else {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Authenticate & Unlock Vault</span>';
             handleFailedAttempt();
           }
         };
@@ -663,95 +582,264 @@
       }
 
       // -----------------------------------------------------------------------
-      // Step 6: Hidden Stealth Gesture for Owner Enrollment (Triple-Click Icon)
-      // -----------------------------------------------------------------------
-      const gateIcon = document.getElementById('auth-gate-icon');
-      const enrollDialog = document.getElementById('auth-enroll-dialog');
-      const enrollInput = document.getElementById('enroll-key-input');
-      const btnEnrollSubmit = document.getElementById('btn-enroll-submit');
-      const btnEnrollCancel = document.getElementById('btn-enroll-cancel');
-      const btnEnrollClose = document.getElementById('btn-enroll-close');
-
-      let iconClickCount = 0;
-      let lastIconClick = 0;
-
-      const openEnrollment = () => {
-        if (enrollDialog) {
-          enrollDialog.style.display = 'flex';
-          if (enrollInput) {
-            enrollInput.value = '';
-            enrollInput.focus();
-          }
-          if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
-        }
-      };
-
-      const closeEnrollment = () => {
-        if (enrollDialog) enrollDialog.style.display = 'none';
-      };
-
-      if (gateIcon) {
-        gateIcon.onclick = () => {
-          const now = Date.now();
-          if (now - lastIconClick < 1200) {
-            iconClickCount++;
-          } else {
-            iconClickCount = 1;
-          }
-          lastIconClick = now;
-
-          if (iconClickCount >= 3) {
-            iconClickCount = 0;
-            openEnrollment();
-          }
-        };
-      }
-
-      // Keyboard shortcut for owner: Ctrl+Shift+U
-      window.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'u') {
-          e.preventDefault();
-          openEnrollment();
-        }
-      });
-
-      if (btnEnrollCancel) btnEnrollCancel.onclick = closeEnrollment;
-      if (btnEnrollClose) btnEnrollClose.onclick = closeEnrollment;
-
-      if (btnEnrollSubmit && enrollInput) {
-        btnEnrollSubmit.onclick = async () => {
-          const key = (enrollInput.value || '').trim();
-          if (MASTER_KEYS.includes(key)) {
-            closeEnrollment();
-            await grantMasterAccess('⚡ Master Device Paired: Hardware Node Registered for 1-Click Access.', true);
-          } else {
-            enrollInput.style.borderColor = '#ef4444';
-            if (window.soundEngine && window.soundEngine.playSecurityAlarm) {
-              window.soundEngine.playSecurityAlarm();
-            }
-            this.showToast('❌ Invalid Architectural Master Key.');
-          }
-        };
-      }
-
-      // -----------------------------------------------------------------------
-      // Step 7: Lock Session Action Buttons
+      // Step 3: Lock Session Action Buttons
       // -----------------------------------------------------------------------
       document.querySelectorAll('.btn-lock-session').forEach(btn => {
         btn.onclick = async (e) => {
           e.preventDefault();
           sessionStorage.removeItem('aether_admin_authenticated');
+          sessionStorage.removeItem('aether_admin_token');
+          sessionStorage.removeItem('aether_admin_user');
+          sessionStorage.removeItem('aether_admin_last_activity');
+          localStorage.removeItem('aether_user_session');
           document.body.classList.add('vault-locked');
           document.body.classList.remove('vault-authenticated');
           overlay.classList.add('active');
 
-          if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
-          this.showToast('🔒 Vault Console Locked.');
+          if (passInput) {
+            passInput.value = '';
+            passInput.disabled = false;
+          }
+          if (submitBtn) submitBtn.disabled = false;
 
-          // Re-initialize gate state (owner sees 1-click unlock button)
-          await this.setupAuthCheck();
+          if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
+          this.showToast('🔒 Vault Administrative Console Locked.');
         };
       });
+    }
+
+    /**
+     * Secret 30-Minute Inactivity Auto-Lockout Engine
+     */
+    setupInactivityEngine() {
+      if (this.inactivityInterval) clearInterval(this.inactivityInterval);
+
+      const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+
+      // Throttle user activity tracking
+      let lastRecorded = 0;
+      const recordActivity = () => {
+        const now = Date.now();
+        if (now - lastRecorded > 5000) {
+          lastRecorded = now;
+          if (sessionStorage.getItem('aether_admin_authenticated') === 'true') {
+            sessionStorage.setItem('aether_admin_last_activity', now.toString());
+          }
+        }
+      };
+
+      ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'].forEach(evt => {
+        window.addEventListener(evt, recordActivity, { passive: true });
+      });
+
+      // Verification interval every 15 seconds
+      this.inactivityInterval = setInterval(() => {
+        if (sessionStorage.getItem('aether_admin_authenticated') === 'true') {
+          const last = parseInt(sessionStorage.getItem('aether_admin_last_activity') || '0', 10);
+          if (last > 0 && (Date.now() - last) > INACTIVITY_LIMIT_MS) {
+            console.warn('[Admin Security] 30-minute session inactivity timeout exceeded. Auto-locking terminal.');
+            sessionStorage.removeItem('aether_admin_authenticated');
+            sessionStorage.removeItem('aether_admin_token');
+            document.body.classList.add('vault-locked');
+            document.body.classList.remove('vault-authenticated');
+            const overlay = document.getElementById('admin-auth-overlay');
+            if (overlay) overlay.classList.add('active');
+            this.showToast('🔒 Terminal Locked: 30 minutes of inactivity detected. Secret passkey required.');
+            this.setupAuthCheck();
+          }
+        }
+      }, 15000);
+    }
+
+    // =========================================================================
+    // ADMINISTRATOR TEAM & RBAC CREDENTIAL MANAGEMENT
+    // =========================================================================
+    setupAdminTeam() {
+      const btnOpenAddModal = document.getElementById('btn-open-add-admin-modal');
+      const modalAddAdmin = document.getElementById('modal-add-admin');
+      const formAddAdmin = document.getElementById('form-add-admin');
+      const btnToggleNewPass = document.getElementById('btn-toggle-new-passkey');
+      const newPassInput = document.getElementById('admin-new-passkey');
+
+      // 1. Open Add Admin Modal
+      if (btnOpenAddModal) {
+        btnOpenAddModal.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (modalAddAdmin) {
+            modalAddAdmin.classList.add('active');
+            const nameInp = document.getElementById('admin-new-name');
+            if (nameInp) nameInp.focus();
+            if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
+          }
+        });
+      }
+
+      // 2. Toggle New Passkey Visibility
+      if (btnToggleNewPass && newPassInput) {
+        btnToggleNewPass.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isPass = newPassInput.type === 'password';
+          newPassInput.type = isPass ? 'text' : 'password';
+          btnToggleNewPass.style.color = isPass ? '#ffffff' : 'var(--admin-text-muted)';
+        });
+      }
+
+      // 3. Handle Add Admin Form Submit
+      if (formAddAdmin) {
+        formAddAdmin.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const name = (document.getElementById('admin-new-name')?.value || '').trim();
+          const email = (document.getElementById('admin-new-email')?.value || '').toLowerCase().trim();
+          const role = document.getElementById('admin-new-role')?.value || 'Vault Manager';
+          const passkey = (document.getElementById('admin-new-passkey')?.value || '').trim();
+
+          if (!name || !email || !passkey) {
+            this.showToast('❌ Please fill in all required administrator fields.');
+            return;
+          }
+
+          if (passkey.length < 6) {
+            this.showToast('❌ Passkey must be at least 6 characters.');
+            return;
+          }
+
+          // Gather Permissions
+          const checkedPerms = [];
+          document.querySelectorAll('#form-add-admin input[name="permissions"]:checked').forEach(cb => {
+            checkedPerms.push(cb.value);
+          });
+
+          await this.ensureDatabaseReady();
+
+          // Cryptographic Passkey Hash
+          const passkeyHash = await window.AetherDB.hashPassword(passkey);
+
+          const newAdminId = `usr_admin_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 4)}`;
+          const newAdminUser = {
+            id: newAdminId,
+            email: email,
+            full_name: name,
+            name: name,
+            role: 'admin',
+            admin_role: role,
+            permissions: checkedPerms.length > 0 ? checkedPerms : ['Manage Inventory', 'Process Orders', 'Export Vault Dumps'],
+            password_hash: passkeyHash,
+            created_at: new Date().toISOString()
+          };
+
+          try {
+            await window.AetherDB.addUser(newAdminUser);
+            this.closeModal('modal-add-admin');
+            formAddAdmin.reset();
+
+            this.showToast(`✅ Administrator Credentials Provisioned for ${name} (${role})`);
+            if (window.soundEngine && window.soundEngine.playSuccess) window.soundEngine.playSuccess();
+
+            await this.loadFromDatabase();
+          } catch (err) {
+            console.error('[Admin Provisioning Error]', err);
+            this.showToast(`❌ Error provisioning administrator: ${err.message}`);
+          }
+        });
+      }
+
+      // 4. Handle Edit Admin Form Submit
+      const formEditAdmin = document.getElementById('form-edit-admin');
+      if (formEditAdmin) {
+        formEditAdmin.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const adminId = document.getElementById('admin-edit-id')?.value;
+          const newRole = document.getElementById('admin-edit-role')?.value;
+          if (!adminId) return;
+
+          const checkedPerms = [];
+          document.querySelectorAll('#form-edit-admin input[name="edit_permissions"]:checked').forEach(cb => {
+            checkedPerms.push(cb.value);
+          });
+
+          await this.ensureDatabaseReady();
+          try {
+            await window.AetherDB.updateUser(adminId, {
+              admin_role: newRole,
+              permissions: checkedPerms
+            });
+
+            this.closeModal('modal-edit-admin');
+            this.showToast(`✅ Administrative Privileges Updated for ${newRole}`);
+            if (window.soundEngine && window.soundEngine.playSuccess) window.soundEngine.playSuccess();
+
+            await this.loadFromDatabase();
+          } catch (err) {
+            console.error('[Admin Edit Error]', err);
+            this.showToast(`❌ Error updating administrator: ${err.message}`);
+          }
+        });
+      }
+    }
+
+    openEditAdminModal(adminId) {
+      const admin = this.collectors.find(c => c.id === adminId && c.role === 'admin');
+      if (!admin) return;
+
+      const modal = document.getElementById('modal-edit-admin');
+      if (!modal) return;
+
+      const idInp = document.getElementById('admin-edit-id');
+      const nameDisp = document.getElementById('admin-edit-name-display');
+      const roleSel = document.getElementById('admin-edit-role');
+
+      if (idInp) idInp.value = admin.id;
+      if (nameDisp) nameDisp.textContent = `${admin.name} (${admin.email})`;
+      if (roleSel) roleSel.value = admin.admin_role || 'Vault Manager';
+
+      const perms = admin.permissions || [];
+      const permIds = {
+        'Manage Inventory': 'perm-edit-inventory',
+        'Process Orders': 'perm-edit-orders',
+        'Manage Team': 'perm-edit-team',
+        'Execute SQL Console': 'perm-edit-sql',
+        'Export Vault Dumps': 'perm-edit-dumps'
+      };
+
+      Object.keys(permIds).forEach(permName => {
+        const el = document.getElementById(permIds[permName]);
+        if (el) el.checked = perms.includes(permName);
+      });
+
+      modal.classList.add('active');
+    }
+
+    async revokeAdminAccess(adminId) {
+      const admin = this.collectors.find(c => c.id === adminId);
+      if (!admin) return;
+
+      if (admin.id === 'usr_admin_001') {
+        alert('SECURITY PROTOCOL: Root Superadmin (Atelier Vault Master) credentials cannot be revoked.');
+        return;
+      }
+
+      if (!confirm(`Revoke administrative access for ${admin.name}?\nTheir administrative privileges will be cancelled and their account downgraded to Collector.`)) {
+        return;
+      }
+
+      await this.ensureDatabaseReady();
+      try {
+        await window.AetherDB.updateUser(adminId, {
+          role: 'collector',
+          admin_role: null,
+          permissions: []
+        });
+
+        this.showToast(`🔒 Administrative Access Revoked for ${admin.name}. Account reverted to Collector.`);
+        if (window.soundEngine && window.soundEngine.playSwitch) window.soundEngine.playSwitch();
+
+        await this.loadFromDatabase();
+      } catch (err) {
+        console.error('[Admin Revocation Error]', err);
+        this.showToast(`❌ Failed to revoke administrative credentials: ${err.message}`);
+      }
     }
 
     // =========================================================================
@@ -904,6 +992,18 @@
       const btnSeedReset = document.getElementById('btn-quick-seed-reset');
       if (btnSeedReset) btnSeedReset.addEventListener('click', () => this.resetDatabaseConfirm());
 
+      // Overview Analytics Range Buttons (30D, 7D, 24H)
+      document.querySelectorAll('.btn-chart-range').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.querySelectorAll('.btn-chart-range').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.chartRange = btn.textContent.trim();
+          this.renderVelocityChart();
+          if (window.soundEngine && window.soundEngine.playClick) window.soundEngine.playClick();
+        });
+      });
+
       // SQL Live Query Input & Sandbox Runner
       const sqlInput = document.getElementById('sql-query-input');
       const btnRunSql = document.getElementById('btn-run-sql');
@@ -1007,90 +1107,316 @@
       const container = document.getElementById('overview-chart-container');
       if (!container) return;
 
-      const points = [32, 45, 38, 64, 52, 78, 69, 94, 85, 112, 104, 138];
-      const width = 800;
-      const height = 220;
-      const padX = 40;
-      const padY = 30;
+      const range = this.chartRange || '30D';
+      const now = new Date();
+      const buckets = [];
 
-      const minVal = Math.min(...points) * 0.8;
-      const maxVal = Math.max(...points) * 1.1;
+      // 1. Calculate Time Intervals & Labels
+      if (range === '24H') {
+        for (let i = 23; i >= 0; i--) {
+          const d = new Date(now.getTime() - i * 3600 * 1000);
+          const hour = d.getHours().toString().padStart(2, '0') + ':00';
+          const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), 0, 0, 0).getTime();
+          buckets.push({
+            time: d,
+            label: hour,
+            startTime: start,
+            endTime: start + 3600 * 1000,
+            volume: 0,
+            pairs: 0,
+            transactions: 0
+          });
+        }
+      } else if (range === '7D') {
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+          const dayName = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+          buckets.push({
+            time: d,
+            label: dayName,
+            startTime: start,
+            endTime: start + 24 * 3600 * 1000,
+            volume: 0,
+            pairs: 0,
+            transactions: 0
+          });
+        }
+      } else {
+        // 30D (default)
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+          const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+          buckets.push({
+            time: d,
+            label: dateLabel,
+            startTime: start,
+            endTime: start + 24 * 3600 * 1000,
+            volume: 0,
+            pairs: 0,
+            transactions: 0
+          });
+        }
+      }
 
-      const coords = points.map((val, idx) => {
-        const x = padX + (idx / (points.length - 1)) * (width - padX * 2);
-        const y = height - padY - ((val - minVal) / (maxVal - minVal)) * (height - padY * 2);
-        return { x, y, val };
+      // 2. Aggregate Live Orders and Shoes from AetherDB
+      let totalVaultLiquidity = 0;
+      Object.values(this.shoes).forEach(s => {
+        const stockMap = s.sizesStock || {};
+        const pairs = Object.values(stockMap).reduce((a, b) => a + Number(b || 0), 0);
+        totalVaultLiquidity += (s.price || 0) * pairs;
       });
 
-      let dPath = `M ${coords[0].x} ${coords[0].y}`;
+      this.orders.forEach(order => {
+        const orderTime = new Date(order.created_at || now).getTime();
+        const bucket = buckets.find(b => orderTime >= b.startTime && orderTime < b.endTime);
+        const orderTotal = parseFloat(order.total || order.subtotal || 480);
+        const itemsCount = (order.items && order.items.length) ? order.items.reduce((acc, it) => acc + (it.quantity || 1), 0) : 1;
+
+        if (bucket) {
+          bucket.volume += orderTotal;
+          bucket.pairs += itemsCount;
+          bucket.transactions += 1;
+        } else if (buckets.length > 0) {
+          const lastBucket = buckets[buckets.length - 1];
+          lastBucket.volume += (orderTotal * 0.12);
+        }
+      });
+
+      // 3. Market Trading Velocity Trajectory (Secondary Marketplace Baseline)
+      const basePoints = range === '24H'
+        ? [22, 28, 25, 34, 38, 45, 52, 60, 72, 85, 96, 110, 104, 122, 115, 134, 142, 158, 165, 180, 172, 188, 195, 210]
+        : (range === '7D'
+          ? [68, 85, 92, 115, 138, 164, 192]
+          : [28, 32, 36, 30, 42, 48, 44, 52, 58, 65, 61, 74, 82, 78, 88, 96, 91, 105, 118, 112, 128, 136, 130, 145, 158, 150, 168, 182, 175, 198]
+        );
+
+      buckets.forEach((b, idx) => {
+        const baselineMultiplier = (Math.max(80000, totalVaultLiquidity) / 164820) * 110;
+        const baseVol = (basePoints[idx % basePoints.length] || 45) * baselineMultiplier;
+        b.volume = Math.round(b.volume + baseVol);
+        b.pairs = b.pairs + Math.max(1, Math.round(b.volume / 540));
+        b.transactions = b.transactions + Math.max(1, Math.round(b.pairs / 1.5));
+        b.liquidity = Math.round(totalVaultLiquidity * (0.94 + (idx / buckets.length) * 0.09));
+      });
+
+      // 4. SVG Coordinate Geometry
+      const width = 800;
+      const height = 220;
+      const padX = 45;
+      const padY = 30;
+
+      const volumes = buckets.map(b => b.volume);
+      const minVal = Math.min(...volumes) * 0.85;
+      const maxVal = Math.max(...volumes) * 1.1;
+
+      const coords = buckets.map((b, idx) => {
+        const x = padX + (idx / (buckets.length - 1)) * (width - padX * 2);
+        const y = height - padY - ((b.volume - minVal) / (maxVal - minVal || 1)) * (height - padY * 2);
+        return { x, y, bucket: b };
+      });
+
+      let dPath = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
       for (let i = 1; i < coords.length; i++) {
         const prev = coords[i - 1];
         const curr = coords[i];
-        const cpX = (prev.x + curr.x) / 2;
-        dPath += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
+        const cpX = ((prev.x + curr.x) / 2).toFixed(1);
+        dPath += ` C ${cpX} ${prev.y.toFixed(1)}, ${cpX} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
       }
 
-      const dArea = `${dPath} L ${coords[coords.length - 1].x} ${height - padY} L ${coords[0].x} ${height - padY} Z`;
+      const dArea = `${dPath} L ${coords[coords.length - 1].x.toFixed(1)} ${(height - padY).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(height - padY).toFixed(1)} Z`;
+
+      const topMilestone = `$${Math.round(maxVal).toLocaleString()}`;
+      const midMilestone = `$${Math.round((maxVal + minVal) / 2).toLocaleString()}`;
+
+      this._chartCoords = coords;
+      this._chartWidth = width;
+      this._chartHeight = height;
 
       container.innerHTML = `
-        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" id="chart-velocity-svg">
           <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#dc2626" stop-opacity="0.45" />
-              <stop offset="60%" stop-color="#dc2626" stop-opacity="0.08" />
-              <stop offset="100%" stop-color="#dc2626" stop-opacity="0" />
+              <stop offset="60%" stop-color="#dc2626" stop-opacity="0.10" />
+              <stop offset="100%" stop-color="#dc2626" stop-opacity="0.0" />
             </linearGradient>
             <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
-          <line x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" />
-          <line x1="${padX}" y1="${height / 2}" x2="${width - padX}" y2="${height / 2}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" />
-          <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="rgba(255,255,255,0.08)" />
 
+          <!-- Horizontal Reference Grids -->
+          <line x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4" />
+          <text x="${padX - 8}" y="${padY + 4}" fill="#71717a" font-size="10" font-family="Space Mono, monospace" text-anchor="end">${topMilestone}</text>
+
+          <line x1="${padX}" y1="${height / 2}" x2="${width - padX}" y2="${height / 2}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" />
+          <text x="${padX - 8}" y="${height / 2 + 4}" fill="#71717a" font-size="10" font-family="Space Mono, monospace" text-anchor="end">${midMilestone}</text>
+
+          <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="rgba(255,255,255,0.1)" />
+
+          <!-- Gradient Area & Glowing Curve -->
           <path d="${dArea}" fill="url(#chartGradient)" />
           <path d="${dPath}" fill="none" stroke="#dc2626" stroke-width="3" filter="url(#neonGlow)" />
 
-          ${coords.map(pt => `
-            <circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#ffffff" stroke="#dc2626" stroke-width="2">
-              <title>$${(pt.val * 1200).toLocaleString()}</title>
-            </circle>
+          <!-- Interactive Vertical Crosshair Line -->
+          <line id="chart-crosshair" x1="0" y1="${padY}" x2="0" y2="${height - padY}" stroke="rgba(255, 255, 255, 0.45)" stroke-dasharray="3 3" style="display: none;" />
+
+          <!-- Interactive Active Circle Highlight -->
+          <circle id="chart-active-point" cx="0" cy="0" r="6" fill="#ffffff" stroke="#dc2626" stroke-width="3" style="display: none; filter: drop-shadow(0 0 8px #dc2626);" />
+
+          <!-- Milestone Dots -->
+          ${coords.filter((_, i) => i % (range === '30D' ? 4 : 1) === 0).map(pt => `
+            <circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3.5" fill="#18181b" stroke="#dc2626" stroke-width="2"></circle>
+          `).join('')}
+
+          <!-- Date / Time Labels along bottom -->
+          ${coords.filter((_, i) => i % (range === '30D' ? 5 : (range === '7D' ? 1 : 4)) === 0 || i === coords.length - 1).map(pt => `
+            <text x="${pt.x.toFixed(1)}" y="${height - 10}" fill="#a1a1aa" font-size="10" font-family="Space Mono, monospace" text-anchor="middle">${escapeHTML(pt.bucket.label)}</text>
           `).join('')}
         </svg>
+
+        <div id="chart-admin-tooltip" class="chart-admin-tooltip"></div>
       `;
+
+      this.attachChartHoverEvents(container);
+    }
+
+    attachChartHoverEvents(container) {
+      const svg = container.querySelector('#chart-velocity-svg');
+      const tooltip = container.querySelector('#chart-admin-tooltip');
+      const crosshair = container.querySelector('#chart-crosshair');
+      const activePoint = container.querySelector('#chart-active-point');
+      if (!svg || !tooltip || !this._chartCoords) return;
+
+      const handleMove = (e) => {
+        const rect = svg.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        if (!clientX) return;
+
+        const mouseSvgX = ((clientX - rect.left) / rect.width) * this._chartWidth;
+
+        let closestPt = this._chartCoords[0];
+        let minDist = Math.abs(mouseSvgX - closestPt.x);
+        for (let i = 1; i < this._chartCoords.length; i++) {
+          const dist = Math.abs(mouseSvgX - this._chartCoords[i].x);
+          if (dist < minDist) {
+            minDist = dist;
+            closestPt = this._chartCoords[i];
+          }
+        }
+
+        if (!closestPt) return;
+        const b = closestPt.bucket;
+
+        if (crosshair) {
+          crosshair.setAttribute('x1', closestPt.x);
+          crosshair.setAttribute('x2', closestPt.x);
+          crosshair.style.display = 'block';
+        }
+        if (activePoint) {
+          activePoint.setAttribute('cx', closestPt.x);
+          activePoint.setAttribute('cy', closestPt.y);
+          activePoint.style.display = 'block';
+        }
+
+        tooltip.innerHTML = `
+          <div class="chart-tooltip-header">
+            <span class="chart-tooltip-date">${escapeHTML(b.label)}</span>
+            <span class="chart-tooltip-badge">VAULT HUD</span>
+          </div>
+          <div class="chart-tooltip-row">
+            <span class="chart-tooltip-label">Trading Volume:</span>
+            <span class="chart-tooltip-val val-volume">$${b.volume.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div class="chart-tooltip-row">
+            <span class="chart-tooltip-label">Pairs Cleared:</span>
+            <span class="chart-tooltip-val val-pairs">${b.pairs} Pairs (${b.transactions} Tx)</span>
+          </div>
+          <div class="chart-tooltip-row">
+            <span class="chart-tooltip-label">Vault Liquidity Index:</span>
+            <span class="chart-tooltip-val val-liquidity">$${b.liquidity.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+        `;
+
+        const pixelX = (closestPt.x / this._chartWidth) * rect.width;
+        const pixelY = (closestPt.y / this._chartHeight) * rect.height;
+
+        tooltip.style.left = `${pixelX}px`;
+        tooltip.style.top = `${pixelY}px`;
+        tooltip.classList.add('visible');
+      };
+
+      const handleLeave = () => {
+        if (tooltip) tooltip.classList.remove('visible');
+        if (crosshair) crosshair.style.display = 'none';
+        if (activePoint) activePoint.style.display = 'none';
+      };
+
+      container.onmousemove = handleMove;
+      container.onmouseleave = handleLeave;
+      container.ontouchmove = handleMove;
+      container.ontouchend = handleLeave;
     }
 
     renderAllocationBars(shoesList, totalPairs) {
       const container = document.getElementById('allocation-bars-container');
       if (!container) return;
 
-      const silMap = {};
+      const silMap = {
+        'High OG': 0,
+        'Low OG': 0,
+        'Retro 4': 0,
+        'Bespoke': 0
+      };
+
       shoesList.forEach(s => {
-        const sil = s.silhouette || 'High OG';
+        const rawSil = (s.silhouette || '').trim();
+        let normalized = 'High OG';
+
+        if (/low/i.test(rawSil)) {
+          normalized = 'Low OG';
+        } else if (/4|aj4|retro 4/i.test(rawSil)) {
+          normalized = 'Retro 4';
+        } else if (/bespoke|collab/i.test(rawSil)) {
+          normalized = 'Bespoke';
+        } else if (/retro 3|3/i.test(rawSil)) {
+          normalized = 'Retro 3';
+        } else {
+          normalized = 'High OG';
+        }
+
         const stockMap = s.sizesStock || {};
         const pairs = Object.values(stockMap).reduce((a, b) => a + Number(b || 0), 0);
-        silMap[sil] = (silMap[sil] || 0) + pairs;
+        silMap[normalized] = (silMap[normalized] || 0) + pairs;
       });
+
+      if (this.drops && this.drops.length > 0) {
+        this.drops.forEach(d => {
+          if (/bespoke/i.test(d.title || '')) {
+            silMap['Bespoke'] = (silMap['Bespoke'] || 0) + (d.stock_allocated || 5);
+          }
+        });
+      }
+
+      const totalCalculatedPairs = Object.values(silMap).reduce((a, b) => a + b, 0) || totalPairs || 1;
 
       const colors = {
         'High OG': '#dc2626',
-        'High': '#dc2626',
         'Retro 4': '#9333ea',
-        'AJ4': '#9333ea',
         'Low OG': '#0284c7',
-        'Low': '#0284c7',
         'Retro 3': '#ea580c',
-        'Mid': '#16a34a',
         'Bespoke': '#eab308'
       };
 
       container.innerHTML = Object.keys(silMap).map(sil => {
         const count = silMap[sil];
-        const pct = totalPairs > 0 ? Math.round((count / totalPairs) * 100) : 0;
+        const pct = totalCalculatedPairs > 0 ? Math.round((count / totalCalculatedPairs) * 100) : 0;
         const color = colors[sil] || '#16a34a';
         return `
           <div class="allocation-item">
@@ -1355,7 +1681,13 @@
         document.getElementById('shoe-year').value = s.year || '2026';
         document.getElementById('shoe-category').value = s.category || 'Runway';
         document.getElementById('shoe-condition').value = s.condition || 'Deadstock Grade A+';
-        document.getElementById('shoe-theme-color').value = s.theme || '#dc2626';
+        const shoeColor = s.theme || '#dc2626';
+        document.getElementById('shoe-theme-color').value = shoeColor;
+        if (document.getElementById('shoe-theme-hex')) document.getElementById('shoe-theme-hex').value = shoeColor;
+        if (document.getElementById('shoe-color-badge')) {
+          document.getElementById('shoe-color-badge').style.background = shoeColor;
+          document.getElementById('shoe-color-badge').style.boxShadow = `0 0 10px ${shoeColor}88`;
+        }
         document.getElementById('shoe-image-preset').value = s.image;
         document.getElementById('shoe-image-custom').value = s.image.startsWith('http') ? s.image : '';
         document.getElementById('shoe-story').value = s.story || '';
@@ -1376,7 +1708,13 @@
         document.getElementById('shoe-year').value = '2026';
         document.getElementById('shoe-category').value = 'Runway';
         document.getElementById('shoe-condition').value = 'Deadstock Grade A+';
-        document.getElementById('shoe-theme-color').value = '#dc2626';
+        const defColor = '#dc2626';
+        document.getElementById('shoe-theme-color').value = defColor;
+        if (document.getElementById('shoe-theme-hex')) document.getElementById('shoe-theme-hex').value = defColor;
+        if (document.getElementById('shoe-color-badge')) {
+          document.getElementById('shoe-color-badge').style.background = defColor;
+          document.getElementById('shoe-color-badge').style.boxShadow = `0 0 10px ${defColor}88`;
+        }
         document.getElementById('shoe-image-preset').value = 'assets/images/jordan-chicago.png';
         document.getElementById('shoe-story').value = 'Exclusive Atelier release crafted for high-tier collectors.';
 
@@ -1412,7 +1750,18 @@
       const name = document.getElementById('shoe-name')?.value || 'Air Jordan 1 Retro';
       const colorway = document.getElementById('shoe-colorway')?.value || 'Custom Vault Grail';
       const price = document.getElementById('shoe-price')?.value || 450;
-      const theme = document.getElementById('shoe-theme-color')?.value || '#dc2626';
+      const colorInput = document.getElementById('shoe-theme-color');
+      const hexInput = document.getElementById('shoe-theme-hex');
+      const badge = document.getElementById('shoe-color-badge');
+      const theme = colorInput?.value || '#dc2626';
+
+      if (hexInput && hexInput.value.toLowerCase() !== theme.toLowerCase()) {
+        hexInput.value = theme;
+      }
+      if (badge) {
+        badge.style.background = theme;
+        badge.style.boxShadow = `0 0 10px ${theme}88`;
+      }
 
       let img = document.getElementById('shoe-image-custom')?.value || document.getElementById('shoe-image-preset')?.value || 'assets/images/jordan-chicago.png';
 
@@ -1433,6 +1782,38 @@
         previewPanel.style.background = `radial-gradient(circle at center, ${theme}22 0%, rgba(13, 13, 18, 0.9) 75%)`;
         previewPanel.style.borderColor = `${theme}44`;
       }
+    }
+
+    onCustomHexInput(val) {
+      if (!val) return;
+      val = val.trim();
+      if (!val.startsWith('#') && /^[0-9A-Fa-f]{6}$/.test(val)) {
+        val = '#' + val;
+      }
+      const colorInput = document.getElementById('shoe-theme-color');
+      const badge = document.getElementById('shoe-color-badge');
+      if (/^#[0-9A-Fa-f]{6}$/i.test(val)) {
+        if (colorInput) colorInput.value = val;
+        if (badge) {
+          badge.style.background = val;
+          badge.style.boxShadow = `0 0 10px ${val}88`;
+        }
+        this.updateShoeModalPreview();
+      }
+    }
+
+    setColorTheme(hex) {
+      if (!hex) return;
+      const colorInput = document.getElementById('shoe-theme-color');
+      const hexInput = document.getElementById('shoe-theme-hex');
+      const badge = document.getElementById('shoe-color-badge');
+      if (colorInput) colorInput.value = hex;
+      if (hexInput) hexInput.value = hex;
+      if (badge) {
+        badge.style.background = hex;
+        badge.style.boxShadow = `0 0 10px ${hex}88`;
+      }
+      this.updateShoeModalPreview();
     }
 
     async saveShoeFromModal() {
@@ -1659,6 +2040,14 @@
       document.getElementById('order-detail-tracking').textContent = tracking;
       document.getElementById('order-detail-nfc').textContent = nfcHash;
 
+      const printNfc = document.getElementById('cert-print-nfc');
+      if (printNfc) printNfc.textContent = nfcHash;
+      const printDate = document.getElementById('cert-print-date');
+      if (printDate) {
+        const d = new Date();
+        printDate.textContent = `TIMESTAMP: ${d.toISOString().replace('T', ' ').substring(0, 19)} UTC`;
+      }
+
       // Update stepper nodes
       const steps = ['pending_verification', 'forensic_check', 'authenticated', 'dispatched', 'delivered'];
       let st = order.status;
@@ -1677,63 +2066,159 @@
     }
 
     // =========================================================================
-    // 4. USERS & COLLECTORS (CRM)
+    // 4. USERS, ADMIN TEAM & COLLECTORS (CRM)
     // =========================================================================
     renderCollectors() {
-      const tbody = document.getElementById('collectors-table-body');
-      if (!tbody) return;
+      // 1. Render Administrative Vault Team Table
+      const adminTbody = document.getElementById('admin-team-table-body');
+      if (adminTbody) {
+        const admins = this.collectors.filter(c => c.role === 'admin');
+        if (admins.length === 0) {
+          adminTbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--admin-text-muted); padding: 18px;">
+                No administrators found in vault store. Use "+ Add Administrator" above to provision credentials.
+              </td>
+            </tr>
+          `;
+        } else {
+          adminTbody.innerHTML = admins.map(col => {
+            const initials = (col.name || 'AD').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const isSuper = (col.admin_role === 'Root Superadmin' || col.id === 'usr_admin_001');
+            const perms = Array.isArray(col.permissions) && col.permissions.length > 0 
+              ? col.permissions 
+              : ['Manage Inventory', 'Process Orders', 'Export Vault Dumps'];
 
-      tbody.innerHTML = this.collectors.map(col => {
-        const initials = (col.name || 'CR').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        return `
-          <tr>
-            <td>
-              <div class="collector-avatar-cell">
-                <div class="collector-avatar">${escapeHTML(initials)}</div>
-                <div>
-                  <div class="collector-name">${escapeHTML(col.name)}</div>
-                  <div class="collector-handle">${escapeHTML(col.handle)} • ${escapeHTML(col.email)}</div>
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="vip-tier-badge ${col.role === 'admin' ? 'tier-admin' : (col.tier && col.tier.includes('Elite')) ? 'tier-elite' : 'tier-vault'}">
-                ${escapeHTML(col.tier)}
-              </span>
-            </td>
-            <td>
-              <span class="mono" style="color: #4ade80;">${escapeHTML(col.preferredSize)}</span>
-            </td>
-            <td>
-              <span class="mono" style="color: #ffffff; font-weight: 700;">$${Number(col.totalSpend || 0).toLocaleString()}</span>
-            </td>
-            <td>
-              <span class="mono">${Number(col.grailsOwned || 0)} pairs</span>
-            </td>
-            <td>
-              <select class="admin-select" style="padding: 4px 8px; font-size: 0.75rem;" onchange="window.aetherAdmin.updateCollectorRole('${escapeHTML(col.id)}', this.value)">
-                <option value="collector" ${col.role === 'collector' ? 'selected' : ''}>Collector</option>
-                <option value="vip_member" ${col.role === 'vip_member' ? 'selected' : ''}>VIP Member</option>
-                <option value="admin" ${col.role === 'admin' ? 'selected' : ''}>Root Admin</option>
-              </select>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            return `
+              <tr>
+                <td>
+                  <div class="collector-avatar-cell">
+                    <div class="collector-avatar" style="${isSuper ? 'border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);' : ''}">${escapeHTML(initials)}</div>
+                    <div>
+                      <div class="collector-name" style="display: flex; align-items: center; gap: 6px;">
+                        <span>${escapeHTML(col.name)}</span>
+                        ${isSuper ? '<span style="color: #eab308;" title="Root Master Enclave Key">★</span>' : ''}
+                      </div>
+                      <div class="collector-handle">${escapeHTML(col.email)} • <span class="sku-badge" style="font-size: 0.65rem;">${escapeHTML(col.id)}</span></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="vip-tier-badge ${isSuper ? 'tier-superadmin' : 'tier-admin'}">
+                    ${isSuper ? 'SUPERADMIN' : 'ADMIN'}
+                  </span>
+                  <span class="admin-role-title">${escapeHTML(col.admin_role || (isSuper ? 'Root Superadmin' : 'Vault Manager'))}</span>
+                </td>
+                <td>
+                  <div class="perm-chips-wrap">
+                    ${perms.map(p => `
+                      <span class="perm-chip ${p.includes('Team') || p.includes('SQL') ? 'perm-highlight' : ''}">${escapeHTML(p)}</span>
+                    `).join('')}
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span class="mono" style="font-size: 0.72rem; color: #4ade80;">● SHA-256 Validated</span>
+                    <span class="mono" style="font-size: 0.65rem; color: #71717a;">Enclave Active</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="btn-row-action" onclick="window.aetherAdmin.openEditAdminModal('${escapeHTML(col.id)}')" title="Edit Role & Permissions">
+                      Edit Role
+                    </button>
+                    ${isSuper ? `
+                      <button type="button" class="btn-row-action" style="opacity: 0.4; cursor: not-allowed;" title="Root Superadmin cannot be revoked" disabled>
+                        Protected
+                      </button>
+                    ` : `
+                      <button type="button" class="btn-row-action text-danger" onclick="window.aetherAdmin.revokeAdminAccess('${escapeHTML(col.id)}')" title="Revoke Administrative Privileges">
+                        Revoke Access
+                      </button>
+                    `}
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 2. Render VIP & Public Collectors Table
+      const tbody = document.getElementById('collectors-table-body');
+      if (tbody) {
+        const clientCollectors = this.collectors.filter(c => c.role !== 'admin');
+        if (clientCollectors.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--admin-text-muted); padding: 18px;">
+                No public or VIP collectors enrolled yet.
+              </td>
+            </tr>
+          `;
+        } else {
+          tbody.innerHTML = clientCollectors.map(col => {
+            const initials = (col.name || 'CR').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            return `
+              <tr>
+                <td>
+                  <div class="collector-avatar-cell">
+                    <div class="collector-avatar">${escapeHTML(initials)}</div>
+                    <div>
+                      <div class="collector-name">${escapeHTML(col.name)}</div>
+                      <div class="collector-handle">${escapeHTML(col.handle)} • ${escapeHTML(col.email)}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="vip-tier-badge ${(col.tier && col.tier.includes('Elite')) ? 'tier-elite' : (col.role === 'vip_member' ? 'tier-vault' : 'tier-collector')}">
+                    ${escapeHTML(col.tier)}
+                  </span>
+                </td>
+                <td>
+                  <span class="mono" style="color: #4ade80;">${escapeHTML(col.preferredSize)}</span>
+                </td>
+                <td>
+                  <span class="mono" style="color: #ffffff; font-weight: 700;">$${Number(col.totalSpend || 0).toLocaleString()}</span>
+                </td>
+                <td>
+                  <span class="mono">${Number(col.grailsOwned || 0)} pairs</span>
+                </td>
+                <td>
+                  <select class="admin-select" style="padding: 4px 8px; font-size: 0.75rem;" onchange="window.aetherAdmin.updateCollectorRole('${escapeHTML(col.id)}', this.value)">
+                    <option value="collector" ${col.role === 'collector' ? 'selected' : ''}>Collector</option>
+                    <option value="vip_member" ${col.role === 'vip_member' ? 'selected' : ''}>VIP Member</option>
+                    <option value="admin" ${col.role === 'admin' ? 'selected' : ''}>Promote to Admin</option>
+                  </select>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
     }
 
     async updateCollectorRole(colId, newRole) {
       const col = this.collectors.find(c => c.id === colId);
       if (!col) return;
       col.role = newRole;
-      col.tier = newRole === 'admin' ? 'Root Architect' : (newRole === 'vip_member' ? 'VIP Vault Member' : 'Grail Collector');
+      col.tier = newRole === 'admin' ? 'Vault Manager' : (newRole === 'vip_member' ? 'VIP Vault Member' : 'Grail Collector');
+      if (newRole === 'admin') {
+        col.admin_role = 'Vault Manager';
+        col.permissions = ['Manage Inventory', 'Process Orders', 'Export Vault Dumps'];
+      }
 
       if (window.AetherDB && typeof window.AetherDB.updateUser === 'function') {
-        await window.AetherDB.updateUser(colId, { role: newRole });
+        await window.AetherDB.updateUser(colId, {
+          role: newRole,
+          admin_role: col.admin_role || null,
+          permissions: col.permissions || []
+        });
       }
 
       this.renderCollectors();
-      this.showToast(`Updated tier for ${escapeHTML(col.name)} to: ${col.tier}`);
+      this.showToast(`Updated role for ${escapeHTML(col.name)} to: ${col.tier}`);
+      if (window.soundEngine && window.soundEngine.playSuccess) window.soundEngine.playSuccess();
     }
 
     // =========================================================================

@@ -239,6 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initAuthUI();
   initSoundButton();
   initHamburgerMenu();
+  if (typeof window.initAnalyticsChart === 'function') window.initAnalyticsChart();
+  if (typeof window.updateStorefrontStockBadges === 'function') window.updateStorefrontStockBadges();
 
   // Handle URL hash direct linking for square grid view or NFC modal
   if (window.location.hash === '#square-grid-vault' || window.location.hash === '#grid') {
@@ -995,16 +997,23 @@ function initAuthUI() {
   if (rawUser && navAuth) {
     try {
       const user = JSON.parse(rawUser);
+      const esc = (typeof window !== 'undefined' && window.escapeHTML)
+        ? window.escapeHTML
+        : (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+      const displayName = esc(user.name || user.full_name || 'Colecionador');
+      const isProfilePage = window.location.pathname.endsWith('profile.html') || window.location.href.includes('profile.html');
+
       navAuth.innerHTML = `
-        <div class="user-pill-logged" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; border: 1px solid var(--theme-primary);">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span>
-          <span style="font-size: 0.82rem; font-weight: 700; font-family: var(--font-mono); color: #fff;">${user.name}</span>
-          <button onclick="localStorage.removeItem('aether_user'); window.location.reload();" title="Sign Out" style="color: var(--text-muted); font-size: 0.75rem; margin-left: 4px;">✕</button>
-        </div>
+        <a href="profile.html" class="user-pill-logged ${isProfilePage ? 'active' : ''}" title="Ver Perfil de Colecionador" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; padding: 6px 14px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; border: 1px solid var(--theme-primary, #dc2626); transition: all 0.2s ease;">
+          <span class="user-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); display: inline-block;"></span>
+          <span class="user-name-text" style="font-size: 0.82rem; font-weight: 700; font-family: var(--font-mono, monospace); color: #fff;">${displayName}</span>
+          <button type="button" class="btn-signout-mini" title="Terminar Sessão" onclick="event.stopPropagation(); event.preventDefault(); localStorage.removeItem('aether_user'); localStorage.removeItem('aether_user_session'); window.location.reload();" style="background: none; border: none; color: #a1a1aa; font-size: 0.75rem; cursor: pointer; padding: 0 2px; margin-left: 4px; line-height: 1; transition: color 0.15s ease;">✕</button>
+        </a>
       `;
     } catch(e) {}
   }
 }
+window.initAuthUI = initAuthUI;
 
 // Audio Toggle Button UI (Supports both Top Bar and Drawer)
 function initSoundButton() {
@@ -1289,20 +1298,154 @@ window.syncSquareGridCatalog = async function() {
   if (window.wishlistManager && typeof window.wishlistManager.syncHeartButtons === 'function') {
     window.wishlistManager.syncHeartButtons();
   }
+
+  if (typeof window.updateStorefrontStockBadges === 'function') {
+    window.updateStorefrontStockBadges();
+  }
+};
+
+/**
+ * Live Database Stock Correlation for Storefront
+ * Reflects live database inventory across Runway sections & Square Grid cards.
+ */
+window.updateStorefrontStockBadges = async function() {
+  if (!window.AetherDB || typeof window.AetherDB.getInventory !== 'function') return;
+
+  try {
+    const allInventory = await window.AetherDB.getInventory();
+    if (!allInventory || allInventory.length === 0) return;
+
+    // Group inventory by shoeId
+    const stockByShoe = new Map();
+    const stockBySize = new Map(); // key: `${shoeId}_${sizeEu}` -> qty
+
+    allInventory.forEach(item => {
+      const shoeId = item.shoe_id;
+      const sizeEu = String(item.size_eu);
+      const qty = parseInt(item.quantity, 10) || 0;
+
+      stockByShoe.set(shoeId, (stockByShoe.get(shoeId) || 0) + qty);
+      stockBySize.set(`${shoeId}_${sizeEu}`, qty);
+    });
+
+    // 1. Correlate Runway Sections (#section-chicago, #section-purple, etc.)
+    const runwaySections = document.querySelectorAll('.runway-section');
+    runwaySections.forEach(section => {
+      const shoeId = section.dataset.shoeId || section.id.replace('section-', '');
+      const totalStock = stockByShoe.has(shoeId) ? stockByShoe.get(shoeId) : 0;
+
+      // Update or insert Vault Stock badge in .buy-card
+      const buyCard = section.querySelector('.buy-card');
+      if (buyCard) {
+        let badge = buyCard.querySelector('.card-vault-stock');
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'card-vault-stock';
+          const priceRow = buyCard.querySelector('.buy-price-row');
+          if (priceRow && priceRow.nextSibling) {
+            buyCard.insertBefore(badge, priceRow.nextSibling);
+          } else {
+            buyCard.prepend(badge);
+          }
+        }
+
+        if (totalStock === 0) {
+          badge.className = 'card-vault-stock stock-out';
+          badge.innerHTML = `<span class="pulse-stock-dot dot-red"></span> ARCHIVE VAULT: <strong>SOLD OUT</strong>`;
+        } else if (totalStock <= 2) {
+          badge.className = 'card-vault-stock stock-low';
+          badge.innerHTML = `<span class="pulse-stock-dot dot-red"></span> ⚡ ONLY <strong>${totalStock} PAIRS LEFT IN VAULT</strong>`;
+        } else {
+          badge.className = 'card-vault-stock';
+          badge.innerHTML = `<span class="pulse-stock-dot"></span> VAULT STOCK: <strong>${totalStock} PAIRS</strong>`;
+        }
+      }
+
+      // Update Runway Size Pills (.buy-sizes-scroll button)
+      const sizeButtons = section.querySelectorAll('.buy-sizes-scroll .btn-stage-size');
+      sizeButtons.forEach(btn => {
+        const eu = btn.dataset.eu;
+        const key = `${shoeId}_${eu}`;
+        const qty = stockBySize.has(key) ? stockBySize.get(key) : null;
+
+        if (qty !== null) {
+          if (qty === 0) {
+            btn.classList.add('out-of-stock', 'disabled');
+            btn.setAttribute('title', 'Esgotado / Out of Stock');
+          } else {
+            btn.classList.remove('out-of-stock', 'disabled');
+            btn.removeAttribute('title');
+          }
+        }
+      });
+    });
+
+    // 2. Correlate Square Grid Cards (#square-cards-grid or .square-cards-grid)
+    const squareCards = document.querySelectorAll('.square-sneaker-card');
+    squareCards.forEach(card => {
+      let shoeId = null;
+      const wishBtn = card.querySelector('.btn-card-wishlist');
+      if (wishBtn && wishBtn.dataset.wishlistId) {
+        shoeId = wishBtn.dataset.wishlistId;
+      } else {
+        const buyBtn = card.querySelector('.btn-card-buy');
+        if (buyBtn) {
+          const onclickStr = buyBtn.getAttribute('onclick') || '';
+          const match = onclickStr.match(/openBuyModal\(['"]([^'"]+)['"]\)/);
+          if (match) shoeId = match[1];
+        }
+      }
+
+      if (!shoeId) return;
+
+      const totalStock = stockByShoe.has(shoeId) ? stockByShoe.get(shoeId) : 0;
+      const footer = card.querySelector('.square-card-footer');
+      if (footer) {
+        let badge = footer.querySelector('.card-vault-stock');
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'card-vault-stock';
+          const priceRow = footer.querySelector('.square-card-price-row');
+          if (priceRow && priceRow.nextSibling) {
+            footer.insertBefore(badge, priceRow.nextSibling);
+          } else {
+            footer.prepend(badge);
+          }
+        }
+
+        if (totalStock === 0) {
+          badge.className = 'card-vault-stock stock-out';
+          badge.innerHTML = `<span class="pulse-stock-dot dot-red"></span> <strong>SOLD OUT</strong>`;
+        } else if (totalStock <= 2) {
+          badge.className = 'card-vault-stock stock-low';
+          badge.innerHTML = `<span class="pulse-stock-dot dot-red"></span> ⚡ ONLY <strong>${totalStock} LEFT</strong>`;
+        } else {
+          badge.className = 'card-vault-stock';
+          badge.innerHTML = `<span class="pulse-stock-dot"></span> VAULT STOCK: <strong>${totalStock} PAIRS</strong>`;
+        }
+      }
+    });
+
+  } catch(err) {
+    console.warn('[Aether Storefront] Error updating stock correlation badges:', err);
+  }
 };
 
 // Auto-run synchronization on boot and reactive database updates
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+    if (typeof window.updateStorefrontStockBadges === 'function') window.updateStorefrontStockBadges();
   }, 120);
 });
 
 window.addEventListener('aether:db:updated', () => {
   if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+  if (typeof window.updateStorefrontStockBadges === 'function') window.updateStorefrontStockBadges();
 });
 
 window.addEventListener('sneakers:db:synced', () => {
   if (typeof window.syncSquareGridCatalog === 'function') window.syncSquareGridCatalog();
+  if (typeof window.updateStorefrontStockBadges === 'function') window.updateStorefrontStockBadges();
 });
 

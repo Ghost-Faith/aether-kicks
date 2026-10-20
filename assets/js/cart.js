@@ -229,13 +229,28 @@ class CartManager {
     }
   }
 
-  openBuyModal(shoeId) {
-    const shoe = SNEAKERS_DB[shoeId];
+  async openBuyModal(shoeId) {
+    let shoe = (window.SNEAKERS_DB && window.SNEAKERS_DB[shoeId]) ? window.SNEAKERS_DB[shoeId] : null;
+    if (!shoe && window.AetherDB && typeof window.AetherDB.getShoes === 'function') {
+      try {
+        const allShoes = await window.AetherDB.getShoes();
+        shoe = allShoes.find(s => s.id === shoeId);
+      } catch(e) {}
+    }
     if (!shoe) return;
 
     this.activeShoeForModal = shoe;
     this.activeSizeUnit = localStorage.getItem('aether_size_unit') || 'EU';
     this.selectedEu = this.selectedEu || '42'; // Pre-selected Portugal grail size 42
+
+    // Load inventory for active shoe from AetherDB
+    this.activeModalInventory = [];
+    if (window.AetherDB && typeof window.AetherDB.getInventory === 'function') {
+      try {
+        this.activeModalInventory = await window.AetherDB.getInventory(shoeId);
+      } catch(e) {}
+    }
+
     const initialEntry = window.findSizeEntry ? window.findSizeEntry(this.selectedEu, 'eu') : { eu: '42', us: '8.5' };
     this.selectedSize = `EU ${initialEntry.eu} (US ${initialEntry.us})`;
     this.selectedCondition = 'deadstock';
@@ -244,14 +259,32 @@ class CartManager {
     if (!modal) return;
 
     // Populate modal info
-    document.getElementById('modal-shoe-title').textContent = shoe.name;
-    document.getElementById('modal-shoe-colorway').textContent = shoe.colorway;
-    document.getElementById('modal-shoe-style').textContent = `Style: ${shoe.styleCode} • ${shoe.year}`;
-    document.getElementById('modal-shoe-price').textContent = `$${shoe.price}`;
-    document.getElementById('modal-shoe-retail').textContent = `Est. Retail $${shoe.retailPrice}`;
-    document.getElementById('modal-shoe-img').src = shoe.image;
-    document.getElementById('modal-shoe-img').alt = shoe.name;
-    document.getElementById('modal-shoe-story').textContent = shoe.story;
+    const priceVal = shoe.vault_price !== undefined ? shoe.vault_price : (shoe.price || 400);
+    const retailVal = shoe.retail_price !== undefined ? shoe.retail_price : (shoe.retailPrice || 180);
+    const nameVal = shoe.name || 'Air Jordan 1 Retro High OG';
+    const colorwayVal = shoe.colorway || 'Grail Edition';
+    const styleVal = shoe.styleCode || shoe.style_code || '555088-000';
+    const yearVal = shoe.year || '2026';
+    const imgVal = shoe.image_url || shoe.image || 'assets/images/jordan-chicago.png';
+    const storyVal = shoe.story || 'Physical authentication verified across 14 checkpoints.';
+
+    const titleEl = document.getElementById('modal-shoe-title');
+    if (titleEl) titleEl.textContent = nameVal;
+    const colorEl = document.getElementById('modal-shoe-colorway');
+    if (colorEl) colorEl.textContent = colorwayVal;
+    const styleEl = document.getElementById('modal-shoe-style');
+    if (styleEl) styleEl.textContent = `Style: ${styleVal} • ${yearVal}`;
+    const priceEl = document.getElementById('modal-shoe-price');
+    if (priceEl) priceEl.textContent = `$${priceVal}`;
+    const retailEl = document.getElementById('modal-shoe-retail');
+    if (retailEl) retailEl.textContent = `Est. Retail $${retailVal}`;
+    const imgEl = document.getElementById('modal-shoe-img');
+    if (imgEl) {
+      imgEl.src = imgVal;
+      imgEl.alt = nameVal;
+    }
+    const storyEl = document.getElementById('modal-shoe-story');
+    if (storyEl) storyEl.textContent = storyVal;
 
     // Setup Unit Switcher in Modal
     const unitSwitcher = document.getElementById('modal-unit-switcher');
@@ -274,7 +307,7 @@ class CartManager {
       });
     }
 
-    // Render sizes
+    // Render sizes with live stock correlation
     this.renderModalSizes();
 
     // Sync modal wishlist button
@@ -287,8 +320,10 @@ class CartManager {
     }
 
     // Theme modal glow
-    modal.style.setProperty('--modal-accent', shoe.theme);
-    modal.style.setProperty('--modal-glow', shoe.glow);
+    const themeVal = shoe.theme_color || shoe.theme || '#dc2626';
+    const glowVal = shoe.glow_color || shoe.glow || 'rgba(220, 38, 38, 0.4)';
+    modal.style.setProperty('--modal-accent', themeVal);
+    modal.style.setProperty('--modal-glow', glowVal);
 
     modal.classList.add('active');
     document.getElementById('modal-backdrop').classList.add('active');
@@ -302,34 +337,72 @@ class CartManager {
     if (!sizeContainer || !this.activeShoeForModal) return;
     sizeContainer.innerHTML = '';
 
+    // Standard list of sizes (EU 38 to 46)
+    const standardSizes = ['38', '38.5', '39', '40', '40.5', '41', '42', '42.5', '43', '44', '45', '46'];
     const sizesList = (this.activeShoeForModal.sizes && this.activeShoeForModal.sizes.length > 0)
       ? this.activeShoeForModal.sizes
-      : ['40', '40.5', '41', '42', '42.5', '43', '44', '45'];
+      : standardSizes;
+
+    // Create lookup map for inventory stock
+    const invMap = new Map();
+    if (Array.isArray(this.activeModalInventory)) {
+      this.activeModalInventory.forEach(item => {
+        invMap.set(String(item.size_eu), parseInt(item.quantity, 10) || 0);
+      });
+    }
+
+    // Check if the selected size is in stock
+    const currentSelectedStock = invMap.has(String(this.selectedEu))
+      ? invMap.get(String(this.selectedEu))
+      : (invMap.size > 0 ? 0 : 5);
+
+    // If current selected size has 0 stock, see if we should auto-select the first in-stock size
+    if (currentSelectedStock === 0 && invMap.size > 0) {
+      const firstInStock = sizesList.find(sz => (invMap.get(String(sz)) || 0) > 0);
+      if (firstInStock) {
+        this.selectedEu = firstInStock;
+        const entry = window.findSizeEntry ? window.findSizeEntry(firstInStock, 'eu') : { eu: firstInStock, us: '8.5' };
+        this.selectedSize = `EU ${entry.eu} (US ${entry.us})`;
+      }
+    }
+
+    let selectedSizeInStock = true;
 
     sizesList.forEach((sz) => {
       const entry = window.findSizeEntry ? window.findSizeEntry(sz, 'eu') : { eu: sz, us: '8.5', uk: '7.5', cm: '26.5' };
-      const isSelected = entry.eu === this.selectedEu;
+      const isSelected = String(entry.eu) === String(this.selectedEu);
+      const stock = invMap.has(String(sz)) ? invMap.get(String(sz)) : (invMap.size > 0 ? 0 : 5);
+      const isOutOfStock = stock === 0 && invMap.size > 0;
+
+      if (isSelected && isOutOfStock) {
+        selectedSizeInStock = false;
+      }
+
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = `size-pill-btn ${isSelected ? 'selected' : ''}`;
+      btn.className = `size-pill size-pill-btn ${isSelected ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock disabled' : ''}`;
+      if (isOutOfStock) {
+        btn.setAttribute('title', 'Esgotado / Out of Stock');
+      }
 
       let mainVal = '';
       let subVal = '';
       if (this.activeSizeUnit === 'EU') {
-        mainVal = entry.eu;
-        subVal = `US ${entry.us} • ${entry.cm}cm`;
+        mainVal = isOutOfStock ? `${entry.eu} (0)` : `${entry.eu} (${stock} left)`;
+        subVal = isOutOfStock ? 'Esgotado / Out of Stock' : `US ${entry.us} • ${entry.cm}cm`;
       } else if (this.activeSizeUnit === 'US') {
-        mainVal = `US ${entry.us}`;
-        subVal = `EU ${entry.eu} • UK ${entry.uk}`;
+        mainVal = isOutOfStock ? `US ${entry.us} (0)` : `US ${entry.us} (${stock} left)`;
+        subVal = isOutOfStock ? 'Out of Stock' : `EU ${entry.eu} • UK ${entry.uk}`;
       } else if (this.activeSizeUnit === 'UK') {
-        mainVal = `UK ${entry.uk}`;
-        subVal = `EU ${entry.eu} • US ${entry.us}`;
+        mainVal = isOutOfStock ? `UK ${entry.uk} (0)` : `UK ${entry.uk} (${stock} left)`;
+        subVal = isOutOfStock ? 'Out of Stock' : `EU ${entry.eu} • US ${entry.us}`;
       } else if (this.activeSizeUnit === 'CM') {
-        mainVal = `${entry.cm} cm`;
-        subVal = `EU ${entry.eu}`;
+        mainVal = isOutOfStock ? `${entry.cm}cm (0)` : `${entry.cm} cm (${stock} left)`;
+        subVal = isOutOfStock ? 'Out of Stock' : `EU ${entry.eu}`;
       }
 
       btn.innerHTML = `<span class="size-main">${mainVal}</span><small class="size-sub">${subVal}</small>`;
+
       btn.addEventListener('click', () => {
         this.selectedEu = entry.eu;
         this.selectedSize = `EU ${entry.eu} (US ${entry.us})`;
@@ -338,17 +411,53 @@ class CartManager {
 
         const callout = document.getElementById('modal-selected-size-callout');
         if (callout) {
-          callout.textContent = `Selected: EU ${entry.eu} (US ${entry.us})`;
+          callout.textContent = `Selected: EU ${entry.eu} (US ${entry.us}) • ${stock > 0 ? stock + ' pairs in vault' : 'Esgotado'}`;
         }
+
+        // Toggle Add to Bag button disabled state
+        this.updateModalAddButtonState(!isOutOfStock);
+
         if (window.soundEngine) window.soundEngine.playClick();
       });
+
       sizeContainer.appendChild(btn);
     });
 
     const callout = document.getElementById('modal-selected-size-callout');
     if (callout) {
       const activeEntry = window.findSizeEntry ? window.findSizeEntry(this.selectedEu, 'eu') : { eu: '42', us: '8.5' };
-      callout.textContent = `Selected: EU ${activeEntry.eu} (US ${activeEntry.us})`;
+      const curStock = invMap.has(String(this.selectedEu)) ? invMap.get(String(this.selectedEu)) : (invMap.size > 0 ? 0 : 5);
+      callout.textContent = `Selected: EU ${activeEntry.eu} (US ${activeEntry.us}) • ${curStock > 0 ? curStock + ' in vault' : 'Esgotado'}`;
+    }
+
+    this.updateModalAddButtonState(selectedSizeInStock);
+  }
+
+  updateModalAddButtonState(isInStock) {
+    const addBagBtns = document.querySelectorAll('#buy-modal .btn-primary, #modal-btn-add-bag');
+    addBagBtns.forEach(btn => {
+      if (!isInStock) {
+        btn.disabled = true;
+        btn.style.opacity = '0.45';
+        btn.style.cursor = 'not-allowed';
+        btn.innerHTML = '<span>Esgotado / Out of Stock</span>';
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '<span data-i18n="add_to_bag">Add Pair to Bag</span>';
+      }
+    });
+  }
+
+  async refreshModalStock() {
+    const modal = document.getElementById('buy-modal');
+    if (!modal || !modal.classList.contains('active') || !this.activeShoeForModal) return;
+    if (window.AetherDB && typeof window.AetherDB.getInventory === 'function') {
+      try {
+        this.activeModalInventory = await window.AetherDB.getInventory(this.activeShoeForModal.id);
+        this.renderModalSizes();
+      } catch(e) {}
     }
   }
 
@@ -365,6 +474,14 @@ class CartManager {
 
   addCurrentModalItem() {
     if (!this.activeShoeForModal) return;
+    // Verify real-time stock
+    if (Array.isArray(this.activeModalInventory) && this.activeModalInventory.length > 0) {
+      const match = this.activeModalInventory.find(i => String(i.size_eu) === String(this.selectedEu));
+      if (match && match.quantity <= 0) {
+        if (typeof showToast === 'function') showToast('⚡ Tamanho esgotado no cofre! / Size currently out of stock.');
+        return;
+      }
+    }
     const size = this.selectedSize || 'EU 42 (US 8.5)';
     this.addItem(this.activeShoeForModal.id, size, 'deadstock');
     this.closeBuyModal();
@@ -660,6 +777,14 @@ function launchConfetti() {
     }).onfinish = () => el.remove();
   }
 }
+
+// Listen for real-time database updates to refresh modal stock
+window.addEventListener('aether:db:updated', () => {
+  if (window.cartManager && typeof window.cartManager.refreshModalStock === 'function') {
+    window.cartManager.refreshModalStock();
+  }
+});
+
 
 window.cartManager = new CartManager();
 window.showToast = showToast;
