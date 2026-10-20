@@ -1051,18 +1051,21 @@
 
     updateTopbarStats() {
       const shoeCount = Object.keys(this.shoes).length;
-      const orderCount = this.orders.length;
       const ind = document.getElementById('db-live-indicator');
       if (ind) {
-        ind.textContent = `${shoeCount} Grails • ${orderCount} Orders Active`;
+        ind.textContent = `${shoeCount} Grails`;
       }
       const badgeInv = document.getElementById('sidebar-badge-inventory');
-      if (badgeInv) badgeInv.textContent = shoeCount;
+      if (badgeInv) {
+        badgeInv.textContent = shoeCount;
+        badgeInv.title = `${shoeCount} Grails in Vault Catalog`;
+      }
 
       const badgeOrders = document.getElementById('sidebar-badge-orders');
       if (badgeOrders) {
         const pending = this.orders.filter(o => o.status !== 'delivered').length;
-        badgeOrders.textContent = `${pending} active`;
+        badgeOrders.textContent = pending > 0 ? String(pending) : '0';
+        badgeOrders.title = `${pending} Active Orders in Custody`;
       }
     }
 
