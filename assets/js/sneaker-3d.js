@@ -234,6 +234,11 @@ class Interactive3DSneaker {
   }
 
   render() {
+    if (localStorage.getItem('aether_webgl_enabled') === 'false') {
+      if (this.wrap) this.wrap.style.transform = 'none';
+      this.isAnimating = false;
+      return;
+    }
     // Auto-spin increment
     if (this.isAutoSpinning) {
       this.targetAngle += this.autoSpinSpeed;
@@ -348,6 +353,19 @@ function initAll3DSneakers() {
     window.aether3DSneakers[`shoe_${idx}_${shoeId}`] = instance;
   });
 }
+
+  window.addEventListener('aether:webglChange', (e) => {
+    const enabled = e.detail && e.detail.enabled !== undefined ? e.detail.enabled : true;
+    Object.values(window.aether3DSneakers || {}).forEach(inst => {
+      if (inst && typeof inst.requestRender === 'function') {
+        if (!enabled && inst.wrap) {
+          inst.wrap.style.transform = 'none';
+        } else if (enabled) {
+          inst.requestRender();
+        }
+      }
+    });
+  });
 
 document.addEventListener('DOMContentLoaded', () => {
   initAll3DSneakers();

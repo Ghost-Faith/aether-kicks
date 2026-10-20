@@ -2,7 +2,7 @@
  * ==============================================================================
  * AETHER KICKS - UNIVERSAL CLIENT-SIDE RELATIONAL DATABASE ENGINE
  * High-Performance IndexedDB Architecture with LocalStorage Fallback & Cache
- * Version: 1.0.0 (Production Release 2026)
+ * Version: 2.0.0 (Hardened Production Release 2026)
  * ==============================================================================
  */
 
@@ -289,7 +289,7 @@
         image: 'assets/images/jordan-green.png',
         theme_color: '#16a34a',
         theme: '#16a34a',
-        glow_color: 'rgba(22, 163, 74, 0.45)',
+        glow_color: 'rgba(220, 38, 38, 0.45)',
         glow: 'rgba(22, 163, 74, 0.45)',
         category: 'grid',
         condition_grade: 'Deadstock Grade A',
@@ -537,7 +537,6 @@
     const inv = [];
     DEFAULT_SEEDS.shoes.forEach((shoe) => {
       SIZING_REFERENCE.forEach((s) => {
-        // Base realistic quantity
         let baseQty = 6;
         if (s.eu === '42' || s.eu === '41' || s.eu === '43') baseQty = 12;
         if (s.eu === '38' || s.eu === '46') baseQty = 3;
@@ -559,6 +558,49 @@
 
   DEFAULT_SEEDS.inventory = generateDefaultInventory();
 
+  // Unified shoe object normalizer to eliminate duplicate aliasing logic
+  function normalizeShoe(shoeData) {
+    if (!shoeData || typeof shoeData !== 'object') return null;
+    const now = new Date().toISOString();
+    const id = shoeData.id || (shoeData.name ? shoeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `shoe_${Date.now()}`);
+
+    const retailVal = parseFloat(shoeData.retail_price !== undefined ? shoeData.retail_price : (shoeData.retailPrice !== undefined ? shoeData.retailPrice : 180)) || 180;
+    const vaultVal = parseFloat(shoeData.vault_price !== undefined ? shoeData.vault_price : (shoeData.price !== undefined ? shoeData.price : 300)) || 300;
+    const styleVal = shoeData.style_code || shoeData.styleCode || 'AETH-000';
+    const imgVal = shoeData.image_url || shoeData.image || 'assets/images/jordan-chicago.png';
+    const themeVal = shoeData.theme_color || shoeData.theme || '#dc2626';
+    const glowVal = shoeData.glow_color || shoeData.glow || 'rgba(220, 38, 38, 0.45)';
+
+    return {
+      id,
+      name: shoeData.name || 'Custom Grail',
+      silhouette: shoeData.silhouette || 'High',
+      colorway: shoeData.colorway || '',
+      style_code: styleVal,
+      styleCode: styleVal,
+      retail_price: retailVal,
+      retailPrice: retailVal,
+      vault_price: vaultVal,
+      price: vaultVal,
+      market_trend_pct: shoeData.market_trend_pct || shoeData.marketTrend || shoeData.trend || '+0.0%',
+      year: String(shoeData.year || '2026'),
+      story: shoeData.story || '',
+      image_url: imgVal,
+      image: imgVal,
+      theme_color: themeVal,
+      theme: themeVal,
+      glow_color: glowVal,
+      glow: glowVal,
+      category: shoeData.category || 'grid',
+      condition_grade: shoeData.condition_grade || shoeData.condition || 'Deadstock Grade A+',
+      nfc_token: shoeData.nfc_token || `NFC-AETH-${Math.floor(1000 + Math.random() * 9000)}-TOKEN`,
+      is_active: shoeData.is_active !== undefined ? (shoeData.is_active ? 1 : 0) : 1,
+      sizes: Array.isArray(shoeData.sizes) ? shoeData.sizes : ['40', '40.5', '41', '42', '42.5', '43', '44', '45'],
+      created_at: shoeData.created_at || now,
+      updated_at: shoeData.updated_at || now
+    };
+  }
+
   // Class Definition
   class AetherDatabase {
     constructor() {
@@ -566,9 +608,55 @@
       this.version = 1;
       this.stores = ['shoes', 'inventory', 'users', 'orders', 'drops', 'bespoke', 'auditLogs'];
       this.db = null;
-      this.isIndexedDBAvailable = typeof window !== 'undefined' && 'indexedDB' in window;
       this.storagePrefix = 'aether_idb_';
+      this._notifyDepth = 0;
+
+      // 3-Tier Storage Architecture: Tier 1: IDB | Tier 2: LocalStorage | Tier 3: In-Memory
+      this._memoryStore = {};
+      for (const s of this.stores) {
+        this._memoryStore[s] = JSON.parse(JSON.stringify(DEFAULT_SEEDS[s] || []));
+      }
+
+      this.isIndexedDBAvailable = this._detectIndexedDB();
       this._initPromise = this._init();
+    }
+
+    _detectIndexedDB() {
+      try {
+        return typeof window !== 'undefined' && 'indexedDB' in window && window.indexedDB !== null;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Safe Web Storage helpers that never throw in private/incognito modes
+    _safeLocalStorageGet(key) {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          return localStorage.getItem(key);
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    _safeLocalStorageSet(key, value) {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(key, value);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    _safeLocalStorageRemove(key) {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(key);
+          return true;
+        }
+      } catch (e) {}
+      return false;
     }
 
     /**
@@ -576,14 +664,31 @@
      */
     async _init() {
       if (!this.isIndexedDBAvailable) {
-        console.warn('[AetherDB] IndexedDB not available in current environment. Using LocalStorage fallback mode.');
+        console.warn('[AetherDB] IndexedDB not available or blocked in current environment. Using LocalStorage & In-Memory fallback mode.');
         this._initLocalStorageSeeds();
-        return;
+        return this;
       }
 
       return new Promise((resolve) => {
+        let isResolved = false;
+        const completeInit = (success) => {
+          if (isResolved) return;
+          isResolved = true;
+          if (!success) {
+            this.isIndexedDBAvailable = false;
+            this._initLocalStorageSeeds();
+          }
+          resolve(this);
+        };
+
         try {
           const req = indexedDB.open(this.dbName, this.version);
+
+          // Handle blocked upgrade gracefully (e.g. multiple tabs)
+          req.onblocked = (e) => {
+            console.warn('[AetherDB] IndexedDB upgrade blocked by another connection:', e);
+            completeInit(false);
+          };
 
           req.onupgradeneeded = (e) => {
             const db = e.target.result;
@@ -599,6 +704,9 @@
               const invStore = db.createObjectStore('inventory', { keyPath: 'id' });
               invStore.createIndex('shoe_id', 'shoe_id', { unique: false });
               invStore.createIndex('size_eu', 'size_eu', { unique: false });
+              try {
+                invStore.createIndex('by_shoe_size', ['shoe_id', 'size_eu'], { unique: true });
+              } catch (idxErr) {}
             }
 
             if (!db.objectStoreNames.contains('users')) {
@@ -614,11 +722,13 @@
             }
 
             if (!db.objectStoreNames.contains('drops')) {
-              db.createObjectStore('drops', { keyPath: 'id' });
+              const dropStore = db.createObjectStore('drops', { keyPath: 'id' });
+              dropStore.createIndex('status', 'status', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('bespoke')) {
-              db.createObjectStore('bespoke', { keyPath: 'id' });
+              const bespokeStore = db.createObjectStore('bespoke', { keyPath: 'id' });
+              bespokeStore.createIndex('status', 'status', { unique: false });
             }
 
             if (!db.objectStoreNames.contains('auditLogs')) {
@@ -629,21 +739,26 @@
 
           req.onsuccess = async (e) => {
             this.db = e.target.result;
+
+            // Handle connection close if another tab upgrades
+            this.db.onversionchange = () => {
+              try {
+                this.db.close();
+                console.warn('[AetherDB] Database closed due to version upgrade in another tab.');
+              } catch (err) {}
+            };
+
             await this._checkAndSeedDatabase();
-            resolve(this);
+            completeInit(true);
           };
 
           req.onerror = (e) => {
-            console.error('[AetherDB] IndexedDB open error, falling back to LocalStorage:', e);
-            this.isIndexedDBAvailable = false;
-            this._initLocalStorageSeeds();
-            resolve(this);
+            console.warn('[AetherDB] IndexedDB open error, falling back to LocalStorage & Memory:', e);
+            completeInit(false);
           };
         } catch (err) {
-          console.error('[AetherDB] Unexpected exception initializing IndexedDB:', err);
-          this.isIndexedDBAvailable = false;
-          this._initLocalStorageSeeds();
-          resolve(this);
+          console.warn('[AetherDB] Unexpected exception initializing IndexedDB:', err);
+          completeInit(false);
         }
       });
     }
@@ -653,8 +768,20 @@
      */
     async _checkAndSeedDatabase() {
       if (this.isIndexedDBAvailable && this.db) {
-        const shoes = await this._getAllFromStore('shoes');
-        if (!shoes || shoes.length === 0) {
+        try {
+          const shoes = await this._getAllFromStore('shoes');
+          if (!shoes || shoes.length === 0) {
+            await this._seedAllStores();
+          } else {
+            // Populate memory cache from IndexedDB
+            for (const store of this.stores) {
+              const data = await this._getAllFromStore(store);
+              if (data && data.length > 0) {
+                this._memoryStore[store] = data;
+              }
+            }
+          }
+        } catch (e) {
           await this._seedAllStores();
         }
       } else {
@@ -665,9 +792,8 @@
     async _seedAllStores() {
       for (const store of this.stores) {
         const seedItems = DEFAULT_SEEDS[store] || [];
-        for (const item of seedItems) {
-          await this._putInStore(store, item);
-        }
+        this._memoryStore[store] = JSON.parse(JSON.stringify(seedItems));
+        await this._putBatchInStore(store, seedItems);
       }
       this._syncToLocalStorage();
       console.log('[AetherDB] Factory deadstock seeds successfully populated into vault.');
@@ -676,127 +802,292 @@
     _initLocalStorageSeeds() {
       for (const store of this.stores) {
         const key = this.storagePrefix + store;
-        const existing = localStorage.getItem(key);
+        const existing = this._safeLocalStorageGet(key);
         if (!existing) {
-          localStorage.setItem(key, JSON.stringify(DEFAULT_SEEDS[store] || []));
+          const seedItems = DEFAULT_SEEDS[store] || [];
+          this._memoryStore[store] = JSON.parse(JSON.stringify(seedItems));
+          this._safeLocalStorageSet(key, JSON.stringify(seedItems));
+        } else {
+          try {
+            const parsed = JSON.parse(existing);
+            this._memoryStore[store] = Array.isArray(parsed) ? parsed : (DEFAULT_SEEDS[store] || []);
+          } catch (e) {
+            this._memoryStore[store] = DEFAULT_SEEDS[store] || [];
+          }
         }
       }
     }
 
     _syncToLocalStorage() {
-      if (typeof localStorage === 'undefined') return;
-      this.stores.forEach(async (store) => {
+      this.stores.forEach((store) => {
         try {
-          const data = await this._getAllFromStore(store);
-          localStorage.setItem(this.storagePrefix + store, JSON.stringify(data));
+          const data = this._memoryStore[store] || [];
+          this._safeLocalStorageSet(this.storagePrefix + store, JSON.stringify(data));
         } catch (e) {}
       });
     }
 
     // ==========================================================================
-    // LOW-LEVEL OBJECT STORE HELPERS (IDB + LocalStorage Fallback)
+    // LOW-LEVEL OBJECT STORE HELPERS (IDB + LocalStorage + Memory Fallback)
     // ==========================================================================
 
+    async _clearStore(storeName) {
+      this._memoryStore[storeName] = [];
+      this._safeLocalStorageRemove(this.storagePrefix + storeName);
+
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readwrite');
+              const store = tx.objectStore(storeName);
+              const req = store.clear();
+              req.onsuccess = () => resolve(true);
+              req.onerror = () => reject(req.error);
+              tx.onerror = () => reject(tx.error);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        } catch (e) {
+          console.warn(`[AetherDB] IndexedDB clear failed for '${storeName}':`, e);
+        }
+      }
+      return true;
+    }
+
     async _getAllFromStore(storeName) {
-      if (!this.isIndexedDBAvailable || !this.db) {
-        const raw = localStorage.getItem(this.storagePrefix + storeName);
-        return raw ? JSON.parse(raw) : (DEFAULT_SEEDS[storeName] || []);
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          const res = await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readonly');
+              const store = tx.objectStore(storeName);
+              const req = store.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+              tx.onerror = () => reject(tx.error);
+              tx.onabort = () => reject(new Error('Transaction aborted'));
+            } catch (err) {
+              reject(err);
+            }
+          });
+          this._memoryStore[storeName] = res;
+          return res;
+        } catch (e) {
+          console.warn(`[AetherDB] IndexedDB read failed for '${storeName}', falling back:`, e);
+        }
       }
 
-      return new Promise((resolve, reject) => {
+      // Tier 2: LocalStorage
+      const raw = this._safeLocalStorageGet(this.storagePrefix + storeName);
+      if (raw) {
         try {
-          const tx = this.db.transaction(storeName, 'readonly');
-          const store = tx.objectStore(storeName);
-          const req = store.getAll();
-          req.onsuccess = () => resolve(req.result || []);
-          req.onerror = () => {
-            const raw = localStorage.getItem(this.storagePrefix + storeName);
-            resolve(raw ? JSON.parse(raw) : []);
-          };
-        } catch (e) {
-          const raw = localStorage.getItem(this.storagePrefix + storeName);
-          resolve(raw ? JSON.parse(raw) : []);
-        }
-      });
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            this._memoryStore[storeName] = parsed;
+            return parsed;
+          }
+        } catch (err) {}
+      }
+
+      // Tier 3: In-Memory Store
+      return Array.isArray(this._memoryStore[storeName])
+        ? this._memoryStore[storeName]
+        : (DEFAULT_SEEDS[storeName] || []);
     }
 
     async _getByKey(storeName, key) {
-      if (!this.isIndexedDBAvailable || !this.db) {
-        const list = await this._getAllFromStore(storeName);
-        return list.find(item => item.id === key) || null;
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          const res = await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readonly');
+              const store = tx.objectStore(storeName);
+              const req = store.get(key);
+              req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+              req.onerror = () => reject(req.error);
+              tx.onerror = () => reject(tx.error);
+              tx.onabort = () => reject(new Error('Transaction aborted'));
+            } catch (err) {
+              reject(err);
+            }
+          });
+          if (res !== null) return res;
+        } catch (e) {}
       }
 
-      return new Promise((resolve) => {
-        try {
-          const tx = this.db.transaction(storeName, 'readonly');
-          const store = tx.objectStore(storeName);
-          const req = store.get(key);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = async () => {
-            const list = await this._getAllFromStore(storeName);
-            resolve(list.find(item => item.id === key) || null);
-          };
-        } catch (e) {
-          resolve(null);
-        }
-      });
+      const list = await this._getAllFromStore(storeName);
+      return list.find(item => item && item.id === key) || null;
     }
 
     async _putInStore(storeName, item) {
-      // Mirror to local storage
-      try {
-        const raw = localStorage.getItem(this.storagePrefix + storeName);
-        const list = raw ? JSON.parse(raw) : [];
-        const idx = list.findIndex(i => i.id === item.id);
-        if (idx >= 0) {
-          list[idx] = item;
-        } else {
-          list.push(item);
-        }
-        localStorage.setItem(this.storagePrefix + storeName, JSON.stringify(list));
-      } catch (e) {}
+      if (!item || typeof item !== 'object') {
+        throw new Error(`[AetherDB] Invalid item provided to _putInStore in store '${storeName}'`);
+      }
+      if (!item.id) {
+        item.id = `${storeName}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+      }
 
-      if (!this.isIndexedDBAvailable || !this.db) return item;
+      // 1. Memory store update
+      if (!Array.isArray(this._memoryStore[storeName])) {
+        this._memoryStore[storeName] = [];
+      }
+      const memList = this._memoryStore[storeName];
+      const memIdx = memList.findIndex(i => i && i.id === item.id);
+      if (memIdx >= 0) {
+        memList[memIdx] = item;
+      } else {
+        memList.push(item);
+      }
 
-      return new Promise((resolve, reject) => {
+      // 2. LocalStorage mirror
+      this._safeLocalStorageSet(this.storagePrefix + storeName, JSON.stringify(memList));
+
+      // 3. IndexedDB write
+      if (this.isIndexedDBAvailable && this.db) {
         try {
-          const tx = this.db.transaction(storeName, 'readwrite');
-          const store = tx.objectStore(storeName);
-          const req = store.put(item);
-          req.onsuccess = () => resolve(item);
-          req.onerror = (e) => reject(e);
+          await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readwrite');
+              const store = tx.objectStore(storeName);
+              const req = store.put(item);
+              req.onsuccess = () => resolve(item);
+              req.onerror = () => reject(req.error);
+              tx.onerror = () => reject(tx.error);
+              tx.onabort = () => reject(new Error('Transaction aborted'));
+            } catch (err) {
+              reject(err);
+            }
+          });
         } catch (err) {
-          resolve(item);
+          console.warn(`[AetherDB] IndexedDB put failed for '${storeName}':`, err);
         }
-      });
+      }
+
+      return item;
+    }
+
+    async _putBatchInStore(storeName, items) {
+      if (!Array.isArray(items) || items.length === 0) return items;
+
+      // 1. Update memory store
+      if (!Array.isArray(this._memoryStore[storeName])) {
+        this._memoryStore[storeName] = [];
+      }
+      const memList = this._memoryStore[storeName];
+      for (const item of items) {
+        if (!item || typeof item !== 'object') continue;
+        if (!item.id) item.id = `${storeName}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        const idx = memList.findIndex(i => i && i.id === item.id);
+        if (idx >= 0) {
+          memList[idx] = item;
+        } else {
+          memList.push(item);
+        }
+      }
+
+      // 2. Single LocalStorage write
+      this._safeLocalStorageSet(this.storagePrefix + storeName, JSON.stringify(memList));
+
+      // 3. Single IndexedDB transaction
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readwrite');
+              const store = tx.objectStore(storeName);
+              for (const item of items) {
+                if (item && item.id) store.put(item);
+              }
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => reject(tx.error);
+              tx.onabort = () => reject(new Error('Transaction aborted'));
+            } catch (err) {
+              reject(err);
+            }
+          });
+        } catch (err) {
+          console.warn(`[AetherDB] IndexedDB batch put failed for '${storeName}':`, err);
+        }
+      }
+      return items;
     }
 
     async _deleteFromStore(storeName, key) {
-      try {
-        const raw = localStorage.getItem(this.storagePrefix + storeName);
-        if (raw) {
-          const list = JSON.parse(raw).filter(i => i.id !== key);
-          localStorage.setItem(this.storagePrefix + storeName, JSON.stringify(list));
-        }
-      } catch (e) {}
+      // 1. Memory Store
+      if (Array.isArray(this._memoryStore[storeName])) {
+        this._memoryStore[storeName] = this._memoryStore[storeName].filter(i => i && i.id !== key);
+        this._safeLocalStorageSet(this.storagePrefix + storeName, JSON.stringify(this._memoryStore[storeName]));
+      }
 
-      if (!this.isIndexedDBAvailable || !this.db) return true;
-
-      return new Promise((resolve) => {
+      // 2. IndexedDB
+      if (this.isIndexedDBAvailable && this.db) {
         try {
-          const tx = this.db.transaction(storeName, 'readwrite');
-          const store = tx.objectStore(storeName);
-          const req = store.delete(key);
-          req.onsuccess = () => resolve(true);
-          req.onerror = () => resolve(false);
+          return await new Promise((resolve) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readwrite');
+              const store = tx.objectStore(storeName);
+              const req = store.delete(key);
+              req.onsuccess = () => resolve(true);
+              req.onerror = () => resolve(false);
+              tx.onerror = () => resolve(false);
+            } catch (e) {
+              resolve(false);
+            }
+          });
         } catch (e) {
-          resolve(false);
+          return false;
         }
-      });
+      }
+
+      return true;
+    }
+
+    async _deleteBatchFromStore(storeName, keys) {
+      if (!Array.isArray(keys) || keys.length === 0) return true;
+      const keySet = new Set(keys);
+
+      // 1. Memory store
+      if (Array.isArray(this._memoryStore[storeName])) {
+        this._memoryStore[storeName] = this._memoryStore[storeName].filter(item => item && !keySet.has(item.id));
+        this._safeLocalStorageSet(this.storagePrefix + storeName, JSON.stringify(this._memoryStore[storeName]));
+      }
+
+      // 2. IndexedDB transaction
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction(storeName, 'readwrite');
+              const store = tx.objectStore(storeName);
+              for (const key of keys) {
+                store.delete(key);
+              }
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => reject(tx.error);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        } catch (err) {
+          console.warn(`[AetherDB] IndexedDB batch delete failed for '${storeName}':`, err);
+        }
+      }
+      return true;
     }
 
     _notify(store, action, data = null) {
-      if (typeof window !== 'undefined') {
+      if (typeof window === 'undefined') return;
+
+      // Infinite loop & re-entrancy recursion guard
+      if (this._notifyDepth > 5) {
+        console.warn(`[AetherDB] Suppressed recursive _notify loop on store '${store}' action '${action}'`);
+        return;
+      }
+
+      this._notifyDepth++;
+      try {
         const evt = new CustomEvent('aether:db:updated', {
           detail: {
             store,
@@ -806,6 +1097,10 @@
           }
         });
         window.dispatchEvent(evt);
+      } catch (err) {
+        console.error('[AetherDB] Error dispatching aether:db:updated event:', err);
+      } finally {
+        this._notifyDepth--;
       }
     }
 
@@ -823,58 +1118,82 @@
       return await this._getByKey('shoes', id);
     }
 
+    /**
+     * High-performance joined lookup: retrieves a shoe and its sizes/inventory in parallel
+     */
+    async getShoeWithInventory(id) {
+      await this._initPromise;
+      const [shoe, inventory] = await Promise.all([
+        this.getShoe(id),
+        this.getInventory(id)
+      ]);
+      if (!shoe) return null;
+
+      const stockMap = {};
+      (inventory || []).forEach(item => {
+        if (item && item.size_eu) {
+          stockMap[item.size_eu] = item.quantity;
+        }
+      });
+
+      return {
+        ...shoe,
+        inventory: inventory || [],
+        sizesStock: stockMap
+      };
+    }
+
+    /**
+     * High-performance batch join: retrieves all shoes stitched with their full inventory
+     * Eliminates N+1 query loops across admin and storefront catalogs
+     */
+    async getShoesWithInventory() {
+      await this._initPromise;
+      const [shoes, inventory] = await Promise.all([
+        this.getShoes(),
+        this.getInventory()
+      ]);
+
+      const invByShoe = {};
+      (inventory || []).forEach(inv => {
+        if (!inv || !inv.shoe_id) return;
+        if (!invByShoe[inv.shoe_id]) invByShoe[inv.shoe_id] = [];
+        invByShoe[inv.shoe_id].push(inv);
+      });
+
+      return (shoes || []).map(shoe => {
+        const shoeInv = invByShoe[shoe.id] || [];
+        const stockMap = {};
+        shoeInv.forEach(item => {
+          if (item && item.size_eu) {
+            stockMap[item.size_eu] = item.quantity;
+          }
+        });
+        return {
+          ...shoe,
+          inventory: shoeInv,
+          sizesStock: stockMap
+        };
+      });
+    }
+
     async addShoe(shoeData) {
       await this._initPromise;
-      if (!shoeData.id) {
-        shoeData.id = shoeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      }
-
-      // Normalize fields
-      const now = new Date().toISOString();
-      const shoe = {
-        id: shoeData.id,
-        name: shoeData.name,
-        silhouette: shoeData.silhouette || 'High',
-        colorway: shoeData.colorway || '',
-        style_code: shoeData.style_code || shoeData.styleCode || 'AETH-000',
-        styleCode: shoeData.style_code || shoeData.styleCode || 'AETH-000',
-        retail_price: parseFloat(shoeData.retail_price || shoeData.retailPrice || 180),
-        retailPrice: parseFloat(shoeData.retail_price || shoeData.retailPrice || 180),
-        vault_price: parseFloat(shoeData.vault_price || shoeData.price || 300),
-        price: parseFloat(shoeData.vault_price || shoeData.price || 300),
-        market_trend_pct: shoeData.market_trend_pct || shoeData.marketTrend || '+0.0%',
-        year: shoeData.year || '2026',
-        story: shoeData.story || '',
-        image_url: shoeData.image_url || shoeData.image || 'assets/images/jordan-chicago.png',
-        image: shoeData.image_url || shoeData.image || 'assets/images/jordan-chicago.png',
-        theme_color: shoeData.theme_color || shoeData.theme || '#dc2626',
-        theme: shoeData.theme_color || shoeData.theme || '#dc2626',
-        glow_color: shoeData.glow_color || shoeData.glow || 'rgba(220, 38, 38, 0.45)',
-        glow: shoeData.glow_color || shoeData.glow || 'rgba(220, 38, 38, 0.45)',
-        category: shoeData.category || 'grid',
-        condition_grade: shoeData.condition_grade || 'Deadstock Grade A+',
-        nfc_token: shoeData.nfc_token || `NFC-AETH-${Math.floor(1000 + Math.random() * 9000)}-TOKEN`,
-        is_active: shoeData.is_active !== undefined ? (shoeData.is_active ? 1 : 0) : 1,
-        sizes: shoeData.sizes || ['40', '40.5', '41', '42', '42.5', '43', '44', '45'],
-        created_at: shoeData.created_at || now,
-        updated_at: now
-      };
-
+      const shoe = normalizeShoe(shoeData);
       await this._putInStore('shoes', shoe);
 
-      // Generate default inventory if not exists
+      // Generate default inventory batch if not existing
       const existingInv = await this.getInventory(shoe.id);
       if (!existingInv || existingInv.length === 0) {
-        for (const s of SIZING_REFERENCE) {
-          await this._putInStore('inventory', {
-            id: `inv_${shoe.id}_${s.eu.replace('.', '_')}`,
-            shoe_id: shoe.id,
-            size_eu: s.eu,
-            size_us: s.us,
-            quantity: 8,
-            reserved_quantity: 0
-          });
-        }
+        const newInvItems = SIZING_REFERENCE.map(s => ({
+          id: `inv_${shoe.id}_${s.eu.replace('.', '_')}`,
+          shoe_id: shoe.id,
+          size_eu: s.eu,
+          size_us: s.us,
+          quantity: 8,
+          reserved_quantity: 0
+        }));
+        await this._putBatchInStore('inventory', newInvItems);
       }
 
       await this.logAction('CREATE_SHOE', 'shoes', shoe.id, { name: shoe.name, price: shoe.price });
@@ -887,42 +1206,14 @@
       const existing = await this.getShoe(id);
       if (!existing) throw new Error(`Shoe with id '${id}' not found.`);
 
-      const updated = {
+      const merged = {
         ...existing,
         ...shoeData,
         id: id,
         updated_at: new Date().toISOString()
       };
 
-      // Synchronize aliases
-      if (shoeData.price !== undefined) {
-        updated.vault_price = parseFloat(shoeData.price);
-        updated.price = parseFloat(shoeData.price);
-      } else if (shoeData.vault_price !== undefined) {
-        updated.vault_price = parseFloat(shoeData.vault_price);
-        updated.price = parseFloat(shoeData.vault_price);
-      }
-      if (shoeData.retailPrice !== undefined || shoeData.retail_price !== undefined) {
-        const val = parseFloat(shoeData.retailPrice !== undefined ? shoeData.retailPrice : shoeData.retail_price);
-        updated.retail_price = val;
-        updated.retailPrice = val;
-      }
-      if (shoeData.image || shoeData.image_url) {
-        const img = shoeData.image || shoeData.image_url;
-        updated.image = img;
-        updated.image_url = img;
-      }
-      if (shoeData.theme || shoeData.theme_color) {
-        const t = shoeData.theme || shoeData.theme_color;
-        updated.theme = t;
-        updated.theme_color = t;
-      }
-      if (shoeData.glow || shoeData.glow_color) {
-        const g = shoeData.glow || shoeData.glow_color;
-        updated.glow = g;
-        updated.glow_color = g;
-      }
-
+      const updated = normalizeShoe(merged);
       await this._putInStore('shoes', updated);
       await this.logAction('UPDATE_SHOE', 'shoes', id, { updatedFields: Object.keys(shoeData) });
       this._notify('shoes', 'updated', updated);
@@ -934,10 +1225,11 @@
       const shoe = await this.getShoe(id);
       await this._deleteFromStore('shoes', id);
 
-      // Cascade delete inventory
+      // Cascade delete inventory items in single batch
       const invList = await this.getInventory(id);
-      for (const item of invList) {
-        await this._deleteFromStore('inventory', item.id);
+      const invKeys = invList.map(item => item.id);
+      if (invKeys.length > 0) {
+        await this._deleteBatchFromStore('inventory', invKeys);
       }
 
       await this.logAction('DELETE_SHOE', 'shoes', id, { deletedName: shoe ? shoe.name : id });
@@ -951,34 +1243,72 @@
 
     async getInventory(shoeId = null) {
       await this._initPromise;
+      if (!shoeId) {
+        return await this._getAllFromStore('inventory');
+      }
+
+      // Fast path via IndexedDB shoe_id index
+      if (this.isIndexedDBAvailable && this.db) {
+        try {
+          const res = await new Promise((resolve, reject) => {
+            try {
+              const tx = this.db.transaction('inventory', 'readonly');
+              const store = tx.objectStore('inventory');
+              if (store.indexNames.contains('shoe_id')) {
+                const idx = store.index('shoe_id');
+                const req = idx.getAll(shoeId);
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => reject(req.error);
+              } else {
+                resolve(null);
+              }
+            } catch (err) {
+              reject(err);
+            }
+          });
+          if (Array.isArray(res) && res.length > 0) return res;
+        } catch (e) {}
+      }
+
+      // Memory & LocalStorage fallback
       const all = await this._getAllFromStore('inventory');
-      if (!shoeId) return all;
-      return all.filter(item => item.shoe_id === shoeId);
+      return all.filter(item => item && item.shoe_id === shoeId);
     }
 
-    async updateInventory(shoeId, sizeEu, qty) {
+    async updateInventory(shoeId, sizeEu, qty, options = {}) {
       await this._initPromise;
-      const invList = await this.getInventory(shoeId);
-      let match = invList.find(i => String(i.size_eu) === String(sizeEu));
+      const safeSize = String(sizeEu).trim();
+      const itemId = `inv_${shoeId}_${safeSize.replace('.', '_')}`;
+
+      // O(1) primary key direct lookup
+      let match = await this._getByKey('inventory', itemId);
+      if (!match) {
+        const shoeStock = await this.getInventory(shoeId);
+        match = shoeStock.find(i => i && String(i.size_eu) === safeSize);
+      }
+
+      const parsedQty = Math.max(0, parseInt(qty, 10) || 0);
 
       if (match) {
-        match.quantity = Math.max(0, parseInt(qty, 10));
+        match.quantity = parsedQty;
         await this._putInStore('inventory', match);
       } else {
-        const ref = SIZING_REFERENCE.find(s => s.eu === String(sizeEu)) || { us: '8.5' };
+        const ref = SIZING_REFERENCE.find(s => s.eu === safeSize) || { us: '8.5' };
         match = {
-          id: `inv_${shoeId}_${String(sizeEu).replace('.', '_')}`,
+          id: itemId,
           shoe_id: shoeId,
-          size_eu: String(sizeEu),
+          size_eu: safeSize,
           size_us: ref.us,
-          quantity: Math.max(0, parseInt(qty, 10)),
+          quantity: parsedQty,
           reserved_quantity: 0
         };
         await this._putInStore('inventory', match);
       }
 
-      await this.logAction('UPDATE_INVENTORY', 'inventory', match.id, { shoeId, sizeEu, newQty: qty });
-      this._notify('inventory', 'updated', match);
+      if (!options.silent) {
+        await this.logAction('UPDATE_INVENTORY', 'inventory', match.id, { shoeId, sizeEu: safeSize, newQty: parsedQty });
+        this._notify('inventory', 'updated', match);
+      }
       return match;
     }
 
@@ -1027,8 +1357,6 @@
 
     /**
      * Cryptographic HMAC Session Signature
-     * Signs the user session payload with HMAC-SHA256.
-     * Prevents client-side privilege escalation (e.g. tampering role: 'admin' in DevTools).
      */
     async signSession(sessionData, secret = 'AETHER_VAULT_HMAC_MASTER_KEY_2026') {
       const payload = {
@@ -1064,7 +1392,6 @@
       }
 
       if (!signatureHex) {
-        // Fallback keyed hash
         signatureHex = await this.hashPassword(secret + ':' + payloadString + ':' + secret);
       }
 
@@ -1077,8 +1404,6 @@
 
     /**
      * Validates cryptographic session integrity.
-     * Recomputes the HMAC signature and verifies against session token.
-     * If any field (e.g. role: 'admin') was tampered with in DevTools, returns null.
      */
     async verifySession(sessionObject, secret = 'AETHER_VAULT_HMAC_MASTER_KEY_2026') {
       if (!sessionObject) return null;
@@ -1099,7 +1424,6 @@
         payload = sessionObject.payload;
         signature = sessionObject.signature;
       } else if (sessionObject.role) {
-        // Unsigned raw object injected into storage -> Reject as tampered
         return null;
       }
 
@@ -1147,24 +1471,21 @@
       await this._initPromise;
       const users = await this._getAllFromStore('users');
       const targetEmail = (email || '').toLowerCase().trim();
-      const user = users.find(u => u.email.toLowerCase() === targetEmail);
+      const user = users.find(u => u && u.email && u.email.toLowerCase() === targetEmail);
 
       if (!user) return null;
 
-      // Hash input password with SHA-256
       const hashedInput = await this.hashPassword(password);
 
-      // Known admin hashes ('aether2026', 'admin')
       const ADMIN_HASHES = [
-        '140f00da29e9ac981ff7ab92dbb872deeb5115dde50bbc0174543d2b3d61b3e9', // SHA-256('aether2026')
-        '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // SHA-256('admin')
-        '644558e0a3b06385d8e70a9dd37a5cb74fa450d067cbff5e84860b7ca4b659c8'  // SHA-256('aether')
+        '140f00da29e9ac981ff7ab92dbb872deeb5115dde50bbc0174543d2b3d61b3e9', // aether2026
+        '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', // admin
+        '644558e0a3b06385d8e70a9dd37a5cb74fa450d067cbff5e84860b7ca4b659c8'  // aether
       ];
-      // Known collector hashes ('grailpass', 'collector', 'airjordan1985')
       const COLLECTOR_HASHES = [
-        '61eb1a066b4d039315c21b6dbe71b53daec9ee34aabe364a7bcf1586831fee23', // SHA-256('grailpass')
-        '0736fd5b7cc7ab7dfe821d3a17f93f2634497770232486155c9c881321c4d22c', // SHA-256('collector')
-        'cb59d4c70a84be85933d76ce19a7ee5fbb0e9751e08ce7a858e7b396fcebb4b9'  // SHA-256('airjordan1985')
+        '61eb1a066b4d039315c21b6dbe71b53daec9ee34aabe364a7bcf1586831fee23', // grailpass
+        '0736fd5b7cc7ab7dfe821d3a17f93f2634497770232486155c9c881321c4d22c', // collector
+        'cb59d4c70a84be85933d76ce19a7ee5fbb0e9751e08ce7a858e7b396fcebb4b9'  // airjordan1985
       ];
 
       let isValid = false;
@@ -1208,7 +1529,7 @@
 
       // 1. Check Master Keys
       if (MASTER_KEYS.includes(trimmed)) {
-        const rootAdmin = allUsers.find(u => u.id === 'usr_admin_001') || {
+        const rootAdmin = allUsers.find(u => u && u.id === 'usr_admin_001') || {
           id: 'usr_admin_001',
           email: 'admin@aetherkicks.com',
           full_name: 'Atelier Vault Master',
@@ -1223,7 +1544,7 @@
       // 2. Check Provisioned Admins in Vault DB by SHA-256 Hash
       const inputHash = await this.hashPassword(trimmed);
       const matched = allUsers.find(u => {
-        if (u.role !== 'admin') return false;
+        if (!u || u.role !== 'admin') return false;
         return u.password_hash === inputHash;
       });
 
@@ -1273,8 +1594,7 @@
 
     async updateUser(id, userData) {
       await this._initPromise;
-      const users = await this._getAllFromStore('users');
-      const existing = users.find(u => u.id === id);
+      const existing = await this._getByKey('users', id);
       if (!existing) throw new Error(`User with id '${id}' not found.`);
 
       const updated = {
@@ -1318,6 +1638,7 @@
       await this._initPromise;
       const orderId = orderData.id || `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
       const now = new Date().toISOString();
+      const items = Array.isArray(orderData.items) ? orderData.items : [];
 
       const order = {
         id: orderId,
@@ -1333,30 +1654,28 @@
         status: orderData.status || 'pending_verification',
         tracking_number: orderData.tracking_number || `AETH-EXPRESS-${Math.floor(10000 + Math.random() * 90000)}-PT`,
         nfc_certificate_id: orderData.nfc_certificate_id || `NFC-AETH-${Math.floor(1000 + Math.random() * 9000)}-VERIFIED`,
-        items: orderData.items || [],
+        items: items,
         created_at: now
       };
 
       await this._putInStore('orders', order);
 
-      // Decrement inventory stock for each ordered item
-      if (Array.isArray(order.items)) {
-        for (const item of order.items) {
-          const shoeId = item.shoe_id || item.shoeId;
-          const sizeEu = item.size_eu || item.sizeEu || item.size;
-          const qty = parseInt(item.quantity || 1, 10);
-          if (shoeId && sizeEu) {
-            const currentStock = await this.getInventory(shoeId);
-            const sizeRecord = currentStock.find(s => String(s.size_eu) === String(sizeEu));
-            if (sizeRecord) {
-              const newQty = Math.max(0, sizeRecord.quantity - qty);
-              await this.updateInventory(shoeId, sizeEu, newQty);
-            }
+      // Decrement inventory stock with silent option to eliminate event storms
+      for (const item of items) {
+        const shoeId = item.shoe_id || item.shoeId;
+        const sizeEu = item.size_eu || item.sizeEu || item.size;
+        const qty = parseInt(item.quantity || 1, 10);
+        if (shoeId && sizeEu && !String(shoeId).startsWith('custom-')) {
+          const currentStock = await this.getInventory(shoeId);
+          const sizeRecord = currentStock.find(s => s && String(s.size_eu) === String(sizeEu));
+          if (sizeRecord) {
+            const newQty = Math.max(0, sizeRecord.quantity - qty);
+            await this.updateInventory(shoeId, sizeEu, newQty, { silent: true });
           }
         }
       }
 
-      await this.logAction('CREATE_ORDER', 'orders', order.id, { total: order.total, itemsCount: order.items.length });
+      await this.logAction('CREATE_ORDER', 'orders', order.id, { total: order.total, itemsCount: items.length });
       this._notify('orders', 'created', order);
       return order;
     }
@@ -1468,8 +1787,8 @@
       const dump = {
         meta: {
           app: 'AETHER KICKS VAULT DATABASE',
-          version: '1.0.0',
-          engine: 'AetherRelationalClient v1',
+          version: '2.0.0',
+          engine: 'AetherRelationalClient v2',
           exported_at: new Date().toISOString()
         }
       };
@@ -1483,36 +1802,76 @@
 
     /**
      * Import full JSON database backup.
+     * Handles table aliases, input validation, stringified JSON, and clean atomicity.
      */
     async importJSON(dumpData, merge = false) {
       await this._initPromise;
-      if (!dumpData || typeof dumpData !== 'object') {
+      let parsed = dumpData;
+
+      if (typeof parsed === 'string') {
+        try {
+          parsed = JSON.parse(dumpData);
+        } catch (e) {
+          throw new Error('Invalid JSON string provided for database import.');
+        }
+      }
+
+      if (!parsed || typeof parsed !== 'object') {
         throw new Error('Invalid JSON dump provided for database import.');
       }
 
+      if (parsed.data && typeof parsed.data === 'object' && !parsed.shoes) {
+        parsed = parsed.data;
+      }
+
+      const aliasMap = {
+        'shoe_inventory': 'inventory',
+        'hype_drops': 'drops',
+        'bespoke_commissions': 'bespoke',
+        'audit_logs': 'auditLogs'
+      };
+
       for (const store of this.stores) {
-        if (Array.isArray(dumpData[store])) {
-          if (!merge) {
-            // Clear current items in store
-            const current = await this._getAllFromStore(store);
-            for (const item of current) {
-              await this._deleteFromStore(store, item.id);
+        let items = parsed[store];
+        if (!items) {
+          for (const [alias, targetStore] of Object.entries(aliasMap)) {
+            if (targetStore === store && Array.isArray(parsed[alias])) {
+              items = parsed[alias];
+              break;
             }
           }
-          // Put new items
-          for (const item of dumpData[store]) {
-            await this._putInStore(store, item);
+        }
+
+        if (Array.isArray(items)) {
+          if (!merge) {
+            await this._clearStore(store);
+          }
+
+          const validItems = [];
+          for (const item of items) {
+            if (item && typeof item === 'object') {
+              if (!item.id) {
+                item.id = `${store}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+              }
+              validItems.push(item);
+            }
+          }
+
+          if (validItems.length > 0) {
+            await this._putBatchInStore(store, validItems);
           }
         }
       }
 
       await this.logAction('DATABASE_IMPORTED', 'SYSTEM', 'ALL', { mergeMode: merge });
-      this._notify('all', 'imported', dumpData);
+      this._notify('all', 'imported', parsed);
       return true;
     }
 
     /**
      * Generates a complete, executable SQL script containing schema and seed statements.
+     * Fully exports all 8 relational entities: users, shoes, shoe_inventory, orders,
+     * order_items, hype_drops, bespoke_commissions, and audit_logs.
      */
     async exportSQL() {
       await this._initPromise;
@@ -1522,34 +1881,23 @@
       lines.push('-- ==============================================================================');
       lines.push('-- AETHER KICKS - VAULT DATABASE SQL DUMP');
       lines.push(`-- Exported on: ${dump.meta.exported_at}`);
+      lines.push('-- Engine: Relational Client v2.0 (PostgreSQL / SQLite / Supabase Compliant)');
       lines.push('-- ==============================================================================');
       lines.push('');
 
-      // Bulletproof SQL String Escaper (Prevents SQL Injection & Breakout in Dumps)
+      // ANSI-compliant SQL String Escaper
       const esc = (val) => {
         if (val === null || val === undefined) return 'NULL';
         if (typeof val === 'number') return Number.isFinite(val) ? String(val) : 'NULL';
         if (typeof val === 'boolean') return val ? 'TRUE' : 'FALSE';
-        // Comprehensive SQL breakout prevention:
-        // 1. Remove NUL bytes (\0)
-        // 2. Escape backslashes (\ -> \\)
-        // 3. Double single-quotes (' -> '')
-        // 4. Escape newline/carriage return/tab control characters
-        // 5. Escape ASCII Ctrl+Z (\x1a)
-        const escaped = String(val)
-          .replace(/\0/g, '')
-          .replace(/\\/g, '\\\\')
-          .replace(/'/g, "''")
-          .replace(/\r/g, '\\r')
-          .replace(/\n/g, '\\n')
-          .replace(/\t/g, '\\t')
-          .replace(/\x1a/g, '\\Z');
-        return "'" + escaped + "'";
+        let str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+        str = str.replace(/\0/g, '').replace(/\\/g, '\\\\').replace(/'/g, "''");
+        return "'" + str + "'";
       };
 
-      // Users
+      // 1. Users
       if (dump.users && dump.users.length > 0) {
-        lines.push('-- USERS');
+        lines.push('-- 1. USERS & COLLECTORS');
         for (const u of dump.users) {
           lines.push(
             `INSERT INTO users (id, email, password_hash, full_name, role, preferred_size, address, city, postal_code, country, phone, created_at, updated_at) ` +
@@ -1560,35 +1908,36 @@
         lines.push('');
       }
 
-      // Shoes
+      // 2. Shoes / Products
       if (dump.shoes && dump.shoes.length > 0) {
-        lines.push('-- SHOES / PRODUCTS');
+        lines.push('-- 2. SHOES / PRODUCTS (ARCHIVE & RUNWAY CATALOG)');
         for (const s of dump.shoes) {
+          const isActive = s.is_active !== undefined ? (s.is_active ? 1 : 0) : 1;
           lines.push(
             `INSERT INTO shoes (id, name, silhouette, colorway, style_code, retail_price, vault_price, market_trend_pct, year, story, image_url, theme_color, glow_color, category, condition_grade, nfc_token, is_active, created_at, updated_at) ` +
-            `VALUES (${esc(s.id)}, ${esc(s.name)}, ${esc(s.silhouette)}, ${esc(s.colorway)}, ${esc(s.style_code || s.styleCode)}, ${esc(s.retail_price || s.retailPrice)}, ${esc(s.vault_price || s.price)}, ${esc(s.market_trend_pct || s.marketTrend)}, ${esc(s.year)}, ${esc(s.story)}, ${esc(s.image_url || s.image)}, ${esc(s.theme_color || s.theme)}, ${esc(s.glow_color || s.glow)}, ${esc(s.category)}, ${esc(s.condition_grade)}, ${esc(s.nfc_token)}, ${esc(s.is_active)}, ${esc(s.created_at)}, ${esc(s.updated_at)}) ` +
-            `ON CONFLICT (id) DO UPDATE SET vault_price = EXCLUDED.vault_price, updated_at = CURRENT_TIMESTAMP;`
+            `VALUES (${esc(s.id)}, ${esc(s.name)}, ${esc(s.silhouette)}, ${esc(s.colorway)}, ${esc(s.style_code || s.styleCode)}, ${esc(s.retail_price || s.retailPrice)}, ${esc(s.vault_price || s.price)}, ${esc(s.market_trend_pct || s.marketTrend)}, ${esc(s.year)}, ${esc(s.story)}, ${esc(s.image_url || s.image)}, ${esc(s.theme_color || s.theme)}, ${esc(s.glow_color || s.glow)}, ${esc(s.category)}, ${esc(s.condition_grade)}, ${esc(s.nfc_token)}, ${isActive}, ${esc(s.created_at)}, ${esc(s.updated_at)}) ` +
+            `ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, silhouette = EXCLUDED.silhouette, colorway = EXCLUDED.colorway, retail_price = EXCLUDED.retail_price, vault_price = EXCLUDED.vault_price, market_trend_pct = EXCLUDED.market_trend_pct, year = EXCLUDED.year, story = EXCLUDED.story, image_url = EXCLUDED.image_url, theme_color = EXCLUDED.theme_color, glow_color = EXCLUDED.glow_color, category = EXCLUDED.category, condition_grade = EXCLUDED.condition_grade, is_active = EXCLUDED.is_active, updated_at = CURRENT_TIMESTAMP;`
           );
         }
         lines.push('');
       }
 
-      // Inventory
+      // 3. Shoe Inventory
       if (dump.inventory && dump.inventory.length > 0) {
-        lines.push('-- SHOE INVENTORY');
+        lines.push('-- 3. SHOE INVENTORY');
         for (const inv of dump.inventory) {
           lines.push(
             `INSERT INTO shoe_inventory (id, shoe_id, size_eu, size_us, quantity, reserved_quantity) ` +
             `VALUES (${esc(inv.id)}, ${esc(inv.shoe_id)}, ${esc(inv.size_eu)}, ${esc(inv.size_us)}, ${esc(inv.quantity)}, ${esc(inv.reserved_quantity || 0)}) ` +
-            `ON CONFLICT (id) DO UPDATE SET quantity = EXCLUDED.quantity;`
+            `ON CONFLICT (id) DO UPDATE SET quantity = EXCLUDED.quantity, reserved_quantity = EXCLUDED.reserved_quantity;`
           );
         }
         lines.push('');
       }
 
-      // Orders
+      // 4. Orders & 5. Order Items
       if (dump.orders && dump.orders.length > 0) {
-        lines.push('-- ORDERS');
+        lines.push('-- 4. ORDERS');
         for (const o of dump.orders) {
           lines.push(
             `INSERT INTO orders (id, user_id, customer_name, customer_email, shipping_address, payment_method, promo_code, subtotal, discount, total, status, tracking_number, nfc_certificate_id, created_at) ` +
@@ -1597,11 +1946,26 @@
           );
         }
         lines.push('');
+
+        lines.push('-- 5. ORDER ITEMS');
+        for (const o of dump.orders) {
+          if (Array.isArray(o.items)) {
+            o.items.forEach((it, idx) => {
+              const itemId = it.id || `item_${o.id.replace(/[^a-zA-Z0-9]/g, '_')}_${idx + 1}`;
+              lines.push(
+                `INSERT INTO order_items (id, order_id, shoe_id, size_eu, size_us, unit_price, quantity) ` +
+                `VALUES (${esc(itemId)}, ${esc(o.id)}, ${esc(it.shoe_id || it.shoeId || 'chicago')}, ${esc(it.size_eu || it.size || '42')}, ${esc(it.size_us || '8.5')}, ${esc(it.unit_price || it.price || 0)}, ${esc(it.quantity || 1)}) ` +
+                `ON CONFLICT (id) DO NOTHING;`
+              );
+            });
+          }
+        }
+        lines.push('');
       }
 
-      // Drops
+      // 6. Hype Drops
       if (dump.drops && dump.drops.length > 0) {
-        lines.push('-- HYPE DROPS');
+        lines.push('-- 6. HYPE DROPS');
         for (const d of dump.drops) {
           lines.push(
             `INSERT INTO hype_drops (id, shoe_id, title, drop_time, price, stock_allocated, status) ` +
@@ -1612,38 +1976,34 @@
         lines.push('');
       }
 
+      // 7. Bespoke Commissions
+      if (dump.bespoke && dump.bespoke.length > 0) {
+        lines.push('-- 7. BESPOKE COMMISSIONS');
+        for (const b of dump.bespoke) {
+          lines.push(
+            `INSERT INTO bespoke_commissions (id, user_id, client_name, email, base_silhouette, base_leather_color, swoosh_color, laces_color, custom_engraving, status, created_at) ` +
+            `VALUES (${esc(b.id)}, ${esc(b.user_id)}, ${esc(b.client_name)}, ${esc(b.email)}, ${esc(b.base_silhouette)}, ${esc(b.base_leather_color)}, ${esc(b.swoosh_color)}, ${esc(b.laces_color)}, ${esc(b.custom_engraving)}, ${esc(b.status)}, ${esc(b.created_at)}) ` +
+            `ON CONFLICT (id) DO NOTHING;`
+          );
+        }
+        lines.push('');
+      }
+
+      // 8. Audit Logs
+      if (dump.auditLogs && dump.auditLogs.length > 0) {
+        lines.push('-- 8. AUDIT LOGS');
+        for (const l of dump.auditLogs) {
+          lines.push(
+            `INSERT INTO audit_logs (id, admin_id, action, entity, entity_id, details_json, created_at) ` +
+            `VALUES (${esc(l.id)}, ${esc(l.admin_id)}, ${esc(l.action)}, ${esc(l.entity)}, ${esc(l.entity_id)}, ${esc(l.details_json)}, ${esc(l.created_at)}) ` +
+            `ON CONFLICT (id) DO NOTHING;`
+          );
+        }
+        lines.push('');
+      }
+
       return lines.join('\n');
     }
-
-    /**
-     * =========================================================================
-     * ANTI-SQL INJECTION & PARAMETERIZED QUERY ENGINE
-     * =========================================================================
-     * 
-     * HOW PREPARED STATEMENTS PREVENT SQL INJECTION:
-     * -------------------------------------------------------------------------
-     * 1. In string concatenation (VULNERABLE):
-     *      const sql = "SELECT * FROM users WHERE email = '" + inputEmail + "'";
-     *    If attacker inputs: "admin@aetherkicks.com' OR '1'='1"
-     *    The database parser executes:
-     *      SELECT * FROM users WHERE email = 'admin@aetherkicks.com' OR '1'='1'
-     *    This bypasses authentication entirely.
-     * 
-     * 2. In Parameterized Prepared Statements (DEFENSE):
-     *    PostgreSQL / ANSI:
-     *      PREPARE user_login (text, text) AS 
-     *        SELECT * FROM users WHERE email = $1 AND password_hash = $2;
-     *      EXECUTE user_login('admin@aetherkicks.com', '...');
-     *    MySQL / SQLite:
-     *      SELECT * FROM users WHERE email = ? AND role = ?;
-     * 
-     *    WHY THIS CANNOT BE INJECTED:
-     *    The SQL grammar is parsed, compiled, and optimized by the database *before*
-     *    any parameter value is evaluated. Parameters are transmitted across a 
-     *    separate binary channel and treated strictly as literal data constants. 
-     *    Quotes, comment dashes (--), and semicolons (;) inside parameters are NEVER 
-     *    parsed as SQL syntax or commands.
-     */
 
     /**
      * Formats a query safely with parameter bindings ($1, $2, ... or ?)
@@ -1658,13 +2018,11 @@
         return "'" + String(val).replace(/\0/g, '').replace(/\\/g, '\\\\').replace(/'/g, "''") + "'";
       };
 
-      // Replace positional parameters ($1, $2, etc.)
       let result = sql.replace(/\$(\d+)/g, (match, num) => {
         const idx = parseInt(num, 10) - 1;
         return (idx >= 0 && idx < params.length) ? escParam(params[idx]) : match;
       });
 
-      // Replace positional '?' placeholders
       let pIdx = 0;
       result = result.replace(/\?/g, (match) => {
         return (pIdx < params.length) ? escParam(params[pIdx++]) : match;
@@ -1680,7 +2038,6 @@
       await this._initPromise;
       const safeSQL = this.formatParameterizedQuery(query, params);
 
-      // Audit and detect SQL injection signatures in user-supplied parameters
       const sqliRisks = [];
       params.forEach((param, index) => {
         if (typeof param === 'string') {
@@ -1737,10 +2094,7 @@
     async resetToDefaults() {
       await this._initPromise;
       for (const store of this.stores) {
-        const current = await this._getAllFromStore(store);
-        for (const item of current) {
-          await this._deleteFromStore(store, item.id);
-        }
+        await this._clearStore(store);
       }
       await this._seedAllStores();
       await this.logAction('DATABASE_RESET_FACTORY', 'SYSTEM', 'ROOT', { message: 'Reset all stores to factory deadstock seeds.' });

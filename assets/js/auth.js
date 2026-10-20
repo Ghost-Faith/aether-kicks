@@ -304,37 +304,33 @@ function initFormInteractions() {
           }
         }
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTarget = urlParams.get('redirect');
+
         if (window.soundEngine) window.soundEngine.playSuccess();
         showToast(`Welcome back, ${authenticatedUser.full_name || email.split('@')[0]}! Redirecting...`);
         
         setTimeout(() => {
           if (authenticatedUser.role === 'admin') {
             window.location.href = 'admin.html';
+          } else if (redirectTarget && !redirectTarget.startsWith('http')) {
+            window.location.href = redirectTarget;
           } else {
             window.location.href = 'index.html';
           }
         }, 900);
       } else {
-        // Fallback demo member authentication
-        setTimeout(async () => {
-          const fallbackUser = {
-            id: `usr_${Date.now()}`,
-            email: email,
-            name: email.split('@')[0].toUpperCase(),
-            role: 'collector',
-            tier: 'VIP GRAIL COLLECTOR'
-          };
-          const session = window.AetherDB ? await window.AetherDB.signSession(fallbackUser) : null;
-          localStorage.setItem('aether_user', JSON.stringify(fallbackUser));
-          if (session) localStorage.setItem('aether_user_session', JSON.stringify(session));
-
-          if (window.soundEngine) window.soundEngine.playSuccess();
-          showToast(`Welcome back, ${email.split('@')[0]}! Redirecting...`);
-          
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 900);
-        }, 600);
+        // Strict Security: Reject invalid credentials, zero fallback bypass
+        if (window.soundEngine && typeof window.soundEngine.playSecurityAlarm === 'function') {
+          window.soundEngine.playSecurityAlarm();
+        } else if (window.soundEngine) {
+          window.soundEngine.playClick();
+        }
+        showToast('❌ Email ou palavra-passe incorretos. Por favor verifique as suas credenciais.');
+        btn.disabled = false;
+        btn.innerHTML = 'Entrar no Cofre / Sign In';
+        const passInput = document.getElementById('login-password');
+        if (passInput) passInput.focus();
       }
     });
   }

@@ -184,3 +184,9 @@ class SoundEngine {
 }
 
 window.soundEngine = new SoundEngine();
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'aether_sound_enabled' && window.soundEngine) {
+    window.soundEngine.enabled = e.newValue !== 'false';
+  }
+});

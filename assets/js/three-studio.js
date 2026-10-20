@@ -72,6 +72,26 @@ class Sneaker3DStudio {
     // 5. Lighting Setup
     this.setupLighting();
 
+    // Check WebGL 3D preference from Atelier Profile
+    const webglPref = localStorage.getItem('aether_webgl_enabled');
+    this.webglEnabled = webglPref !== 'false';
+
+    window.addEventListener('aether:webglChange', (e) => {
+      this.webglEnabled = e.detail && e.detail.enabled !== undefined ? e.detail.enabled : true;
+      if (!this.webglEnabled) {
+        if (this.animId) {
+          cancelAnimationFrame(this.animId);
+          this.animId = null;
+        }
+        if (this.container) this.container.style.opacity = '0.45';
+      } else {
+        if (this.container) this.container.style.opacity = '1';
+        if (!this.animId && this.isVisible) {
+          this.animate();
+        }
+      }
+    });
+
     // 6. Build 3D Sneaker Model & Stage
     this.buildStage();
     this.buildSneakerModel(this.currentShoeId);
@@ -741,7 +761,7 @@ class Sneaker3DStudio {
   }
 
   animate() {
-    if (!this.isVisible) {
+    if (!this.isVisible || this.webglEnabled === false) {
       this.animId = null;
       return;
     }

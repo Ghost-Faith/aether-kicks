@@ -91,6 +91,26 @@ var SNEAKERS_DB = window.SNEAKERS_DB || {
 };
 window.SNEAKERS_DB = SNEAKERS_DB;
 
+// Precise Size Normalizers (Resolves Finding C-1 "428.5" inventory bug)
+function normalizeSizeEu(sizeStr) {
+  if (!sizeStr) return '42';
+  const str = String(sizeStr).trim();
+  const euMatch = str.match(/EU\s*([0-9.]+)/i);
+  if (euMatch) return euMatch[1];
+  const parenMatch = str.match(/^([0-9.]+)/);
+  if (parenMatch) return parenMatch[1];
+  return str.split('(')[0].replace(/[^0-9.]/g, '') || '42';
+}
+
+function normalizeSizeUs(sizeStr) {
+  if (!sizeStr) return '8.5';
+  const match = String(sizeStr).match(/US\s*([0-9.]+)/i);
+  return match ? match[1] : '8.5';
+}
+
+window.normalizeSizeEu = normalizeSizeEu;
+window.normalizeSizeUs = normalizeSizeUs;
+
 class CartManager {
   constructor() {
     this.items = this.loadCart();
@@ -118,25 +138,62 @@ class CartManager {
     this.renderCartItems();
   }
 
-  addItem(shoeId, size, condition = 'deadstock') {
-    const shoe = SNEAKERS_DB[shoeId];
-    if (!shoe) return;
+  async addItem(shoeId, size, condition = 'deadstock') {
+    let shoe = (window.SNEAKERS_DB && window.SNEAKERS_DB[shoeId]) ? window.SNEAKERS_DB[shoeId] : null;
+    if (!shoe && this.activeShoeForModal && this.activeShoeForModal.id === shoeId) {
+      shoe = this.activeShoeForModal;
+    }
+    if (!shoe && window.AetherDB && typeof window.AetherDB.getShoes === 'function') {
+      try {
+        const allShoes = await window.AetherDB.getShoes();
+        shoe = allShoes.find(s => s.id === shoeId);
+      } catch(e) {}
+    }
+    if (!shoe) {
+      showToast('⚠️ Silhueta de sapatilha não encontrada.');
+      return;
+    }
+
+    const cleanEu = normalizeSizeEu(size);
+    const cleanUs = normalizeSizeUs(size);
+    const formattedSize = `EU ${cleanEu} (US ${cleanUs})`;
+
+    // Verify stock against AetherDB / live inventory
+    if (window.AetherDB && typeof window.AetherDB.getInventory === 'function') {
+      try {
+        const inv = await window.AetherDB.getInventory(shoeId);
+        const match = inv.find(i => String(i.size_eu) === String(cleanEu));
+        const maxStock = match ? parseInt(match.quantity, 10) : 5;
+        const existingItem = this.items.find(
+          item => item.id === shoeId && normalizeSizeEu(item.size) === cleanEu && item.condition === condition
+        );
+        const currentQty = existingItem ? existingItem.quantity : 0;
+        if (currentQty + 1 > maxStock) {
+          showToast(`⚡ Limite atingido: Apenas ${maxStock} pares disponíveis no cofre para EU ${cleanEu}.`);
+          return;
+        }
+      } catch(e) {}
+    }
 
     const existingIndex = this.items.findIndex(
-      item => item.id === shoeId && item.size === size && item.condition === condition
+      item => item.id === shoeId && normalizeSizeEu(item.size) === cleanEu && item.condition === condition
     );
+
+    const price = parseFloat(shoe.vault_price !== undefined ? shoe.vault_price : (shoe.price || 400));
 
     if (existingIndex > -1) {
       this.items[existingIndex].quantity += 1;
     } else {
       this.items.push({
         id: shoeId,
-        name: shoe.name,
-        colorway: shoe.colorway,
-        price: shoe.price,
-        image: shoe.image,
-        theme: shoe.theme,
-        size: size,
+        name: shoe.name || 'Air Jordan 1 Retro',
+        colorway: shoe.colorway || 'Grail',
+        price: price,
+        image: shoe.image_url || shoe.image || 'assets/images/jordan-chicago.png',
+        theme: shoe.theme_color || shoe.theme || '#dc2626',
+        size: formattedSize,
+        size_eu: cleanEu,
+        size_us: cleanUs,
         condition: condition,
         quantity: 1
       });
@@ -144,7 +201,7 @@ class CartManager {
 
     this.saveCart();
     if (window.soundEngine) window.soundEngine.playSuccess();
-    showToast(`Added ${shoe.name} (${shoe.colorway}) to Bag!`);
+    showToast(`Adicionado ${shoe.name} (${shoe.colorway}) ao saco!`);
     this.openCart();
   }
 
@@ -153,16 +210,34 @@ class CartManager {
       const removed = this.items.splice(index, 1)[0];
       this.saveCart();
       if (window.soundEngine) window.soundEngine.playClick();
-      showToast(`Removed ${removed.colorway} from Bag`);
+      showToast(`Removido ${removed.colorway} do saco`);
     }
   }
 
-  updateQuantity(index, delta) {
-    if (this.items[index]) {
-      this.items[index].quantity += delta;
-      if (this.items[index].quantity <= 0) {
-        this.removeItem(index);
-        return;
+  async updateQuantity(index, delta) {
+    const item = this.items[index];
+    if (!item) return;
+
+    if (delta > 0 && window.AetherDB && typeof window.AetherDB.getInventory === 'function') {
+      try {
+        const inv = await window.AetherDB.getInventory(item.id);
+        const cleanEu = item.size_eu || normalizeSizeEu(item.size);
+        const match = inv.find(i => String(i.size_eu) === String(cleanEu));
+        if (match && item.quantity + delta > parseInt(match.quantity, 10)) {
+          showToast(`⚡ Limite do cofre: Apenas ${match.quantity} disponíveis.`);
+          return;
+        }
+      } catch(e) {}
+    }
+
+    item.quantity += delta;
+    if (item.quantity <= 0) {
+      this.removeItem(index);
+      return;
+    }
+    this.saveCart();
+    if (window.soundEngine) window.soundEngine.playClick();
+  }
       }
       this.saveCart();
       if (window.soundEngine) window.soundEngine.playClick();
@@ -489,19 +564,43 @@ class CartManager {
 
   openCheckoutModal() {
     if (this.items.length === 0) {
-      showToast('Your bag is empty! Add a grail to checkout.');
+      showToast('O seu saco está vazio! Adicione um par para finalizar a compra.');
       return;
     }
     this.closeCart();
     const modal = document.getElementById('checkout-modal');
     const backdrop = document.getElementById('checkout-backdrop');
     if (modal && backdrop) {
+      // Preserve original modal form HTML so multiple purchases without reload don't crash
+      if (!this._originalCheckoutHtml) {
+        this._originalCheckoutHtml = modal.innerHTML;
+      } else {
+        modal.innerHTML = this._originalCheckoutHtml;
+      }
+
+      // Re-hydrate shipping defaults if logged in
+      try {
+        const storedProfile = localStorage.getItem('aether_profile') || localStorage.getItem('aether_user');
+        if (storedProfile) {
+          const p = JSON.parse(storedProfile);
+          const nameInput = document.getElementById('chk-shipping-name');
+          const addrInput = document.getElementById('chk-shipping-addr');
+          const zipInput = document.getElementById('chk-shipping-zip');
+          if (nameInput && p.name) nameInput.value = p.name;
+          if (addrInput && p.address) addrInput.value = p.address;
+          if (zipInput && (p.zip || p.postal_code)) zipInput.value = p.zip || p.postal_code;
+        }
+      } catch (e) {}
+
       // populate summary
       const sub = this.getSubtotal();
       const tot = this.getTotal();
-      document.getElementById('chk-subtotal').textContent = `$${sub.toFixed(2)}`;
-      document.getElementById('chk-discount').textContent = `-$${(sub - tot).toFixed(2)}`;
-      document.getElementById('chk-total').textContent = `$${tot.toFixed(2)}`;
+      const subEl = document.getElementById('chk-subtotal');
+      const discEl = document.getElementById('chk-discount');
+      const totEl = document.getElementById('chk-total');
+      if (subEl) subEl.textContent = `$${sub.toFixed(2)}`;
+      if (discEl) discEl.textContent = `-$${(sub - tot).toFixed(2)}`;
+      if (totEl) totEl.textContent = `$${tot.toFixed(2)}`;
 
       modal.classList.add('active');
       backdrop.classList.add('active');
@@ -517,6 +616,9 @@ class CartManager {
       modal.classList.remove('active');
       backdrop.classList.remove('active');
       document.body.style.overflow = '';
+      if (this._originalCheckoutHtml) {
+        modal.innerHTML = this._originalCheckoutHtml;
+      }
       if (window.soundEngine) window.soundEngine.playClick();
     }
   }
@@ -525,27 +627,42 @@ class CartManager {
     const btn = document.getElementById('btn-confirm-order');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-inline"></span> Encrypting & Securing Pair...`;
+      btn.innerHTML = `<span class="spinner-inline"></span> A encriptar e reservar no cofre...`;
     }
 
     if (window.soundEngine) window.soundEngine.playSwoosh();
 
     const activeItems = (this.items && this.items.length > 0) ? this.items.slice() : [];
-    const subtotal = this.getSubtotal();
-    const total = this.getTotal();
+
+    // Authoritative pricing check against catalog / database to prevent price tampering
+    let subtotal = 0;
+    activeItems.forEach(it => {
+      let catalogShoe = (window.SNEAKERS_DB && window.SNEAKERS_DB[it.id]) ? window.SNEAKERS_DB[it.id] : null;
+      if (catalogShoe) {
+        const authorPrice = Number(catalogShoe.vault_price !== undefined ? catalogShoe.vault_price : (catalogShoe.price || 400));
+        it.price = authorPrice;
+      }
+      subtotal += (Number(it.price) || 0) * (Number(it.quantity) || 1);
+    });
     const discount = subtotal * (this.discountPercent || 0);
+    const total = Math.max(0, subtotal - discount);
 
     let buyerName = 'Marcus Collector';
     let buyerEmail = 'collector@aetherkicks.com';
-    let shippingAddr = '23 Championship Blvd, Suite 1985, Chicago, IL 60601';
+    let shippingAddr = 'Avenida da Liberdade 120, 3º Dto, 1250-146 Lisboa, Portugal';
 
     try {
+      const nameInput = document.getElementById('chk-shipping-name');
+      const addrInput = document.getElementById('chk-shipping-addr');
+      const zipInput = document.getElementById('chk-shipping-zip');
+      if (nameInput && nameInput.value.trim()) buyerName = nameInput.value.trim();
+      if (addrInput && addrInput.value.trim()) {
+        shippingAddr = `${addrInput.value.trim()}, ${zipInput ? zipInput.value.trim() : ''} Lisboa, Portugal`;
+      }
       const storedProfile = localStorage.getItem('aether_profile') || localStorage.getItem('aether_user');
       if (storedProfile) {
         const p = JSON.parse(storedProfile);
-        if (p.name) buyerName = p.name;
         if (p.email) buyerEmail = p.email;
-        if (p.address) shippingAddr = `${p.address}, ${p.postal || p.postal_code || ''} ${p.city || 'Lisboa'}, ${p.country || 'Portugal'}`;
       }
     } catch (e) {}
 
@@ -575,19 +692,24 @@ class CartManager {
       tracking: trackingCode,
       nfc_certificate_id: nfcToken,
       nfcHash: nfcToken,
-      items: activeItems.map(it => ({
-        shoe_id: it.id,
-        shoe_name: it.name,
-        shoeName: it.name,
-        colorway: it.colorway,
-        size_eu: it.size ? String(it.size).replace(/[^0-9.]/g, '') : '42',
-        size_us: '8.5',
-        size: it.size,
-        unit_price: it.price,
-        price: it.price,
-        quantity: it.quantity,
-        image: it.image
-      }))
+      items: activeItems.map(it => {
+        const cleanEu = it.size_eu || normalizeSizeEu(it.size);
+        const cleanUs = it.size_us || normalizeSizeUs(it.size);
+        return {
+          shoe_id: it.id,
+          shoe_name: it.name,
+          shoeName: it.name,
+          colorway: it.colorway,
+          // CRITICAL FIX: Clean single EU size number (e.g. "42", not "428.5") that matches database inventory
+          size_eu: cleanEu,
+          size_us: cleanUs,
+          size: it.size || `EU ${cleanEu} (US ${cleanUs})`,
+          unit_price: Number(it.price) || 0,
+          price: Number(it.price) || 0,
+          quantity: Number(it.quantity) || 1,
+          image: it.image
+        };
+      })
     };
 
     // Save order into localStorage
@@ -598,7 +720,7 @@ class CartManager {
       localStorage.setItem('aether_orders', JSON.stringify(ordersList));
     } catch (e) {}
 
-    // Save order into AetherDB relational engine
+    // Save order into AetherDB relational engine (accurately decrements stock!)
     if (window.AetherDB && typeof window.AetherDB.addOrder === 'function') {
       window.AetherDB.addOrder(orderRecord).catch(err => console.warn('[Cart] AetherDB order add warning:', err));
     }
@@ -614,15 +736,15 @@ class CartManager {
             <div class="success-icon-wrap">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <h2>Grail Secured!</h2>
-            <p class="order-code">Order Number: <strong>${orderNum}</strong></p>
-            <p class="order-note">100% Verified Deadstock. Your pair has been locked in vault custody and is queued for authenticated 2-Day Air Express dispatch.</p>
+            <h2>Grail Assegurado!</h2>
+            <p class="order-code">Número da Ordem: <strong>${orderNum}</strong></p>
+            <p class="order-note">100% Deadstock Verificado. O par foi alocado no cofre e encaminhado para despacho autenticado Air Express.</p>
             <div class="tamper-seal-badge">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>NFC Cryptographic Anti-Counterfeit Seal Active: <strong>${trackingCode}</strong></span>
+              <span>Selo NFC Criptográfico Antifalsificação Ativo: <strong>${trackingCode}</strong></span>
             </div>
             <button class="btn-primary" onclick="window.cartManager.closeCheckoutModal(); window.location.reload();">
-              Back to Showroom
+              Voltar ao Showroom
             </button>
           </div>
         `;
@@ -630,7 +752,7 @@ class CartManager {
 
       if (window.soundEngine) window.soundEngine.playSuccess();
       launchConfetti();
-    }, 1400);
+    }, 1200);
   }
 
   exploreShowcase() {
@@ -722,7 +844,7 @@ class CartManager {
   }
 }
 
-// Global Toast System
+// Global Toast System (DOM-safe against XSS)
 function showToast(message, type = 'info') {
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -733,11 +855,16 @@ function showToast(message, type = 'info') {
 
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `
-    <span class="toast-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--theme-primary); display: inline-block;"></span>
-    <span>${message}</span>
-  `;
+  
+  const dot = document.createElement('span');
+  dot.className = 'toast-dot';
+  dot.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; background: var(--theme-primary); display: inline-block; flex-shrink: 0;';
 
+  const textSpan = document.createElement('span');
+  textSpan.textContent = String(message || '');
+
+  toast.appendChild(dot);
+  toast.appendChild(textSpan);
   container.appendChild(toast);
 
   setTimeout(() => {

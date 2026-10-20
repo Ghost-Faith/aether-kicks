@@ -685,20 +685,23 @@ function initRefinedSneakerParallax() {
       }
     }
 
+    let stageRect = null;
     stage.addEventListener('mouseenter', () => {
       isHovering = true;
+      stageRect = stage.getBoundingClientRect();
       cancelAnimationFrame(animationFrameId);
       animationFrameId = requestAnimationFrame(renderParallax);
     });
 
     stage.addEventListener('mousemove', (e) => {
-      const rect = stage.getBoundingClientRect();
-      targetX = ((e.clientX - rect.left) / rect.width) - 0.5;
-      targetY = ((e.clientY - rect.top) / rect.height) - 0.5;
+      if (!stageRect) stageRect = stage.getBoundingClientRect();
+      targetX = ((e.clientX - stageRect.left) / stageRect.width) - 0.5;
+      targetY = ((e.clientY - stageRect.top) / stageRect.height) - 0.5;
     });
 
     stage.addEventListener('mouseleave', () => {
       isHovering = false;
+      stageRect = null;
     });
   });
 }
@@ -990,11 +993,29 @@ function closeNFCModal() {
   }
 }
 
+function performSignOut() {
+  localStorage.removeItem('aether_user');
+  localStorage.removeItem('aether_user_session');
+  localStorage.removeItem('aether_profile');
+  sessionStorage.removeItem('aether_admin_authenticated');
+  sessionStorage.removeItem('aether_admin_token');
+  sessionStorage.removeItem('aether_admin_user');
+  sessionStorage.removeItem('aether_admin_last_activity');
+  window.dispatchEvent(new CustomEvent('aether:auth:changed', { detail: { user: null } }));
+  if (window.location.pathname.endsWith('profile.html')) {
+    window.location.href = 'index.html';
+  } else {
+    window.location.reload();
+  }
+}
+
 // Recognize Logged-in User
 function initAuthUI() {
   const rawUser = localStorage.getItem('aether_user');
   const navAuth = document.querySelector('.nav-auth-group');
-  if (rawUser && navAuth) {
+  if (!navAuth) return;
+
+  if (rawUser) {
     try {
       const user = JSON.parse(rawUser);
       const esc = (typeof window !== 'undefined' && window.escapeHTML)
@@ -1007,13 +1028,37 @@ function initAuthUI() {
         <a href="profile.html" class="user-pill-logged ${isProfilePage ? 'active' : ''}" title="Ver Perfil de Colecionador" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; padding: 6px 14px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; border: 1px solid var(--theme-primary, #dc2626); transition: all 0.2s ease;">
           <span class="user-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); display: inline-block;"></span>
           <span class="user-name-text" style="font-size: 0.82rem; font-weight: 700; font-family: var(--font-mono, monospace); color: #fff;">${displayName}</span>
-          <button type="button" class="btn-signout-mini" title="Terminar Sessão" onclick="event.stopPropagation(); event.preventDefault(); localStorage.removeItem('aether_user'); localStorage.removeItem('aether_user_session'); window.location.reload();" style="background: none; border: none; color: #a1a1aa; font-size: 0.75rem; cursor: pointer; padding: 0 2px; margin-left: 4px; line-height: 1; transition: color 0.15s ease;">✕</button>
+          <button type="button" class="btn-signout-mini" title="Terminar Sessão" style="background: none; border: none; color: #a1a1aa; font-size: 0.75rem; cursor: pointer; padding: 0 2px; margin-left: 4px; line-height: 1; transition: color 0.15s ease;">✕</button>
         </a>
       `;
+      const signoutBtn = navAuth.querySelector('.btn-signout-mini');
+      if (signoutBtn) {
+        signoutBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          performSignOut();
+        };
+      }
     } catch(e) {}
+  } else {
+    // Reset to unauthenticated state if session was purged
+    navAuth.innerHTML = `
+      <a href="login.html" class="btn-nav-login" style="display: inline-flex; align-items: center; gap: 6px;" title="Painel do Colecionador">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="nav-profile-name">Perfil</span>
+      </a>
+    `;
   }
 }
 window.initAuthUI = initAuthUI;
+window.performSignOut = performSignOut;
+
+// Cross-tab synchronization
+window.addEventListener('storage', (e) => {
+  if (e.key === 'aether_user' || e.key === 'aether_user_session') {
+    initAuthUI();
+  }
+});
 
 // Audio Toggle Button UI (Supports both Top Bar and Drawer)
 function initSoundButton() {

@@ -83,11 +83,15 @@
       // Initialize Hardened Admin Security Gate
       await this.setupAuthCheck();
 
-      // Listen for database updates across any tab or component
-      window.addEventListener('aether:db:updated', async (e) => {
+      // Listen for database updates across any tab or component (debounced)
+      let _adminDbDebounce = null;
+      window.addEventListener('aether:db:updated', (e) => {
         if (sessionStorage.getItem('aether_admin_authenticated') === 'true') {
-          console.log('[Admin Controller] Reactive DB update detected:', e.detail);
-          await this.loadFromDatabase();
+          clearTimeout(_adminDbDebounce);
+          _adminDbDebounce = setTimeout(async () => {
+            console.log('[Admin Controller] Reactive DB update detected (debounced):', e.detail);
+            await this.loadFromDatabase();
+          }, 150);
         }
       });
     }
@@ -609,7 +613,7 @@
     }
 
     /**
-     * Secret 30-Minute Inactivity Auto-Lockout Engine
+     * Secret 30-Minute Inactivity Auto-Lockout Engine (Leak-Free)
      */
     setupInactivityEngine() {
       if (this.inactivityInterval) clearInterval(this.inactivityInterval);
@@ -628,8 +632,16 @@
         }
       };
 
+      // Detach prior bound listeners if existing to prevent memory leaks
+      if (this._boundActivityHandler) {
+        ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'].forEach(evt => {
+          window.removeEventListener(evt, this._boundActivityHandler);
+        });
+      }
+      this._boundActivityHandler = recordActivity;
+
       ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll'].forEach(evt => {
-        window.addEventListener(evt, recordActivity, { passive: true });
+        window.addEventListener(evt, this._boundActivityHandler, { passive: true });
       });
 
       // Verification interval every 15 seconds
@@ -1181,9 +1193,6 @@
           bucket.volume += orderTotal;
           bucket.pairs += itemsCount;
           bucket.transactions += 1;
-        } else if (buckets.length > 0) {
-          const lastBucket = buckets[buckets.length - 1];
-          lastBucket.volume += (orderTotal * 0.12);
         }
       });
 
@@ -1649,14 +1658,26 @@
       if (!shoe) return;
 
       if (confirm(`Are you sure you want to decommission "${shoe.name} - ${shoe.colorway}" from the Atelier Vault Database?`)) {
-        if (window.AetherDB && typeof window.AetherDB.deleteShoe === 'function') {
-          await window.AetherDB.deleteShoe(shoeId);
+        try {
+          if (window.AetherDB && typeof window.AetherDB.deleteShoe === 'function') {
+            await window.AetherDB.deleteShoe(shoeId);
+          }
+          delete this.shoes[shoeId];
+          if (window.SNEAKERS_DB && window.SNEAKERS_DB[shoeId]) {
+            delete window.SNEAKERS_DB[shoeId];
+          }
+          if (Array.isArray(this.inventory)) {
+            this.inventory = this.inventory.filter(i => i && i.shoe_id !== shoeId);
+          }
+          this.renderInventory();
+          this.renderOverview();
+          if (typeof this.updateTopbarStats === 'function') this.updateTopbarStats();
+          this.showToast(`Decommissioned ${shoe.colorway} from live database.`);
+          if (window.soundEngine && window.soundEngine.playClick) window.soundEngine.playClick();
+        } catch(err) {
+          console.error('[Admin] Delete error:', err);
+          this.showToast(`❌ Error deleting sneaker: ${err.message}`);
         }
-        delete this.shoes[shoeId];
-        this.renderInventory();
-        this.renderOverview();
-        this.showToast(`Decommissioned ${shoe.colorway} from live database.`);
-        if (window.soundEngine && window.soundEngine.playClick) window.soundEngine.playClick();
       }
     }
 

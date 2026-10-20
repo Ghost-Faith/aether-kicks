@@ -19,6 +19,7 @@ function initDropCountdown() {
 
   // Target time: 14 hours, 32 minutes from now
   const targetTime = Date.now() + (14 * 3600 + 32 * 60 + 15) * 1000;
+  let hasTriggered10mAlert = false;
 
   function updateTimer() {
     const remaining = Math.max(0, targetTime - Date.now());
@@ -31,6 +32,19 @@ function initDropCountdown() {
     minsEl.textContent = String(m).padStart(2, '0');
     secsEl.textContent = String(s).padStart(2, '0');
     if (msEl) msEl.textContent = String(ms).padStart(2, '0');
+
+    // Section 4 Atelier Preference: Deadstock Drop 10-Minute Priority Notification
+    if (remaining <= 600000 && !hasTriggered10mAlert) {
+      hasTriggered10mAlert = true;
+      if (localStorage.getItem('aether_drop_notifications') === 'true' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification('AETHER KICKS // LIVE DROP ALERT', {
+            body: 'Atenção Colecionador: O drop exclusivo de grails inicia em menos de 10 minutos!',
+            icon: 'assets/images/jordan-chicago.png'
+          });
+        } catch(e) {}
+      }
+    }
 
     if (remaining > 0) {
       requestAnimationFrame(updateTimer);

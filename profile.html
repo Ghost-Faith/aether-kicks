@@ -1,13 +1,21 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n="profile_page_title">Configuração do Perfil | AETHER KICKS - Painel do Colecionador</title>
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none';">
   <link rel="stylesheet" href="assets/css/global.css">
   <link rel="stylesheet" href="assets/css/store.css">
   <link rel="stylesheet" href="assets/css/profile-wishlist.css">
   <link rel="icon" href="assets/images/jordan-chicago.png" type="image/png">
+  <script>
+    // Anti-Clickjacking Frame Buster Defense
+    if (window.top !== window.self) {
+      window.top.location = window.self.location;
+    }
+  </script>
   <script src="assets/js/i18n.js"></script>
 </head>
 <body class="theme-purple">
@@ -174,28 +182,42 @@
       </p>
     </header>
 
+    <!-- Unauthenticated Session Notice Banner -->
+    <div id="profile-unauth-banner" style="display: none; align-items: center; justify-content: space-between; gap: 16px; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 14px; padding: 14px 20px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <div style="font-weight: 700; color: #eab308; font-size: 0.92rem;">Sessão Não Autenticada · Modo Demonstração</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted);">Inicie sessão no Vault para sincronizar permanentemente a sua morada de envio em Portugal e visualizar as suas encomendas reais com chip NFC criptográfico.</div>
+        </div>
+      </div>
+      <a href="login.html?redirect=profile.html" class="btn-primary" style="text-decoration: none; padding: 10px 18px; font-size: 0.84rem; white-space: nowrap;">
+        Iniciar Sessão
+      </a>
+    </div>
+
     <div class="profile-layout">
       <!-- Left VIP Identity Card -->
       <aside class="profile-sidebar">
         <div class="profile-user-card">
           <div class="profile-avatar-wrap">
-            <div id="profile-avatar-letters" class="profile-avatar-img">GS</div>
+            <div id="profile-avatar-letters" class="profile-avatar-img">--</div>
             <div class="profile-avatar-badge" title="NFC Verificado">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
           </div>
 
-          <h2 id="profile-display-name" class="profile-user-name">Gonçalo Silva</h2>
-          <p id="profile-display-handle" class="profile-user-handle">@goncalo_grails</p>
+          <h2 id="profile-display-name" class="profile-user-name">Colecionador Vault</h2>
+          <p id="profile-display-handle" class="profile-user-handle">@aether_collector</p>
           <span class="profile-tier-pill" data-i18n="profile_tier_patron">TIER 1 · VAULT PATRON</span>
 
           <div class="profile-stats-grid">
             <div class="profile-stat-box">
-              <div class="profile-stat-val">€4,250</div>
+              <div class="profile-stat-val">€0.00</div>
               <div class="profile-stat-lbl" data-i18n="profile_stat_portfolio">VALOR DO PORTFÓLIO</div>
             </div>
             <div class="profile-stat-box">
-              <div class="profile-stat-val">3 GRAILS</div>
+              <div class="profile-stat-val">0 GRAILS</div>
               <div class="profile-stat-lbl" data-i18n="profile_stat_collection">COLEÇÃO ATIVA</div>
             </div>
           </div>
@@ -219,7 +241,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span data-i18n="profile_tab_security">Segurança & Atelier</span>
           </button>
-          <a href="admin.html" class="profile-nav-tab" style="text-decoration: none; color: #ef4444; border-top: 1px dashed rgba(239, 68, 68, 0.3); margin-top: 8px; padding-top: 12px; display: flex; align-items: center; gap: 10px;">
+          <a id="profile-nav-admin-link" href="admin.html" class="profile-nav-tab" style="display: none; text-decoration: none; color: #ef4444; border-top: 1px dashed rgba(239, 68, 68, 0.3); margin-top: 8px; padding-top: 12px; align-items: center; gap: 10px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span>Admin Vault OS ⚡</span>
           </a>
@@ -241,28 +263,28 @@
               <div class="input-group">
                 <label class="input-label" for="prof-name" data-i18n="profile_lbl_fullname">Nome Completo</label>
                 <div class="input-wrapper">
-                  <input type="text" id="prof-name" class="form-input" style="padding-left: 16px;" value="Gonçalo Silva" required>
+                  <input type="text" id="prof-name" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: Marcus Jordan" maxlength="60" pattern="^[A-Za-zÀ-ÿ\s'\-]{2,60}$" title="O nome deve conter entre 2 e 60 caracteres alfabéticos" autocomplete="name" required>
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-tag" data-i18n="profile_lbl_tag">Tag de Colecionador</label>
                 <div class="input-wrapper">
-                  <input type="text" id="prof-tag" class="form-input" style="padding-left: 16px;" value="@goncalo_grails" required>
+                  <input type="text" id="prof-tag" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: @air_collector" maxlength="31" pattern="^@[A-Za-z0-9_]{3,30}$" title="A tag deve iniciar com @ e conter de 3 a 30 caracteres alfanuméricos ou underscore" autocomplete="username" required>
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-email" data-i18n="profile_lbl_email">Email de Notificações</label>
                 <div class="input-wrapper">
-                  <input type="email" id="prof-email" class="form-input" style="padding-left: 16px;" value="goncalo.silva@antigravity.pt" required>
+                  <input type="email" id="prof-email" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: marcus@vault.io" maxlength="80" autocomplete="email" required>
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-phone" data-i18n="profile_lbl_phone">Contacto Móvel / WhatsApp (Portugal)</label>
                 <div class="input-wrapper">
-                  <input type="tel" id="prof-phone" class="form-input" style="padding-left: 16px;" value="+351 912 345 678" required>
+                  <input type="tel" id="prof-phone" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: +351 912 345 678" maxlength="20" pattern="^(\+351\s?)?(9[1236]\d{7}|2\d{8})$" title="Insira um contacto válido de Portugal (ex: +351 912 345 678 ou 912345678)" autocomplete="tel">
                 </div>
               </div>
 
@@ -300,32 +322,50 @@
               <div class="profile-full-col input-group">
                 <label class="input-label" for="prof-address" data-i18n="profile_lbl_address">Morada Completa (Rua, Avenida, Praça)</label>
                 <div class="input-wrapper">
-                  <input type="text" id="prof-address" class="form-input" style="padding-left: 16px;" value="Avenida da Liberdade 120" required>
+                  <input type="text" id="prof-address" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: Avenida da Liberdade 120" maxlength="100" autocomplete="street-address">
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-apt" data-i18n="profile_lbl_apt">Andar / Bloco / Porta</label>
                 <div class="input-wrapper">
-                  <input type="text" id="prof-apt" class="form-input" style="padding-left: 16px;" value="3º Direito">
+                  <input type="text" id="prof-apt" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: 3º Direito" maxlength="30" autocomplete="address-line2">
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-zip" data-i18n="profile_lbl_zip">Código Postal (Formato PT: XXXX-XXX)</label>
                 <div class="input-wrapper">
-                  <input type="text" id="prof-zip" class="form-input" style="padding-left: 16px;" value="1250-146" pattern="\d{4}-\d{3}" required>
+                  <input type="text" id="prof-zip" class="form-input" style="padding-left: 16px;" value="" placeholder="Ex: 1250-146" maxlength="8" pattern="\d{4}-\d{3}" title="Código postal no formato XXXX-XXX (ex: 1250-146)" autocomplete="postal-code">
                 </div>
               </div>
 
               <div class="input-group">
                 <label class="input-label" for="prof-city" data-i18n="profile_lbl_city">Cidade / Distrito</label>
                 <div class="input-wrapper">
-                  <select id="prof-city" class="form-input" style="padding: 12px 16px; background: rgba(20,20,28,0.9); color: #fff;">
+                  <select id="prof-city" class="form-input" style="padding: 12px 16px; background: rgba(20,20,28,0.9); color: #fff;" autocomplete="address-level2">
                     <option value="Lisboa" selected>Lisboa</option>
                     <option value="Porto">Porto</option>
                     <option value="Braga">Braga</option>
                     <option value="Coimbra">Coimbra</option>
+                    <option value="Setúbal">Setúbal</option>
+                    <option value="Cascais">Cascais / Sintra</option>
+                    <option value="Faro">Faro / Algarve</option>
+                    <option value="Aveiro">Aveiro</option>
+                    <option value="Funchal">Funchal / Madeira</option>
+                    <option value="Ponta Delgada">Ponta Delgada / Açores</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="prof-country" data-i18n="profile_lbl_country">País</label>
+                <div class="input-wrapper">
+                  <input type="text" id="prof-country" class="form-input" style="padding-left: 16px;" value="Portugal" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
                     <option value="Setúbal">Setúbal</option>
                     <option value="Cascais">Cascais / Sintra</option>
                     <option value="Faro">Faro / Algarve</option>
@@ -349,10 +389,10 @@
           <div id="sec-orders" class="profile-panel" style="margin-top: 24px;">
             <div class="profile-panel-header">
               <h3 class="profile-panel-title" data-i18n="profile_sec3_title">3. Histórico de Grails & Pedidos Bespoke</h3>
-              <span class="badge-pill active" data-i18n="profile_badge_records">2 REGISTOS CRIPTOGRÁFICOS</span>
+              <span id="profile-orders-count-badge" class="badge-pill active" data-i18n="profile_badge_records">2 REGISTOS CRIPTOGRÁFICOS</span>
             </div>
 
-            <div class="profile-orders-list">
+            <div id="profile-orders-list" class="profile-orders-list">
               <div class="order-history-card">
                 <div class="order-thumb-wrap">
                   <img src="assets/images/jordan-chicago.png" alt="Chicago 1985">
@@ -570,18 +610,18 @@
       <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
         <div class="input-group">
           <label class="input-label" data-i18n="checkout_shipping_name">Nome Completo</label>
-          <input type="text" class="form-input" style="padding-left: 16px;" value="Gonçalo Silva" required>
+          <input type="text" id="chk-shipping-name" class="form-input" style="padding-left: 16px;" placeholder="Ex: Marcus Jordan" required>
         </div>
 
         <div class="input-group">
           <label class="input-label" data-i18n="checkout_street_address">Morada de Envio (Portugal)</label>
-          <input type="text" class="form-input" style="padding-left: 16px;" value="Avenida da Liberdade 120, 3º Dto" required>
+          <input type="text" id="chk-shipping-addr" class="form-input" style="padding-left: 16px;" placeholder="Ex: Avenida da Liberdade 120, 3º Dto" required>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="input-group">
             <label class="input-label" data-i18n="checkout_postal_code">Código Postal</label>
-            <input type="text" class="form-input" style="padding-left: 16px;" value="1250-146" required>
+            <input type="text" id="chk-shipping-zip" class="form-input" style="padding-left: 16px;" placeholder="Ex: 1250-146" required>
           </div>
           <div class="input-group">
             <label class="input-label" data-i18n="checkout_city_state">Cidade</label>
@@ -635,6 +675,11 @@
   <script src="assets/js/store.js"></script>
 
   <script>
+    // Universal HTML Escaper for DOM Security
+    const esc = (typeof window !== 'undefined' && window.escapeHTML) 
+      ? window.escapeHTML 
+      : (s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
     // Size conversion table for Portugal / EU standard
     const SIZES_MAP = [
       { eu: '38',   us: '5.5', uk: '4.5', cm: '24.0' },
@@ -659,102 +704,473 @@
       const container = document.getElementById('profile-size-grid');
       if (!container) return;
 
+      const allowedUnits = ['EU', 'US', 'UK', 'CM'];
+      const safeUnit = allowedUnits.includes(currentUnit) ? currentUnit : 'EU';
+
       container.innerHTML = SIZES_MAP.map(item => {
         let label = item.eu;
-        if (currentUnit === 'US') label = item.us;
-        else if (currentUnit === 'UK') label = item.uk;
-        else if (currentUnit === 'CM') label = item.cm;
+        if (safeUnit === 'US') label = item.us;
+        else if (safeUnit === 'UK') label = item.uk;
+        else if (safeUnit === 'CM') label = item.cm;
 
         const isSel = item.eu === chosenEU;
         return `
           <button type="button" class="btn-stage-size ${isSel ? 'selected' : ''}" 
                   style="padding: 10px 4px; font-size: 0.82rem; font-family: var(--font-mono); border-radius: 8px; border: 1px solid ${isSel ? 'var(--theme-primary)' : 'var(--border-glass)'}; background: ${isSel ? 'var(--theme-primary)' : 'rgba(255,255,255,0.04)'}; color: ${isSel ? '#fff' : 'var(--text-secondary)'}; cursor: pointer;"
-                  onclick="selectProfileSize('${item.eu}')">
-            ${currentUnit} ${label}
+                  onclick="selectProfileSize('${esc(item.eu)}')">
+            ${esc(safeUnit)} ${esc(label)}
           </button>
         `;
       }).join('');
     }
 
     function setProfileUnit(unit) {
-      currentUnit = unit;
+      const allowedUnits = ['EU', 'US', 'UK', 'CM'];
+      currentUnit = allowedUnits.includes(unit) ? unit : 'EU';
       document.querySelectorAll('.size-unit-toggle .btn-unit-opt').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.includes(unit));
+        btn.classList.toggle('active', btn.textContent.includes(currentUnit));
       });
       renderProfileSizes();
       if (window.soundEngine) window.soundEngine.playClick();
     }
 
     function selectProfileSize(euVal) {
-      chosenEU = euVal;
-      const matched = SIZES_MAP.find(s => s.eu === euVal);
-      document.getElementById('prof-chosen-size').value = `EU ${euVal} (US ${matched.us} / UK ${matched.uk})`;
+      const matched = SIZES_MAP.find(s => s.eu === String(euVal));
+      if (!matched) return;
+      chosenEU = matched.eu;
+      document.getElementById('prof-chosen-size').value = `EU ${matched.eu} (US ${matched.us} / UK ${matched.uk})`;
       renderProfileSizes();
       if (window.soundEngine) window.soundEngine.playClick();
     }
 
     function switchProfileSection(secId) {
+      const allowedSections = ['personal', 'shipping', 'orders', 'security'];
+      if (!allowedSections.includes(secId)) return;
       const target = document.getElementById(`sec-${secId}`);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       document.querySelectorAll('.profile-nav-tab').forEach(t => t.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('.profile-nav-tab')).find(b => b.getAttribute('onclick').includes(secId));
+      const activeBtn = Array.from(document.querySelectorAll('.profile-nav-tab')).find(b => {
+        const attr = b.getAttribute('onclick') || '';
+        return attr.includes(secId);
+      });
       if (activeBtn) activeBtn.classList.add('active');
       if (window.soundEngine) window.soundEngine.playClick();
     }
 
-    function loadSavedUserProfile() {
-      // 1. Sync from aether_user
-      const rawUser = localStorage.getItem('aether_user');
-      if (rawUser) {
-        try {
-          const user = JSON.parse(rawUser);
-          if (user.name) {
-            document.getElementById('prof-name').value = user.name;
-            document.getElementById('profile-display-name').textContent = user.name;
-            const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            document.getElementById('profile-avatar-letters').textContent = initials;
-          }
-          if (user.email) {
-            document.getElementById('prof-email').value = user.email;
-          }
-        } catch(e) {}
-      }
-
-      // 2. Sync from aether_profile
-      const rawProfile = localStorage.getItem('aether_profile');
-      if (rawProfile) {
-        try {
-          const p = JSON.parse(rawProfile);
-          if (p.name) document.getElementById('prof-name').value = p.name;
-          if (p.tag) {
-            document.getElementById('prof-tag').value = p.tag;
-            document.getElementById('profile-display-handle').textContent = p.tag;
-          }
-          if (p.email) document.getElementById('prof-email').value = p.email;
-          if (p.phone) document.getElementById('prof-phone').value = p.phone;
-          if (p.address) document.getElementById('prof-address').value = p.address;
-          if (p.apt) document.getElementById('prof-apt').value = p.apt;
-          if (p.zip) document.getElementById('prof-zip').value = p.zip;
-          if (p.city) document.getElementById('prof-city').value = p.city;
-          if (p.chosenEU) chosenEU = p.chosenEU;
-        } catch(e) {}
-      }
-
-      renderProfileSizes();
+    // Helper: Safely generate user avatar initials without crashing or injection
+    function getSafeInitials(fullName) {
+      if (!fullName || typeof fullName !== 'string') return 'AK';
+      const parts = fullName.trim().split(/\s+/).filter(Boolean);
+      if (parts.length === 0) return 'AK';
+      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
 
-    function saveUserProfile() {
+    // Dynamic Authenticated Orders Hydration with Anti-XSS Sanitization
+    async function loadAndRenderOrders(userEmail) {
+      const container = document.getElementById('profile-orders-list');
+      const countBadge = document.getElementById('profile-orders-count-badge');
+      if (!container) return;
+
+      let allOrders = [];
+      if (window.AetherDB && typeof window.AetherDB.getOrders === 'function') {
+        try {
+          allOrders = await window.AetherDB.getOrders();
+        } catch (e) {}
+      }
+      if (!allOrders || allOrders.length === 0) {
+        try {
+          const raw = localStorage.getItem('aether_orders');
+          if (raw) allOrders = JSON.parse(raw);
+        } catch (e) {}
+      }
+
+      // Filter orders by authenticated user email if present
+      let userOrders = allOrders || [];
+      if (userEmail) {
+        const targetEmail = String(userEmail).toLowerCase().trim();
+        userOrders = userOrders.filter(o => 
+          (o.customer_email && String(o.customer_email).toLowerCase().trim() === targetEmail) ||
+          (o.email && String(o.email).toLowerCase().trim() === targetEmail)
+        );
+      }
+
+      // If user has no orders, render luxury empty state
+      if (!userOrders || userOrders.length === 0) {
+        if (countBadge) {
+          countBadge.textContent = '0 REGISTOS';
+          countBadge.classList.remove('active');
+        }
+        container.innerHTML = `
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-glass); border-radius: 16px; padding: 36px 20px; text-align: center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; color: var(--text-muted);"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <h4 style="color: #fff; font-size: 1rem; margin-bottom: 6px;">Nenhum Grail Adquirido Ainda</h4>
+            <p style="color: var(--text-muted); font-size: 0.82rem; max-width: 440px; margin: 0 auto 18px;">
+              As tuas encomendas autenticadas com chip criptográfico NFC e acompanhamento do Atelier de Lisboa aparecerão aqui em tempo real.
+            </p>
+            <a href="index.html#square-grid-vault" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 20px; font-size: 0.85rem;">
+              Explorar The Grail Vault
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      // Update badge count
+      if (countBadge) {
+        countBadge.textContent = `${userOrders.length} ${userOrders.length === 1 ? 'REGISTO CRIPTOGRÁFICO' : 'REGISTOS CRIPTOGRÁFICOS'}`;
+        countBadge.classList.add('active');
+      }
+
+      // Calculate portfolio and collection stats
+      let totalPortfolio = 0;
+      let totalGrails = 0;
+
+      userOrders.forEach(o => {
+        totalPortfolio += Number(o.total || o.price || 0);
+        totalGrails += (o.items && o.items.length) ? o.items.length : 1;
+      });
+
+      const statBoxes = document.querySelectorAll('.profile-stat-box .profile-stat-val');
+      if (statBoxes[0]) {
+        statBoxes[0].textContent = `€${Math.round(totalPortfolio).toLocaleString('pt-PT')}`;
+      }
+      if (statBoxes[1]) {
+        statBoxes[1].textContent = `${totalGrails} ${totalGrails === 1 ? 'GRAIL' : 'GRAILS'}`;
+      }
+
+      container.innerHTML = userOrders.map(order => {
+        const safeId = esc(order.id || 'VAULT-ORDER');
+        const firstItem = (order.items && order.items[0]) || {};
+        const shoeName = esc(firstItem.shoe_name || order.shoeName || 'Air Jordan 1 High OG');
+        const colorway = esc(firstItem.colorway || order.colorway || 'Chicago');
+        const size = esc(firstItem.size_eu ? `Tamanho EU ${firstItem.size_eu}` : (order.size || 'Tamanho EU 42'));
+        const imgUrl = esc(firstItem.image || 'assets/images/jordan-chicago.png');
+        const price = Number(order.total || order.price || 480).toFixed(2);
+        const nfcToken = esc(order.nfc_certificate_id || order.nfcHash || 'NFC-AETH-CRYPTOTAG');
+        const isDelivered = order.status === 'delivered';
+        const statusText = isDelivered ? 'ENTREGUE' : (order.status === 'crafting' ? 'EM CONFEÇÃO' : 'CONFIRMADO');
+        const statusColor = isDelivered ? '#22c55e' : '#eab308';
+
+        return `
+          <div class="order-history-card">
+            <div class="order-thumb-wrap">
+              <img src="${imgUrl}" alt="${shoeName}">
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 2px;">
+                <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #dc2626; font-weight: 700;">#${safeId}</span>
+                <span class="badge-pill" style="font-size: 0.65rem; background: ${statusColor}22; color: ${statusColor}; border-color: ${statusColor};">${statusText}</span>
+              </div>
+              <h4 style="font-size: 0.96rem; font-weight: 700; color: #fff;">${shoeName}</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">${colorway} · ${size} · Certificado NFC: ${nfcToken}</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #fff;">€${price}</div>
+              <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; margin-top: 4px;" onclick="showToast('Certificado NFC #${safeId} validado na blockchain privada do Atelier!')">
+                Ver Certificado NFC
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadSavedUserProfile() {
+      let verifiedSession = null;
+      const rawSession = localStorage.getItem('aether_user_session');
+      const rawUser = localStorage.getItem('aether_user');
+
+      // 1. Cryptographic HMAC Session Integrity Verification
+      if (rawSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
+        try {
+          verifiedSession = await window.AetherDB.verifySession(JSON.parse(rawSession));
+          if (!verifiedSession) {
+            console.warn('[Aether Security] Session tampering detected! Removing tampered credentials.');
+            localStorage.removeItem('aether_user');
+            localStorage.removeItem('aether_user_session');
+            showToast('⚠️ Sessão inválida ou adulterada. Por favor inicie sessão novamente.');
+            setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+            return;
+          }
+        } catch(e) {
+          console.warn('[Aether Security] Session verification error:', e);
+        }
+      }
+
+      let currentUser = verifiedSession;
+      if (!currentUser && rawUser) {
+        try {
+          currentUser = JSON.parse(rawUser);
+        } catch(e) {}
+      }
+
+      // Check unauthenticated banner
+      const unauthBanner = document.getElementById('profile-unauth-banner');
+      if (!currentUser) {
+        if (unauthBanner) unauthBanner.style.display = 'flex';
+        const badgeAuth = document.querySelector('#sec-personal .badge-pill');
+        if (badgeAuth) {
+          badgeAuth.textContent = 'MODO DEMONSTRAÇÃO';
+          badgeAuth.classList.remove('active');
+        }
+      } else {
+        if (unauthBanner) unauthBanner.style.display = 'none';
+      }
+
+      // 2. Privilege boundary check: Only show Admin Vault OS if verified admin
+      const adminNavLinks = document.querySelectorAll('#profile-nav-admin-link, a[href="admin.html"]');
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      adminNavLinks.forEach(link => {
+        link.style.display = isAdmin ? 'flex' : 'none';
+      });
+
+      // 3. User Key for Scoped Profile Storage (Prevents account collision & session mutation)
+      const userKey = currentUser ? (currentUser.id || currentUser.email) : 'guest';
+      const rawProfile = localStorage.getItem(`aether_profile_${userKey}`);
+      let userProfile = {};
+      if (rawProfile) {
+        try {
+          userProfile = JSON.parse(rawProfile);
+        } catch(e) {}
+      }
+
+      // 4. Hydrate User Credentials cleanly
+      if (currentUser) {
+        const userName = userProfile.name || currentUser.name || currentUser.full_name || '';
+        const userEmail = userProfile.email || currentUser.email || '';
+        const userTag = userProfile.tag || `@${(currentUser.email ? currentUser.email.split('@')[0] : 'colecionador')}`;
+
+        if (userName) {
+          document.getElementById('prof-name').value = userName;
+          document.getElementById('profile-display-name').textContent = userName;
+          document.getElementById('profile-avatar-letters').textContent = getSafeInitials(userName);
+        }
+        if (userEmail) {
+          document.getElementById('prof-email').value = userEmail;
+        }
+        document.getElementById('prof-tag').value = userTag;
+        document.getElementById('profile-display-handle').textContent = userTag;
+
+        if (currentUser.tier) {
+          const tierEl = document.querySelector('.profile-tier-pill');
+          if (tierEl) tierEl.textContent = currentUser.tier.toUpperCase();
+        }
+      } else {
+        // Guest mode default placeholders
+        document.getElementById('profile-display-name').textContent = 'Convidado VIP';
+        document.getElementById('profile-display-handle').textContent = '@aether_guest';
+        document.getElementById('profile-avatar-letters').textContent = 'CV';
+      }
+
+      // 5. Hydrate Contact & Shipping Information
+      if (userProfile.phone) document.getElementById('prof-phone').value = userProfile.phone;
+      if (userProfile.address) document.getElementById('prof-address').value = userProfile.address;
+      if (userProfile.apt) document.getElementById('prof-apt').value = userProfile.apt;
+      if (userProfile.zip) document.getElementById('prof-zip').value = userProfile.zip;
+      if (userProfile.city) document.getElementById('prof-city').value = userProfile.city;
+      if (userProfile.chosenEU) chosenEU = userProfile.chosenEU;
+
+      // 6. Section 4: Live Preferences Hydration
+      const soundEnabled = localStorage.getItem('aether_sound_enabled');
+      const webglEnabled = localStorage.getItem('aether_webgl_enabled');
+      const notifyEnabled = localStorage.getItem('aether_drop_notifications');
+
+      const audioCheckbox = document.getElementById('pref-audio');
+      const webglCheckbox = document.getElementById('pref-3d');
+      const notifyCheckbox = document.getElementById('pref-notify');
+
+      if (audioCheckbox) {
+        audioCheckbox.checked = soundEnabled !== null ? soundEnabled === 'true' : (userProfile.prefAudio !== undefined ? !!userProfile.prefAudio : true);
+      }
+      if (webglCheckbox) {
+        webglCheckbox.checked = webglEnabled !== null ? webglEnabled === 'true' : (userProfile.pref3D !== undefined ? !!userProfile.pref3D : true);
+      }
+      if (notifyCheckbox) {
+        notifyCheckbox.checked = notifyEnabled !== null ? notifyEnabled === 'true' : (userProfile.prefNotify !== undefined ? !!userProfile.prefNotify : false);
+      }
+
+      // Wire live change listeners for the 3 Section 4 preferences
+      wirePreferencesInteractions();
+
+      renderProfileSizes();
+      await loadAndRenderOrders(currentUser ? currentUser.email : null);
+    }
+
+    function wirePreferencesInteractions() {
+      const audioCheckbox = document.getElementById('pref-audio');
+      const webglCheckbox = document.getElementById('pref-3d');
+      const notifyCheckbox = document.getElementById('pref-notify');
+
+      if (audioCheckbox && !audioCheckbox._wired) {
+        audioCheckbox._wired = true;
+        audioCheckbox.addEventListener('change', () => {
+          const enabled = audioCheckbox.checked;
+          localStorage.setItem('aether_sound_enabled', enabled ? 'true' : 'false');
+          if (window.soundEngine) {
+            window.soundEngine.enabled = enabled;
+            if (enabled && typeof window.soundEngine.playBeep === 'function') {
+              window.soundEngine.playBeep(620, 0.08, 'sine');
+            }
+          }
+          document.querySelectorAll('.btn-sound-toggle, #btn-sound-toggle').forEach(btn => {
+            btn.classList.toggle('active', enabled);
+            btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+          });
+          showToast(enabled ? '🔊 Efeitos sonoros do Atelier ativados!' : '🔇 Efeitos sonoros desativados.');
+        });
+      }
+
+      if (webglCheckbox && !webglCheckbox._wired) {
+        webglCheckbox._wired = true;
+        webglCheckbox.addEventListener('change', () => {
+          const enabled = webglCheckbox.checked;
+          localStorage.setItem('aether_webgl_enabled', enabled ? 'true' : 'false');
+          window.dispatchEvent(new CustomEvent('aether:webglChange', { detail: { enabled } }));
+          showToast(enabled ? '🧊 Renderização 3D WebGL em tempo real ativada!' : '⚡ Renderização 3D desativada (Modo 2D otimizado).');
+        });
+      }
+
+      if (notifyCheckbox && !notifyCheckbox._wired) {
+        notifyCheckbox._wired = true;
+        notifyCheckbox.addEventListener('change', async () => {
+          const enabled = notifyCheckbox.checked;
+          localStorage.setItem('aether_drop_notifications', enabled ? 'true' : 'false');
+          if (enabled) {
+            if ('Notification' in window) {
+              try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                  showToast('🔔 Notificações prioritárias de Drops Deadstock autorizadas!');
+                  try {
+                    new Notification('AETHER KICKS // ATELIER DROPS', {
+                      body: 'Alertas prioritários configurados! Notificaremos 10 min antes do próximo drop.',
+                      icon: 'assets/images/jordan-chicago.png'
+                    });
+                  } catch (e) {}
+                } else {
+                  showToast('⚠️ Permissão de notificações bloqueada no seu navegador.');
+                  notifyCheckbox.checked = false;
+                  localStorage.setItem('aether_drop_notifications', 'false');
+                }
+              } catch (err) {
+                showToast('⚠️ Erro ao solicitar permissões de notificação.');
+              }
+            } else {
+              showToast('⚠️ O seu navegador não suporta notificações de sistema.');
+            }
+          } else {
+            showToast('🔕 Notificações de drops silenciadas.');
+          }
+        });
+      }
+    }
+    }
+
+    async function saveUserProfile() {
+      const nameInput = document.getElementById('prof-name');
+      const tagInput = document.getElementById('prof-tag');
+      const emailInput = document.getElementById('prof-email');
+      const phoneInput = document.getElementById('prof-phone');
+      const addressInput = document.getElementById('prof-address');
+      const aptInput = document.getElementById('prof-apt');
+      const zipInput = document.getElementById('prof-zip');
+      const cityInput = document.getElementById('prof-city');
+
+      const nameVal = (nameInput.value || '').trim();
+      const tagVal = (tagInput.value || '').trim();
+      const emailVal = (emailInput.value || '').trim().toLowerCase();
+      const phoneVal = (phoneInput.value || '').trim();
+      const addressVal = (addressInput.value || '').trim();
+      const aptVal = (aptInput.value || '').trim();
+      const zipVal = (zipInput.value || '').trim();
+      const cityVal = (cityInput.value || '').trim();
+
+      // Strict Input Validation Rules
+      const nameRegex = /^[A-Za-zÀ-ÿ\s'\-]{2,60}$/;
+      if (!nameRegex.test(nameVal)) {
+        showToast('⚠️ Nome inválido: utilize entre 2 e 60 caracteres alfabéticos.');
+        nameInput.focus();
+        return;
+      }
+
+      const tagRegex = /^@[A-Za-z0-9_]{3,30}$/;
+      if (!tagRegex.test(tagVal)) {
+        showToast('⚠️ Tag inválida: deve iniciar com @ e ter de 3 a 30 caracteres alfanuméricos.');
+        tagInput.focus();
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      if (!emailRegex.test(emailVal) || emailVal.length > 80) {
+        showToast('⚠️ Email inválido. Por favor verifique o endereço.');
+        emailInput.focus();
+        return;
+      }
+
+      const phoneRegex = /^(\+351\s?)?(9[1236]\d{7}|2\d{8})$/;
+      if (!phoneRegex.test(phoneVal)) {
+        showToast('⚠️ Contacto móvel inválido. Formato PT: +351 912345678 ou 912345678.');
+        phoneInput.focus();
+        return;
+      }
+
+      if (addressVal.length < 5 || addressVal.length > 100) {
+        showToast('⚠️ Morada deve ter entre 5 e 100 caracteres.');
+        addressInput.focus();
+        return;
+      }
+
+      if (aptVal.length > 30) {
+        showToast('⚠️ Andar/Porta não deve exceder 30 caracteres.');
+        aptInput.focus();
+        return;
+      }
+
+      const zipRegex = /^\d{4}-\d{3}$/;
+      if (!zipRegex.test(zipVal)) {
+        showToast('⚠️ Código postal inválido. Formato PT obrigatório: XXXX-XXX (ex: 1250-146).');
+        zipInput.focus();
+        return;
+      }
+
+      const allowedCities = ['Lisboa', 'Porto', 'Braga', 'Coimbra', 'Setúbal', 'Cascais', 'Cascais / Sintra', 'Faro', 'Faro / Algarve', 'Aveiro', 'Funchal', 'Funchal / Madeira', 'Ponta Delgada', 'Ponta Delgada / Açores'];
+      if (!allowedCities.some(c => c.toLowerCase() === cityVal.toLowerCase())) {
+        showToast('⚠️ Cidade selecionada inválida.');
+        cityInput.focus();
+        return;
+      }
+
+      // Verify Session Integrity before modifying credentials
+      let verifiedSession = null;
+      const rawSession = localStorage.getItem('aether_user_session');
+      if (rawSession && window.AetherDB && typeof window.AetherDB.verifySession === 'function') {
+        try {
+          verifiedSession = await window.AetherDB.verifySession(JSON.parse(rawSession));
+        } catch(e) {}
+      }
+
+      const rawUser = localStorage.getItem('aether_user');
+      let baseUser = null;
+      if (rawUser) {
+        try {
+          baseUser = JSON.parse(rawUser);
+        } catch(e) {}
+      }
+
+      const activeUser = verifiedSession || baseUser;
+
       const profileData = {
-        name: document.getElementById('prof-name').value,
-        tag: document.getElementById('prof-tag').value,
-        email: document.getElementById('prof-email').value,
-        phone: document.getElementById('prof-phone').value,
-        address: document.getElementById('prof-address').value,
-        apt: document.getElementById('prof-apt').value,
-        zip: document.getElementById('prof-zip').value,
-        city: document.getElementById('prof-city').value,
+        name: nameVal,
+        tag: tagVal,
+        email: emailVal,
+        phone: phoneVal,
+        address: addressVal,
+        apt: aptVal,
+        zip: zipVal,
+        city: cityVal,
         country: 'Portugal',
         chosenEU: chosenEU,
         chosenSizeDisplay: document.getElementById('prof-chosen-size').value,
@@ -763,20 +1179,84 @@
         prefNotify: document.getElementById('pref-notify').checked
       };
 
-      localStorage.setItem('aether_profile', JSON.stringify(profileData));
+      // Always persist the 3 active preferences globally across the storefront
+      localStorage.setItem('aether_sound_enabled', profileData.prefAudio ? 'true' : 'false');
+      localStorage.setItem('aether_webgl_enabled', profileData.pref3D ? 'true' : 'false');
+      localStorage.setItem('aether_drop_notifications', profileData.prefNotify ? 'true' : 'false');
 
-      // Also sync user basic session
-      const rawUser = localStorage.getItem('aether_user');
-      let baseUser = rawUser ? JSON.parse(rawUser) : {};
-      baseUser.name = profileData.name;
-      baseUser.email = profileData.email;
-      localStorage.setItem('aether_user', JSON.stringify(baseUser));
+      // Guest / Unauthenticated Mode Handling: Do not corrupt or mutate active accounts
+      if (!activeUser) {
+        localStorage.setItem('aether_guest_preferences', JSON.stringify(profileData));
+        document.getElementById('profile-display-name').textContent = nameVal;
+        document.getElementById('profile-display-handle').textContent = tagVal;
+        document.getElementById('profile-avatar-letters').textContent = getSafeInitials(nameVal);
+        if (window.soundEngine) window.soundEngine.playSuccess();
+        showToast('✅ Preferências de convidado guardadas! Inicie sessão para registar no Atelier Vault.');
+        return;
+      }
 
-      // Update UI elements
-      document.getElementById('profile-display-name').textContent = profileData.name;
-      document.getElementById('profile-display-handle').textContent = profileData.tag;
-      const initials = profileData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      document.getElementById('profile-avatar-letters').textContent = initials;
+      // Authenticated User: Scope profile strictly to this user's ID/email
+      const userKey = activeUser.id || activeUser.email || 'collector';
+      localStorage.setItem(`aether_profile_${userKey}`, JSON.stringify(profileData));
+
+      // Anti-Privilege Escalation: Strictly preserve verified role, ID, and VIP tier
+      const preservedRole = activeUser.role || 'collector';
+      const preservedId = activeUser.id;
+      const preservedTier = activeUser.tier || 'VIP GRAIL COLLECTOR';
+
+      // Synchronize basic user state safely without switching accounts
+      const updatedUser = {
+        ...activeUser,
+        id: preservedId,
+        role: preservedRole,
+        tier: preservedTier,
+        name: nameVal,
+        full_name: nameVal,
+        email: emailVal,
+        preferred_size: profileData.chosenSizeDisplay
+      };
+      localStorage.setItem('aether_user', JSON.stringify(updatedUser));
+
+      // Re-sign Cryptographic Session Token to maintain session validity
+      if (window.AetherDB && typeof window.AetherDB.signSession === 'function') {
+        try {
+          const newSession = await window.AetherDB.signSession({
+            id: preservedId,
+            email: emailVal,
+            name: nameVal,
+            full_name: nameVal,
+            role: preservedRole,
+            tier: preservedTier,
+            issuedAt: Date.now()
+          });
+          localStorage.setItem('aether_user_session', JSON.stringify(newSession));
+        } catch(e) {
+          console.warn('[Security] Could not re-sign session token:', e);
+        }
+      }
+
+      // Sync with AetherDB Relational Store if user exists
+      if (window.AetherDB && typeof window.AetherDB.updateUser === 'function' && preservedId) {
+        try {
+          await window.AetherDB.updateUser(preservedId, {
+            name: nameVal,
+            full_name: nameVal,
+            email: emailVal,
+            phone: phoneVal,
+            address: addressVal,
+            postal_code: zipVal,
+            city: cityVal,
+            preferred_size: profileData.chosenSizeDisplay
+          });
+        } catch(e) {
+          console.warn('[AetherDB] User record sync notice:', e.message);
+        }
+      }
+
+      // Update UI elements safely
+      document.getElementById('profile-display-name').textContent = nameVal;
+      document.getElementById('profile-display-handle').textContent = tagVal;
+      document.getElementById('profile-avatar-letters').textContent = getSafeInitials(nameVal);
 
       if (window.soundEngine) window.soundEngine.playSuccess();
       const saveMsg = window.i18n ? window.i18n.t('profile_toast_saved') : '✅ Perfil guardado com sucesso! Sincronizado com o Atelier.';
@@ -787,15 +1267,28 @@
       const confirmMsg = window.i18n ? window.i18n.t('profile_confirm_reset') : 'Deseja restaurar as configurações padrão de colecionador?';
       if (confirm(confirmMsg)) {
         localStorage.removeItem('aether_profile');
-        location.reload();
+        if (window.soundEngine) window.soundEngine.playClick();
+        showToast('Configurações do perfil restauradas.');
+        setTimeout(() => {
+          location.reload();
+        }, 600);
       }
     }
 
     function logoutUser() {
       const confirmMsg = window.i18n ? window.i18n.t('profile_confirm_logout') : 'Deseja terminar a sessão no cofre de colecionador?';
       if (confirm(confirmMsg)) {
+        // 1. Purge all user and session tokens
         localStorage.removeItem('aether_user');
+        localStorage.removeItem('aether_user_session');
         localStorage.removeItem('aether_profile');
+
+        // 2. Purge administrative session state to prevent privilege resurrection
+        sessionStorage.removeItem('aether_admin_authenticated');
+        sessionStorage.removeItem('aether_admin_token');
+        sessionStorage.removeItem('aether_admin_user');
+        sessionStorage.removeItem('aether_admin_last_activity');
+
         if (window.soundEngine) window.soundEngine.playClick();
         const toastMsg = window.i18n ? window.i18n.t('profile_toast_logout') : 'Sessão terminada. A redirecionar...';
         showToast(toastMsg);
